@@ -6,6 +6,16 @@ TU Delft, 2026). It records everything in the thesis text that is **not (yet) ba
 on-disk evidence** in this repository, separated into four classes:
 
 1. **Confirmed inconsistencies** — the data exists, and the thesis number is demonstrably wrong.
+   **STATUS UPDATE (2026-06-12): §1.1, §1.2 and §1.3 have been FIXED in the thesis source**
+   (`tab:baseline` cell → 56.14 + all baseline cells set to exact 2-dp values; `tab:sft-summary`
+   cross-contaminated cells corrected from the true checkpoints and the two phantom Unfrozen-6K
+   rows commented out with a `% TODO`; Appendix C `tab:perprod-full` SFT+GRPO column, `Δ GRPO`
+   column and the entire `tab:perprod-cm` regenerated exactly from
+   `grpo_qwen25vl_7b_6k_frozen_ep3_full_run2/checkpoint-530/eval_dsmvtec_full_trainprompt.json`,
+   the misleading footnote replaced with an honest macro/micro-average note, and the dependent
+   Ch.7 "GRPO concentrates gains on cable/metal_nut/pill" claim rewritten — GRPO in fact
+   *regresses* cable/pill/transistor/zipper/bottle and its true gains are hazelnut/tile/capsule).
+   The tables below are retained as the audit record of what was wrong.
 2. **Unverifiable** — the artifact needed to check it is not on disk (checkpoint rotated away, run never executed, probe-only metric).
 3. **Unverified / partially-supported claims** — rhetorical, design-rationale, estimate, or cross-reference values with no backing file.
 4. **Pending / in-progress** — placeholder sections awaiting results.
@@ -57,12 +67,13 @@ Several rows carry numbers belonging to *other* runs/epochs/checkpoints. The HEA
 | 7B-Unfrozen-15K ep4 (ckpt-1812) | Acc | 68.86 | **65.21** | same |
 | 7B-Unfrozen-15K ep4 (ckpt-1812) | F1 | 75.60 | **71.51** | same |
 
-**Downstream consequence:** the L81 "6K ep3 vs 15K best-epoch = 7.6 pp" and the discussion-chapter
-"8.5-point 6K-vs-15K DS gap" (`07_discussion.tex` sec:disc-quality L27) both lean on the
-*uncorrected* 15K DS number. With the corrected 7B-Frozen-15K **ep3** DS = 80.12 vs 6K 80.16,
-the gap at matched epoch is ~0 pp. **The "6K beats 15K by 8.5 pp" headline only reproduces against
-the 7B-Frozen-15K ckpt-1359 DS = 71.66 reported in the inventory — confirm which 15K row/epoch the
-8.5 pp is meant to reference and state it consistently across Ch.1, Ch.6, Ch.7, Ch.8.**
+**Downstream consequence — RETRACTED (2026-06-12 recheck):** an earlier revision of this note
+claimed the corrected 7B-Frozen-15K ep3 "DS = 80.12" would collapse the 6K-vs-15K gap to ~0 pp.
+That confused **plain accuracy with balanced accuracy**: 80.12 is the DS-MVTec *accuracy* at
+ckpt-1359; the DS **BA** there is **71.66** (TP/TN/FP/FN-recomputed), exactly what the thesis
+table prints. The "8.5 pp" matched-epoch gap (80.16 − 71.66 = 8.50) and the "~7.6 pp" best-epoch
+gap (80.16 − 72.60 at ep4, = 7.56) are therefore **both genuine** and the thesis prose needs no
+change. Only the row's VisA (65.45 → 64.28) and Acc (78.20 → 80.12) cells were wrong.
 
 ### 1.3 Appendix C — FABRICATED SFT+GRPO per-product column and the entire CM table
 
