@@ -225,21 +225,19 @@ All balanced-accuracy (BA) figures below are recomputed from the `metrics` block
 
 ---
 
-## 6. Relationship to the thesis text (documented divergence)
+## 6. Relationship to the thesis text (divergence — RESOLVED 2026-06-12)
 
-Appendix B / [`04_sft.tex` §sec:sft-data](#) describes a **two-image** system-prompted format
-("*You are an expert industrial anomaly detector. You are given two images…*", with the user
-question "*Are there any defects in the test image?*") and states the same system prompt is used
-at SFT training, GRPO training, and inference.
-
-The **shipped single-image eval harness in this repo does not use that system prompt.** Its three
-reportable modes (§2) all run **without a system message** and on a **single test image**. The
-numbers in [`results/eval_ba_inventory.txt`](../results/eval_ba_inventory.txt) — including every
-headline BA in §5 — were produced by *this* harness, so **this document is authoritative for the
-prompt-mode contract of the eval JSONs**, and the thesis system-prompt wording should be read as
-describing the *training-data construction* prompt rather than the literal strings used by the
-evaluation runs. This divergence is noted here for provenance; it does not change any reported
-number, only the description of how those numbers were obtained.
+Earlier thesis drafts (Appendix B / `04_sft.tex` §sec:sft-data) described a **two-image**
+system-prompted format ("*You are an expert industrial anomaly detector. You are given two
+images…*") — a leftover from an abandoned one-shot design that was never used for any reported
+number. **This has been corrected in the thesis**: Appendix B and Chapters 1/3/4/5/7/8 now
+describe the actual zero-shot, single-image setup documented here (SFT: no system turn +
+product-conditioned question; train-prompt eval: the same question + the one-line
+"`Please answer by yes or no`" system message; GRPO: `single_img=1`, no system message,
+fixed "query image" question). The numbers in
+[`results/eval_ba_inventory.txt`](../results/eval_ba_inventory.txt) were always produced by the
+single-image harness, so no reported number changed — only the description of how those numbers
+were obtained. This document remains authoritative for the prompt-mode contract of the eval JSONs.
 
 The thesis-side generation/inspector prompt (the structured trace generator, with its in-prompt
 auto-reject rules) is preserved separately under
