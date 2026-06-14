@@ -431,12 +431,22 @@ def load_model(checkpoint: Optional[str], base_model: str, load_in_4bit: bool = 
 # Inference (single image)
 # ---------------------------------------------------------------------------
 
-def run_inference_batch(model, processor, batch_items: list, no_system_prompt: bool = False, grpo_eval: bool = False, bare_question: bool = False) -> list:
+def run_inference_batch(model, processor, batch_items: list, no_system_prompt: bool = False, grpo_eval: bool = False, bare_question: bool = False, iadr1_native: bool = False) -> list:
     """batch_items: list of (image, product_name)"""
     texts = []
     all_images = []
     for img, product_name in batch_items:
-        if bare_question:
+        if iadr1_native:
+            # Exact IAD-R1 native eval prompt (vLLM_Qwen_detect.py build_prompt):
+            # system "Please answer by yes or no" + user "Are there any defects in the test image?"
+            messages = [
+                {"role": "system", "content": "Please answer by yes or no"},
+                {"role": "user", "content": [
+                    {"type": "image", "image": img},
+                    {"type": "text",  "text": "Are there any defects in the test image?"},
+                ]},
+            ]
+        elif bare_question:
             # Bare question only — matches SFT-Iter2 training prompt exactly
             # (rollout-and-filter wrote user message as "<image>\n{question}" where
             # question = "Are there any defects in the query image?")
@@ -624,6 +634,7 @@ def evaluate(
     no_system_prompt: bool = False,
     grpo_eval: bool = False,
     bare_question: bool = False,
+    iadr1_native: bool = False,
 ) -> None:
     label = "SFT " + Path(checkpoint).name if checkpoint else "baseline"
     logger.info("=" * 70)
@@ -702,7 +713,7 @@ def evaluate(
                 (Image.open(b["target_path"]).convert("RGB"), b["question"])  # question = product_name
                 for b in batch
             ]
-            predictions = run_inference_batch(model, processor, batch_items, no_system_prompt=no_system_prompt, grpo_eval=grpo_eval, bare_question=bare_question)
+            predictions = run_inference_batch(model, processor, batch_items, no_system_prompt=no_system_prompt, grpo_eval=grpo_eval, bare_question=bare_question, iadr1_native=iadr1_native)
         except Exception as e:
             import traceback
             logger.error(f"Batch {batch_start}-{batch_start+len(batch)} error: {e}\n{traceback.format_exc()}")
@@ -812,11 +823,42 @@ def evaluate(
                 f"  {prod:<30s}  acc={m['accuracy']*100:.1f}%  F1={m['f1']*100:.1f}%  n={m['samples']}"
             )
 
+    # Record exactly which prompt was used so the file is self-describing
+    # (the filename suffix alone has been a source of confusion: a file named
+    #  *_trainprompt.json may have been produced under --grpo-eval).
+    if iadr1_native:
+        prompt_mode = "iadr1native"
+        system_prompt = "Please answer by yes or no"
+        user_prompt = "Are there any defects in the test image?"
+    elif bare_question:
+        prompt_mode = "bareprompt"
+        system_prompt = None
+        user_prompt = "Are there any defects in the query image?"
+    elif grpo_eval:
+        prompt_mode = "grpoprompt"
+        system_prompt = None
+        user_prompt = GRPO_EVAL_PROMPT
+    elif no_system_prompt:
+        prompt_mode = "trainprompt_nosys"
+        system_prompt = None
+        user_prompt = make_train_prompt("{product_name}")
+    else:
+        prompt_mode = "trainprompt"
+        system_prompt = "Please answer by yes or no"
+        user_prompt = make_train_prompt("{product_name}")
+    prompt_info = {
+        "prompt_mode": prompt_mode,
+        "system_prompt": system_prompt,
+        "user_prompt": user_prompt,
+        "checkpoint": checkpoint,
+        "base_model": base_model,
+    }
+
     out_path = Path(output_file)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:
-        json.dump({"metrics": metrics, "results": results}, f, indent=2)
-    logger.info(f"\nResults saved → {out_path}")
+        json.dump({"prompt_info": prompt_info, "metrics": metrics, "results": results}, f, indent=2)
+    logger.info(f"\nResults saved → {out_path}  [prompt_mode={prompt_mode}]")
 
 
 # ---------------------------------------------------------------------------
@@ -858,6 +900,9 @@ if __name__ == "__main__":
                              "with no system message and no preamble. Matches SFT-Iter2 training prompt.")
     parser.add_argument("--grpo-eval", action="store_true",
                         help="Use exact GRPO training prompt (IAD-R1 style, no system message)")
+    parser.add_argument("--iadr1-native", action="store_true",
+                        help="Use IAD-R1's own native eval prompt (vLLM_Qwen_detect.py): system "
+                             "'Please answer by yes or no' + user 'Are there any defects in the test image?'")
     parser.add_argument("--load-in-4bit", action="store_true",
                         help="Load model in 4-bit quantization (bitsandbytes)")
     parser.add_argument("--batch-size",   type=int, default=4,
@@ -884,6 +929,7 @@ if __name__ == "__main__":
         no_system_prompt=args.no_system_prompt,
         grpo_eval=args.grpo_eval,
         bare_question=args.bare_question,
+        iadr1_native=args.iadr1_native,
         batch_size=args.batch_size,
         load_in_4bit=args.load_in_4bit,
     )

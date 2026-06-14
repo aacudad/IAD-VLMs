@@ -42,7 +42,7 @@ load_dotenv()
 # ---------------------------------------------------------------------------
 # Vertex AI credentials
 # ---------------------------------------------------------------------------
-_KEY_FILE = Path(__file__).parent / "vertexai-amir-key.json"
+_KEY_FILE = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", str(Path(__file__).parent / "vertexai-amir-key.json"))
 if _KEY_FILE.exists():
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(_KEY_FILE)
 else:

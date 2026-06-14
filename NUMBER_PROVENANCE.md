@@ -8,6 +8,154 @@ This file is a complete provenance ledger for **every number that appears in the
 
 ---
 
+## Figure provenance (thesis figures → producing script → source data)
+
+| Thesis figure | Producing script | Source data |
+|---|---|---|
+| t-SNE of `<type>` embeddings (Ch3, `fig:tsne-types`) | `scripts/05_figures/` → `analyze_anomaly_types.py` (cluster *numbers* re-derived by `results/recompute_corpus_stats.py`) | `Training/anomaly_type_analysis/{types.json, embeddings_2d.npy}` (8908 traces) |
+| Per-product gains base→SFT (Ch6, `fig:per-product`) | `make_qual_figures.py` | base + SFT-ckpt-564 DS eval JSONs (`results/`) |
+| Per-product SFT-Iter2 vs GRPO (Ch6, `fig:per-product-iter2-{dsmvtec,visa}`) | `make_iter2_overlays.py` | iter2 + GRPO-run2-ckpt-530 eval JSONs |
+| SFT bal-acc-by-epoch curves (Ch6, `fig:{dsmvtec,visa}-curve`) | per-checkpoint eval JSONs (all SFT runs) | `results/sft_qwen25vl_*/checkpoint-*/eval_*.json` |
+| GRPO reward/KL decoupling (Ch5/6) | `make_fig_grpo_decoupling.py` | run-2 `trainer_state.json` / `probe_curve.csv` |
+| Qualitative samples (Ch6, `qual_*`) | `make_qual_figures.py` | DS-MVTec images + model outputs |
+| Pipeline overview (Ch4, `fig:pipeline-overview`) | `docs/pipeline_overview.tex` (TikZ) | — |
+
+> Author note (2026-06-14): more per-product graphs are wanted; new ones should be generated from the
+> `results/` eval JSONs and added here with their producing script + source. The figure scripts live in
+> [`scripts/05_figures/`](scripts/05_figures/).
+
+---
+
+## Revision log
+
+### 2026-06-14 — §2 unverifiable items resolved (GRPO-on-C table, estimator probe, run-1 seed)
+**2b — `tab:grpo-on-c` (§6.13) filled with the verified 4-epoch curve; ckpt-795 row dropped.**
+"Rotated away" = the trainer's `save_total_limit` deletes older ~16 GB checkpoints mid-training. `ls outputs/grpo_qwen25vl_7b_abc_C_grpo/` shows only checkpoint-{265,530,1060,1590,1855,2120}; **checkpoint-795 and checkpoint-1325 dirs no longer exist**, so the old "ckpt-795 = 80.76/69.69" row was unrecomputable and was removed. Verified surviving curve (vs Arm-C init 82.80/72.07), recomputed via `compute_ba.py`:
+
+| ckpt | DS | VisA | Δ_DS | Δ_VisA |
+|---|---|---|---|---|
+| 265 (ep0.5) | 80.61 | 72.68 | −2.19 | +0.61 |
+| 530 (ep1.0) | 80.32 | 70.34 | −2.48 | −1.73 |
+| 1060 (ep2.0) | 81.20 | 69.17 | −1.60 | −2.90 |
+| 1590 (ep3.0) | 80.70 | 68.70 | −2.10 | −3.37 |
+| 1855 (ep3.5) | 78.81 | 67.58 | −3.99 | −4.49 |
+| 2120 (ep4.0) | 80.38 | 67.86 | −2.42 | −4.21 |
+
+Every checkpoint is below the SFT init on DS; VisA degrades monotonically. Reward (ckpt-2120 `trainer_state`): trended **1.92 → 2.38** (peak 3.25) — the old "1.99→2.54" (rotated-window figure) was corrected in `06_results.tex` L570.
+
+**2c — estimator ablation is probe-based (already labelled; clarified).** `tab:grpo-estimator-ablation` uses a fast **400-sample probe** (`outputs/grpo_probe_{ctrl,drgrpo,g2rpo}/probe_curve.csv`, now shipped to `results/grpo_probe_curves/`). Its "init" row 84.52/71.89 is the probe reading and runs **~1.7 pp above** the full 1670-sample eval (Arm-C full = 82.80); a clause was added to the caption so the probe figures are not compared to full-eval numbers. No CM JSON exists for the probe points — not recomputable, correctly flagged.
+
+**2d — run-1 vs run-2 are the SAME seed (NOT a seed experiment).** Both `…ep3_full_run1` and `…_run2` have **seed = 42** (verified in `training_args.bin`), identical lr/G/β. So the run-1 (81.65) vs run-2 (82.73) gap at ckpt-530 is **run-to-run non-determinism** (stochastic GRPO rollouts), **not seed sensitivity**. The Ch7 (L1) limitation was reframed accordingly. Run-1 eval JSONs (ckpt-315, ckpt-530) shipped to `results/grpo_qwen25vl_7b_6k_frozen_ep3_full_run1/` so the comparison is reproducible. (NB: the iter-2 `tab:iter2-progression` ckpt-795 at L161 is a *different*, on-disk checkpoint — left as-is.)
+
+
+
+### 2026-06-14 — Canonical generation pipeline added (`realiad_v4/`) — TWO findings for the author
+The authoritative Real-IAD generation pipeline (`realiad_v4_pipeline.zip`) was added to the repo at
+[`scripts/00_generate/realiad_v4/`](scripts/00_generate/realiad_v4/) (scripts only; `.env` and the Vertex
+service-account key were excluded, HF token scrubbed to an env lookup).
+
+1. **Prompt — reverses an earlier ledger claim.** `generate_realiad_traces_v4.py` (line 106) loads
+   **`inspector_prompt_test_v2.txt`** — the *structured* prompt with the six-phase template, auto-reject
+   rules, and the defect-type vocabulary. So Appendix B's structured prompt, the "six-phase template", the
+   "auto-reject rules", and the type-vocabulary description are **accurate to the real generator** — NOT a
+   redaction/idealisation as earlier §3 notes (and my "1.4d mischaracterisation") claimed. Those earlier
+   notes were based on the wrong file (`inspector_prompt.txt`, which is *not* the v4 generator's prompt).
+   **Action:** retract the §3 "production prompt is a 3–5 sentence prompt / App-B is idealised" notes and the
+   1.4d "controlled vocabulary mischaracterised" item.
+
+2. **Model — RESOLVED by author (2026-06-14).** The author confirms: the **headline Real-IAD** AnomalyThink
+   corpus was generated with **Gemini 2.5-Flash** (so the thesis's "Gemini 2.5-Flash" is CORRECT — no change),
+   while the **Real-IAD-Variety** extension used **Gemini 3 Flash preview**. For consistency the thesis presents
+   both as Gemini 2.5-Flash. Note the bundled v4 script (`generate_realiad_traces_v4.py`, line 64) and the
+   variety generator (line 66) are both set to `google/gemini-3-flash-preview` — a later iteration of the
+   scripts, not the exact 2.5-Flash generator that produced the headline corpus. **No thesis edit required.**
+
+
+
+### 2026-06-14 — Recomputed corpus descriptors (token-length + t-SNE clusters)
+Script: [`results/recompute_corpus_stats.py`](results/recompute_corpus_stats.py) (run in conda env `llama_sft`). Sources: 6K/15K trace JSONs (Qwen2.5-VL tokenizer) and `Training/anomaly_type_analysis/{types.json (8908 raw type strings), embeddings_2d.npy (8908×2 t-SNE coords)}`.
+
+**`<think>` length (Ch3 L171 / L236):**
+| corpus | tokens mean | tokens std | token range | words mean |
+|---|---|---|---|---|
+| 6K | **164.7** | **13.5** | [121, 223] (p5 142, p95 187) | 136.8 |
+| 15K | 165.2 | 14.8 | [53, 216] | 136.8 |
+
+Thesis says "≈170 tokens, std ≈28, range 160–270" → correct **≈165 tokens, std ≈13.5, range 121–223**. Word mean 141 → **137** (identical for 6K and 15K, confirming the "count not length" claim).
+
+**t-SNE type clusters (Ch3 L179)** — recompute matches the ledger exactly:
+| quantity | thesis | **recomputed** |
+|---|---|---|
+| Scratch cluster size (exact "Scratch") | 600 | **500** (substr "scratch" = 944) |
+| Missing-component size (exact) | 180 | **162** |
+| Scratch↔Missing centroid distance | 148.6 | **155.3** |
+| within-cluster radius (mean of the two) | 16.5 | **15.3** |
+| separation ratio (dist/radius) | 9.0 | **10.1** |
+
+(Note: `types.json` holds *raw* type strings — e.g. "Crease", "Opening or disruption of the seal" — not a closed vocabulary; see the 1.4d vocabulary note.)
+
+
+
+### 2026-06-13 — §1.4 batch applied (7 data-backed swaps + contrib-4 scope fix)
+Each value recomputed from disk this session; applied to the thesis and zip re-synced.
+
+| Item | Location(s) | was → now | Source |
+|---|---|---|---|
+| 1.4a | abstract (i), intro contrib 2, Ch6 takeaway (Ch6 SOTA L335 already said 1.8) | "~1 pp" → **~1.8 pp** | 81.92 − 80.16 = 1.76, recanon + ckpt-564 |
+| 1.4b | intro contrib 4 | "+13.6 pp over base" → **+11.2 pp (SFT over base)** | 80.16 − 69.01 = 11.15; makes it consistent with the base→SFT per-product gains it cites |
+| 1.4g | Ch4 L29 | 3B "28 transformer layers" → **36** (7B 28 kept) | 3B `config.json` text_config.num_hidden_layers=36 |
+| 1.4h | Ch4 L81 | 7B-unfrozen-15K "22.5 h" → **12.2 h** (6.9 h / 2.4 h kept — verified 6.93/2.35) | `all_results.json` train_runtime 43 876 s |
+| 1.4k | Ch5 L161 | KL "[0.003, 0.095]" → **[0.0, 0.117]** (+ "13/530 steps >0.095") | run-2 ckpt-530 `trainer_state.json` |
+| 1.4n | Ch7 L108 | run-1 ckpt-530 "80.6%" → **81.65%** | run-1 ckpt-530 eval JSON (80.63 = ckpt-315) |
+
+Already-done before this batch (verified, no edit needed): **1.4j** (GRPO sample count — no "6,500"/"13,000" left in Ch5/App-A), **1.4l** (Ch6 caption already "the remaining thirteen gain").
+
+### 2026-06-13 — 1.4m is NOT an error (ledger was wrong; thesis is correct)
+The thesis claim "SFT loss 0.34 at step 752 / epoch 4" is **correct**: the headline 7B-frozen-6K run's `trainer_state.json` ends at **global_step 752, epoch 4.0**, with loss ~0.34 at the last logged step (step 750 = 0.344). The earlier ledger entry claiming "run ends at step 560, loss ~0.57" was mistaken. **No thesis change.** (The reported *checkpoint* is ckpt-564 = ep3 = best DS; the run itself continued to ep4.)
+
+### 2026-06-13 — Matched-LR unfrozen pilot located (justifies the lower unfrozen LR; resolves the frozen-vs-unfrozen confound)
+The lower LR used for the unfrozen cells (1e-6) is **not** an uncontrolled confound: a matched-learning-rate unfrozen run exists on disk and shows unfreezing hurts even at the *frozen* LR.
+
+- **Run:** `outputs/sft_qwen25vl_7b_zeroshot_6k/` — 7B, `freeze_vision_tower: false`, **LR 1e-5** (= the frozen cells' LR; confirmed in `checkpoint-376/training_args.bin`), cosine, 2 epochs, dataset = 6K SFT pool (`iad_sft_6k_train`). DS-only eval (`eval_dsmvtec_full_trainprompt_all.json`), no VisA.
+- **Result (DS-MVTec BA):** ckpt-100 = 60.22 → **ckpt-200 = 72.82 (peak, ~ep1)** → **ckpt-376 = 69.27 (ep2)** — peaks then **degrades** with further training.
+- **Matched-LR contrast (both 7B, 6K pool, LR 1e-5, only frozen→unfrozen differs):** frozen = **80.16** (ckpt-564) vs unfrozen = **72.82 peak / 69.27 ep2**. Unfreezing costs ~7.3 pp DS *at identical LR* and destabilises training.
+- **Second matched-LR unfrozen run** (`outputs/sft_qwen25vl_7b_zeroshot/`, small set, 1e-5, unfrozen): ckpt-188 DS = **71.86** — same ~72 ceiling. (This 71.86 is also the value mis-copied into the old 3B-Unfrozen-15K table row.)
+- **Claim it supports:** the unfrozen cells used 1e-6 to *stabilise* training (prevent the 1e-5 degradation), not to raise the ceiling (1e-5 peak 72.8 ≈ 1e-6 15K peak 72.1). Unfreezing loses to frozen at every LR tried. Cited in `06_results.tex` (frozen>unfrozen paragraph). Removes the need for a confound caveat in the "Why low LR" rationale.
+
+### 2026-06-13 — SFT hyperparameter EVIDENCE (gathered for author greenlight; thesis NOT yet edited)
+Authoritative values read from each run's saved `outputs/<run>/checkpoint-*/training_args.bin` + YAML. **The thesis SFT hyperparameter tables (Ch4 `tab:sft-hp` L106-120 and App-A `tab:A.2` L54-66 + shared-settings line L66) are wrong on nearly every field.**
+
+| Run | LR | schedule | warmup | wd | AdamW β2 | per-dev BS | GA | cutoff | ep | seed |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 7B-frozen-6K (headline) | **1e-5** | **cosine** | **20** | **0.0** | **0.999** | 4 | 4 | **12144** | 4 | 42 |
+| 3B-frozen-6K | 1e-5 | cosine | 20 | 0.0 | 0.999 | 4 | 4 | 12144 | 4 | 42 |
+| 7B-frozen-15K | 1e-5 | cosine | 50 | 0.0 | 0.999 | 16 | 1 | 12144 | 4 | 42 |
+| 7B-unfrozen-15K | **1e-6** | cosine | 50 | 0.0 | 0.999 | 16 | 1 | 12144 | 4 | 42 |
+| 3B-frozen-15K | 1e-5 | cosine | 50 | 0.0 | 0.999 | 4 | 4 | 12144 | 4 | 42 |
+| 3B-unfrozen-15K | 1e-6 | cosine | 50 | 0.0 | 0.999 | 4 | 4 | 12144 | 4 | 42 |
+| Arm-C SFT (7B) | 1e-5 | cosine | 20 | 0.0 | 0.999 | 8 | 2 | 12144 | 4 | 42 |
+
+**Thesis claims vs actual:** LR `2e-5 (all cells)` → **1e-5 frozen / 1e-6 unfrozen**; schedule `linear` → **cosine**; warmup `100 steps` → **20 (6K) / 50 (15K)**; weight decay `0.01` → **0.0**; AdamW β2 `0.95` → **0.999**; sequence length `4096` → **12144** (`cutoff_len`); per-device BS/GA `frozen 4/4, unfrozen 2/8` → **6K & 3B: 4/4; 7B-15K: 16/1; Arm-C: 8/2** (no run used 2/8). Effective batch size: thesis says **16**, but with 2 GPUs the real EBS = BS×GA×2 = **32** (e.g. 4×4×2). Correct as written: epochs 4, seed 42, bf16, ZeRO-3 CPU offload, grad-clip 1.0.
+
+> **Status: AWAITING AUTHOR GREENLIGHT** before editing the thesis tables/prose. The "Why linear schedule" and "Why low LR (2e-5→5e-5 collapse)" rationale paragraphs in Ch4 will also need rewriting, since they argue for a linear schedule and a 2e-5 LR that were never used (the runs used cosine + 1e-5/1e-6).
+
+
+
+### 2026-06-13 — `tab:sft-summary` 15K rows reselected to true best-DS epoch
+The four-factor SFT summary table's "Best ep." column was inconsistent: 3 of the 4 15K cells were **not** at the epoch that maximises DS-MVTec balanced accuracy (the primary metric). All checkpoints of these runs carry full DS + VisA eval JSONs on disk, so the correct best-DS epoch is recomputable. **Selection criterion = highest DS-MVTec BA.** The VisA/Accuracy/F1 columns report *that same checkpoint* (not independently maximised). Changes applied to `chapters/06_results.tex` tab:sft-summary:
+
+| Cell | was (ep, DS/VisA/Acc/F1) | now (ep, DS/VisA/Acc/F1) | source checkpoint (DS + VisA `eval_*_full_trainprompt.json`) |
+|---|---|---|---|
+| 3B-Frozen-15K | ep4 — 68.65 / 64.85 / 73.59 / 81.49 | **ep1 — 69.56 / 59.65 / 68.80 / 76.18** | `outputs/sft_qwen25vl_3b_15k_frozen/checkpoint-453/` |
+| 7B-Frozen-15K | ep3 — 71.66 / 64.28 / 80.12 / 86.89 | **ep4 — 72.60 / 66.94 / 78.86 / 85.66** | `outputs/sft_qwen25vl_7b_15k_frozen/checkpoint-1812/` |
+| 7B-Unfrozen-15K | ep4 — 70.27 / 58.16 / 65.21 / 71.51 | **ep3 — 72.08 / 58.60 / 68.50 / 75.02** | `outputs/sft_qwen25vl_7b_15k_unfrozen/checkpoint-1359/` |
+
+(3B-Unfrozen-15K stays ep4 = 68.58/59.60/69.58/77.34 — ep4 *is* its best DS; 3B-Frozen-6K stays ep4 = 69.08; 7B-Frozen-6K headline stays ep3 = 80.16 — both already at best DS.) Per-epoch curves for all four 15K runs are in `results/eval_ba_inventory.txt`.
+
+**Dependent prose reconciled** (same file): the "frozen > unfrozen" paragraph's "5–9 pp VisA gap" was rewritten (true only for 7B: 66.94 vs 58.60 = 8.3 pp; 3B is now negligible, 59.65 vs 59.60, a side-effect of selecting 3B-Frozen-15K ep1 by DS); and "7B > 3B by 2–11 pp" → "3–11 pp". The caption now states the selection criterion explicitly.
+
+---
+
 ## How to read this ledger
 
 ### Balanced accuracy (BA) formula

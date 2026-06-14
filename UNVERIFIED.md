@@ -152,9 +152,7 @@ These have data on disk that contradicts them; each should be corrected at the c
 | `06_results` L342 — products that gain | "fifteen others gain" | **thirteen** (wood & tile regress) | per-product recompute |
 | `06_results` L415 — SFT loss at "step 752 / 0.34 / ep4" | step 752, loss 0.34 | run ends at **step 560** (no step 752); final loss **~0.57**. "752/0.34/ep4" is 3B-run cadence | ckpt-564 trainer_state |
 | `07_discussion` L108 — GRPO run-1 DS at ckpt-530 | 80.6% | **81.65%** (80.63 is run-1 *ckpt-315*) — wrong checkpoint, overstates the seed gap | [`results/grpo_qwen25vl_7b_6k_frozen_ep3_full_run1/`](results/) (run-1 not shipped; see §2) |
-| `08_concl` contrib 5 — metal_nut gain (base→GRPO) | +25.8 | **+29.6** (57.86 → 87.47) | base + GRPO ckpt-530 |
-| `08_concl` contrib 5 — cable gain | +19.2 | **+17.1** (51.09 → 68.16) | same |
-| `08_concl` contrib 5 — pill gain | +16.0 | **+15.2** (60.23 → 75.45) | same |
+| `08_concl` contrib 5 — metal_nut/cable/pill gains | +25.8 / +19.2 / +16.0 | **CORRECT as written** — these are **base→SFT** gains (verified: 57.9→83.6, 51.1→70.3, 60.2→76.2), matching the Ch6 per-product chart the conclusion cites. The earlier "base→GRPO correction" (+29.6/+17.1/+15.2) was **mis-scoped**; no change needed. | base + SFT ckpt-564 |
 | `08_concl` RQ1 L31 — mean trace length | ≈141 words | **≈137 words** (136.8 for *both* 6K and 15K; the equality claim holds, the absolute does not) | corpus recompute |
 | App-A Table A.3 — GRPO warmup_ratio | 0.1 | **None** (schedule linear is correct; warmup_ratio not set in run-2 args) | run-2 `training_args.bin` |
 | App-A Table A.3 — GRPO AdamW beta2 | 0.95 | **0.999** | run-2 `training_args.bin` |
@@ -179,7 +177,7 @@ necessarily *wrong*, but they are **unsupported** and should be flagged in the t
 
 | Item | Location | Why it can't be checked | What would be needed |
 |---|---|---|---|
-| **3B-Unfrozen-6K** and **7B-Unfrozen-6K** sft-summary rows | `06_results.tex` tab:sft-summary L68 & L73 | These configs were **never run** — no output dir, no yaml in [`configs/sft/`](configs/sft/). The printed rows duplicate the 15K-unfrozen data. | Either run the two missing 6K-unfrozen cells, or **remove the rows** and state the grid is not fully populated (it is described as 16/32-cell but is short by 2 cells). |
+| **3B-Unfrozen-6K** and **7B-Unfrozen-6K** sft-summary rows | `06_results.tex` tab:sft-summary | 3B-unfrozen-6K was **never run** (no dir, no yaml). 7B-unfrozen-6K has only a **partial** run (`outputs/sft_qwen25vl_7b_zeroshot_6k`, 2 epochs, DS-only, best DS 72.82) — never extended to 4 epochs/VisA. The previously-printed rows had duplicated 15K-unfrozen data. | **RESOLVED (2026-06-13):** decided **not** to run them — unfreezing is already shown to give no DS gain and to hurt VisA at 15K, and IAD-R1 recommends a frozen ViT. Both rows removed; grid reframed to **6 configurations** (unfrozen evaluated at 15K only) in intro / Ch4 §design / 06_results L41 / Ch6, with the omission stated as a deliberate, literature-backed design choice. |
 | **GRPO-on-C ckpt-795** (DS 80.76 / VisA 69.69, deltas −2.04/−2.38) | `06_results.tex` tab:grpo-on-c L560; `07_discussion` L78 | Checkpoint dir was **rotated away** by `save_total_limit`. The shipped [`results/grpo_qwen25vl_7b_abc_C_grpo/`](results/grpo_qwen25vl_7b_abc_C_grpo/) has ckpt-265/530/1060 (and 1325/1590/1855) but **no ckpt-795**. | Re-run GRPO-on-C and re-save ckpt-795, or report only the surviving checkpoints (265: −2.19, 530: −2.48, 1060: −1.60) and drop the 795 row. The "1.99 → 2.54 reward rise" attributed to the ckpt-795 window is likewise unverifiable (surviving ckpt-1060 trainer_state shows 1.92 → 2.09). |
 | **Estimator-ablation step-0 "init" cells** (DS 84.52 / VisA 71.89) | `06_results.tex` tab:grpo-estimator-ablation L578; `07_discussion` L78 | These live only in `probe_curve.csv` (probe-only fast eval); there is **no tp/tn/fp/fn JSON** for step 0, and the probe dirs are **not shipped in this repo's `results/`**. The 84.52 differs from the full-eval Arm-C 82.80 (probe runs ~1.7 pp high). | Ship the probe CSVs/dirs, or recompute step-0 on the full subset to get a CM-backed number. State clearly that probe figures are not full-eval comparable. |
 | **GRPO run-1** ckpt-315/530 numbers | `07_discussion` L108 (run-1 vs run-2 seed comparison) | The run-1 output dir is **not shipped** in `results/` (only run-2 is). The §1.4 correction (run-1 ckpt-530 = 81.65, not 80.6) was made from the original outputs tree, not this repo. | Ship run-1 eval JSONs if the seed-sensitivity claim is to be defensible from this repo. |
@@ -234,8 +232,8 @@ sourced, or removed.
 
 ### Ch.4 SFT
 - **"1K-trace pilot sweep"** (L95) — no 1K-pilot artifact on disk.
-- **"At 5e-5 the model collapses to an empty trace within the first epoch"** (L123) — no logged collapse run.
-- **"cosine under-utilises the last 25% of training; linear+100-step warmup gave higher BA"** (L125) —
+- ~~**"At 5e-5 the model collapses to an empty trace"**~~ — **RESOLVED 2026-06-13: DELETED.** Verified no 5e-5 run exists in any YAML or training_args.bin on disk; the anecdote was removed from Ch4.
+- ~~**"cosine under-utilises... linear+100-step warmup gave higher BA"**~~ — **RESOLVED 2026-06-13: paragraph rewritten** (runs used cosine + 20/50 warmup; the false linear claim removed). Original note for the record:
   **CONTRADICTED by configs**: every SFT run actually used **cosine** with 20/50-step warmup. The deployed
   runs are the *opposite* of what this rationale recommends. The "100-step / 1.5% of budget" figure is also
   internally inconsistent (actual 20/752 ≈ 2.7%).
