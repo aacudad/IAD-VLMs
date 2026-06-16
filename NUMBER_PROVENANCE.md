@@ -16,7 +16,8 @@ This file is a complete provenance ledger for **every number that appears in the
 | Per-product gains base→SFT (Ch6, `fig:per-product`) | `make_qual_figures.py` | base + SFT-ckpt-564 DS eval JSONs (`results/`) |
 | Per-product SFT-Iter2 vs GRPO (Ch6, `fig:per-product-iter2-{dsmvtec,visa}`) | `make_iter2_overlays.py` | iter2 + GRPO-run2-ckpt-530 eval JSONs |
 | SFT bal-acc-by-epoch curves (Ch6, `fig:{dsmvtec,visa}-curve`) | per-checkpoint eval JSONs (all SFT runs) | `results/sft_qwen25vl_*/checkpoint-*/eval_*.json` |
-| GRPO reward/KL decoupling (Ch5/6) | `make_fig_grpo_decoupling.py` | run-2 `trainer_state.json` / `probe_curve.csv` |
+| GRPO reward/accuracy decoupling, 3-estimator (Ch6, `fig:grpo-decoupling` → `figures/grpo_estimator_decoupling.pdf`) | `scripts/05_figures/make_fig_grpo_decoupling.py` | the three 400-sample probe curves `outputs/grpo_probe_{ctrl,drgrpo,g2rpo}/probe_curve.csv` (shipped to `results/grpo_probe_curves/` + `results/grpo_probe_{ctrl,drgrpo,g2rpo}/`). Columns: `step,mean_reward,probe_ds,probe_visa,…`. Panel (a)=`probe_ds` per step; panel (b)=`mean_reward` (5-step MA). The dotted "SFT init (DS-MVTec 84.5)" = the `step 0 / flag=probe-init` row (`probe_ds=84.52`, hardcoded `INIT_DS=84.52` in the script). **NB this is the 400-sample probe, which reads ~1.7 pp above the full 1,670-sample eval (Arm-C full = 82.80) — see revision entry "2c"; no per-sample CM JSON exists for probe points, so they are not recomputable beyond the CSVs.** |
+| GRPO run-2 reward/KL training curves (App H, `curve_grpo_*`) | App-H training-curve script (matplotlib) | run-2 `checkpoint-1060/trainer_state.json` `log_history` (reward, accuracy_reward, consistency_reward, kl, completion_length) |
 | Qualitative samples (Ch6, `qual_*`) | `make_qual_figures.py` | DS-MVTec images + model outputs |
 | Pipeline overview (Ch4, `fig:pipeline-overview`) | `docs/pipeline_overview.tex` (TikZ) | — |
 
