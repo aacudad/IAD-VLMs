@@ -76,6 +76,71 @@ GRPO_EVAL_PROMPT = (
 
 
 # ---------------------------------------------------------------------------
+# Gemini-2.5-Flash benchmark mode (--gemini): identical data/GT/metrics, only the
+# model call is swapped for a Gemini call (Vertex AI). Used to produce a directly
+# comparable Gemini-2.5-Flash reference row on the SAME DS-MVTec / VisA eval set.
+# ---------------------------------------------------------------------------
+GEMINI_VERTEX_PROJECT = "project-366f417b-7062-4a00-bc8"
+GEMINI_VERTEX_LOCATION = "global"
+GEMINI_VERTEX_KEY = "/bulk/aacudad/reasoning_traces/vertexai-amir-key.json"
+
+GEMINI_SYSTEM_PROMPT = (
+    "You are an expert industrial visual-inspection system. You are given a single image of a "
+    "manufactured product. Inspect it carefully and decide whether it contains any defect (anomaly).\n\n"
+    "Respond with ONLY the following XML tags and nothing else:\n"
+    "- If a defect IS present:\n"
+    "<think>one or two sentences of reasoning grounded in the visible evidence</think>"
+    "<type>the defect type</type><location>where in the image the defect is</location>"
+    "<answer>Yes</answer>\n"
+    "- If NO defect is present (the product looks normal):\n"
+    "<answer>No</answer>"
+)
+
+
+def make_gemini_user_text(product_name: str) -> str:
+    return f"Inspect this image of the {product_name} and report whether it has any defect."
+
+
+def build_gemini_client(model_name: str):
+    os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", GEMINI_VERTEX_KEY)
+    from google import genai
+    client = genai.Client(vertexai=True, project=GEMINI_VERTEX_PROJECT, location=GEMINI_VERTEX_LOCATION)
+    logger.info(f"Gemini client ready: model={model_name} (Vertex {GEMINI_VERTEX_PROJECT}/{GEMINI_VERTEX_LOCATION}), thinking_budget=0")
+    return client
+
+
+def gemini_predict_one(client, model_name: str, image, product_name: str, max_retries: int = 6) -> str:
+    """One Gemini call: structured-prompt, thinking_budget=0, returns raw text (with <answer> tags)."""
+    import io
+    import time as _time
+    from google.genai.types import Content, Part, GenerateContentConfig, ThinkingConfig
+    bio = io.BytesIO()
+    image.save(bio, format="JPEG")
+    parts = [
+        Part.from_bytes(data=bio.getvalue(), mime_type="image/jpeg"),
+        Part.from_text(text=make_gemini_user_text(product_name)),
+    ]
+    cfg = GenerateContentConfig(
+        system_instruction=[Part.from_text(text=GEMINI_SYSTEM_PROMPT)],
+        temperature=0.0,
+        max_output_tokens=700,
+        thinking_config=ThinkingConfig(thinking_budget=0),
+    )
+    delay = 4.0
+    for _ in range(max_retries):
+        try:
+            resp = client.models.generate_content(
+                model=model_name, contents=[Content(role="user", parts=parts)], config=cfg,
+            )
+            return resp.text or ""
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"  gemini retry ({type(e).__name__}: {str(e)[:80]})")
+            _time.sleep(delay)
+            delay = min(delay * 1.8, 60.0)
+    return ""
+
+
+# ---------------------------------------------------------------------------
 # Sub-dataset helper
 # ---------------------------------------------------------------------------
 
@@ -635,8 +700,10 @@ def evaluate(
     grpo_eval: bool = False,
     bare_question: bool = False,
     iadr1_native: bool = False,
+    gemini: bool = False,
+    gemini_model: str = "gemini-2.5-flash",
 ) -> None:
-    label = "SFT " + Path(checkpoint).name if checkpoint else "baseline"
+    label = f"Gemini {gemini_model}" if gemini else ("SFT " + Path(checkpoint).name if checkpoint else "baseline")
     logger.info("=" * 70)
     logger.info(f"Qwen2.5-VL-7B Evaluation — {label}")
     logger.info("=" * 70)
@@ -656,10 +723,17 @@ def evaluate(
     logger.info(f"Bare question:   {bare_question}")
     logger.info(f"Batch size:      {batch_size}")
 
-    model, processor = load_model(checkpoint, base_model, load_in_4bit=load_in_4bit)
+    if gemini:
+        from concurrent.futures import ThreadPoolExecutor
+        gclient = build_gemini_client(gemini_model)
+        model, processor = None, None
+    else:
+        model, processor = load_model(checkpoint, base_model, load_in_4bit=load_in_4bit)
 
     logger.info("Building image map...")
-    image_map = build_image_map(DATA_PATHS["realiad_images_root"], DATA_PATHS["mmad_images_root"])
+    # Gemini benchmark is MMAD-only (DS-MVTec / VisA) -> skip the slow 150K+ Real-IAD rglob
+    realiad_root = "" if (gemini and (ds_mvtec_only or visa_only)) else DATA_PATHS["realiad_images_root"]
+    image_map = build_image_map(realiad_root, DATA_PATHS["mmad_images_root"])
     logger.info(f"Found {len(image_map)} images")
 
     data = load_balanced_test_data(DATA_PATHS["test"], num_samples, realiad_only, mmad_only, mmad_all, mmad_official, mmad_official_iad_r1, ds_mvtec_only, visa_only, realiad_4k)
@@ -713,7 +787,12 @@ def evaluate(
                 (Image.open(b["target_path"]).convert("RGB"), b["question"])  # question = product_name
                 for b in batch
             ]
-            predictions = run_inference_batch(model, processor, batch_items, no_system_prompt=no_system_prompt, grpo_eval=grpo_eval, bare_question=bare_question, iadr1_native=iadr1_native)
+            if gemini:
+                with ThreadPoolExecutor(max_workers=max(1, len(batch_items))) as _pool:
+                    predictions = list(_pool.map(
+                        lambda it: gemini_predict_one(gclient, gemini_model, it[0], it[1]), batch_items))
+            else:
+                predictions = run_inference_batch(model, processor, batch_items, no_system_prompt=no_system_prompt, grpo_eval=grpo_eval, bare_question=bare_question, iadr1_native=iadr1_native)
         except Exception as e:
             import traceback
             logger.error(f"Batch {batch_start}-{batch_start+len(batch)} error: {e}\n{traceback.format_exc()}")
@@ -826,7 +905,11 @@ def evaluate(
     # Record exactly which prompt was used so the file is self-describing
     # (the filename suffix alone has been a source of confusion: a file named
     #  *_trainprompt.json may have been produced under --grpo-eval).
-    if iadr1_native:
+    if gemini:
+        prompt_mode = "gemini25flash_structured"
+        system_prompt = GEMINI_SYSTEM_PROMPT
+        user_prompt = make_gemini_user_text("{product_name}")
+    elif iadr1_native:
         prompt_mode = "iadr1native"
         system_prompt = "Please answer by yes or no"
         user_prompt = "Are there any defects in the test image?"
@@ -852,6 +935,8 @@ def evaluate(
         "user_prompt": user_prompt,
         "checkpoint": checkpoint,
         "base_model": base_model,
+        "model": gemini_model if gemini else (checkpoint or base_model),
+        "thinking_budget": 0 if gemini else None,
     }
 
     out_path = Path(output_file)
@@ -903,6 +988,11 @@ if __name__ == "__main__":
     parser.add_argument("--iadr1-native", action="store_true",
                         help="Use IAD-R1's own native eval prompt (vLLM_Qwen_detect.py): system "
                              "'Please answer by yes or no' + user 'Are there any defects in the test image?'")
+    parser.add_argument("--gemini", action="store_true",
+                        help="Benchmark Gemini-2.5-Flash (Vertex AI) instead of a local Qwen model, using the "
+                             "structured think/type/location/answer prompt + thinking_budget=0. Same data/GT/metrics.")
+    parser.add_argument("--gemini-model", type=str, default="gemini-2.5-flash",
+                        help="Gemini model id for --gemini (default: gemini-2.5-flash)")
     parser.add_argument("--load-in-4bit", action="store_true",
                         help="Load model in 4-bit quantization (bitsandbytes)")
     parser.add_argument("--batch-size",   type=int, default=4,
@@ -930,6 +1020,8 @@ if __name__ == "__main__":
         grpo_eval=args.grpo_eval,
         bare_question=args.bare_question,
         iadr1_native=args.iadr1_native,
+        gemini=args.gemini,
+        gemini_model=args.gemini_model,
         batch_size=args.batch_size,
         load_in_4bit=args.load_in_4bit,
     )

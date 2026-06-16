@@ -1,0 +1,27 @@
+{
+  "total": 14472,
+  "union": {
+    "completely_correct": 13626,
+    "wrong": 716,
+    "correct": 129,
+    "completely_wrong": 1
+  },
+  "six_k_subset": {
+    "completely_correct": 5797,
+    "wrong": 146,
+    "correct": 57
+  },
+  "by_source": {
+    "sft": {
+      "completely_correct": 9669,
+      "wrong": 464,
+      "correct": 102,
+      "completely_wrong": 1
+    },
+    "grpo": {
+      "completely_correct": 3957,
+      "wrong": 252,
+      "correct": 27
+    }
+  }
+}
