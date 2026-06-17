@@ -107,6 +107,10 @@ def parse_args():
                    default="/bulk/aacudad/reasoning_traces/Training/datasets_small_new_v4/combined_6k_train.json")
     p.add_argument("--grpo_pool",
                    default="/bulk/aacudad/reasoning_traces/Training/datasets_small_15k_c1_only/grpo_train.json")
+    p.add_argument("--sft_label", default="sft_6k",
+                   help="source_pool label for items from --sft_pool")
+    p.add_argument("--grpo_label", default="grpo_4k",
+                   help="source_pool label for items from --grpo_pool")
     p.add_argument("--output_jsonl", required=True)
     p.add_argument("--k", type=int, default=8, help="rollouts per item")
     p.add_argument("--temperature", type=float, default=0.7)
@@ -267,10 +271,10 @@ def main():
     print(f"[init] torch.cuda.device_count()={torch.cuda.device_count()}", flush=True)
 
     print(f"[init] Loading pools …", flush=True)
-    items = load_pool(args.sft_pool, "sft_6k") + load_pool(args.grpo_pool, "grpo_4k")
+    items = load_pool(args.sft_pool, args.sft_label) + load_pool(args.grpo_pool, args.grpo_label)
     print(f"[init] Total items: {len(items)} "
-          f"({sum(1 for x in items if x['source_pool']=='sft_6k')} sft + "
-          f"{sum(1 for x in items if x['source_pool']=='grpo_4k')} grpo)", flush=True)
+          f"({sum(1 for x in items if x['source_pool']==args.sft_label)} {args.sft_label} + "
+          f"{sum(1 for x in items if x['source_pool']==args.grpo_label)} {args.grpo_label})", flush=True)
 
     if args.limit:
         items = stratified_sample(items, args.limit, args.seed)

@@ -1,0 +1,21 @@
+════════ KL-DRIFT BA TABLE (grpo_abc_C_kl0.1_halfep) ════════
+checkpoint-53 dsmvtec: /bulk/aacudad/reasoning_traces/outputs/grpo_abc_C_kl0.1_halfep/checkpoint-53/eval_dsmvtec_full_trainprompt.json
+checkpoint-53 dsmvtec:   n=1670  TP903 TN392 FP52 FN323  BA=80.97  acc=77.54  F1=82.81
+checkpoint-53 visa: /bulk/aacudad/reasoning_traces/outputs/grpo_abc_C_kl0.1_halfep/checkpoint-53/eval_visa_full_trainprompt.json
+checkpoint-53 visa:   n=2141  TP591 TN854 FP90 FN606  BA=69.92  acc=67.49  F1=62.94
+checkpoint-106 dsmvtec: /bulk/aacudad/reasoning_traces/outputs/grpo_abc_C_kl0.1_halfep/checkpoint-106/eval_dsmvtec_full_trainprompt.json
+checkpoint-106 dsmvtec:   n=1670  TP873 TN401 FP43 FN353  BA=80.76  acc=76.29  F1=81.51
+checkpoint-106 visa: /bulk/aacudad/reasoning_traces/outputs/grpo_abc_C_kl0.1_halfep/checkpoint-106/eval_visa_full_trainprompt.json
+checkpoint-106 visa:   n=2141  TP552 TN870 FP74 FN645  BA=69.14  acc=66.42  F1=60.56
+checkpoint-159 dsmvtec: /bulk/aacudad/reasoning_traces/outputs/grpo_abc_C_kl0.1_halfep/checkpoint-159/eval_dsmvtec_full_trainprompt.json
+checkpoint-159 dsmvtec:   n=1670  TP936 TN387 FP57 FN290  BA=81.75  acc=79.22  F1=84.36
+checkpoint-159 visa: /bulk/aacudad/reasoning_traces/outputs/grpo_abc_C_kl0.1_halfep/checkpoint-159/eval_visa_full_trainprompt.json
+checkpoint-159 visa:   n=2141  TP597 TN860 FP84 FN600  BA=70.49  acc=68.05  F1=63.58
+checkpoint-212 dsmvtec: /bulk/aacudad/reasoning_traces/outputs/grpo_abc_C_kl0.1_halfep/checkpoint-212/eval_dsmvtec_full_trainprompt.json
+checkpoint-212 dsmvtec:   n=1670  TP925 TN392 FP52 FN301  BA=81.87  acc=78.86  F1=83.98
+checkpoint-212 visa: /bulk/aacudad/reasoning_traces/outputs/grpo_abc_C_kl0.1_halfep/checkpoint-212/eval_visa_full_trainprompt.json
+checkpoint-212 visa:   n=2141  TP577 TN871 FP73 FN620  BA=70.24  acc=67.63  F1=62.48
+checkpoint-265 dsmvtec: /bulk/aacudad/reasoning_traces/outputs/grpo_abc_C_kl0.1_halfep/checkpoint-265/eval_dsmvtec_full_trainprompt.json
+checkpoint-265 dsmvtec:   n=1670  TP923 TN393 FP51 FN303  BA=81.90  acc=78.80  F1=83.91
+checkpoint-265 visa: /bulk/aacudad/reasoning_traces/outputs/grpo_abc_C_kl0.1_halfep/checkpoint-265/eval_visa_full_trainprompt.json
+checkpoint-265 visa:   n=2141  TP578 TN866 FP78 FN619  BA=70.01  acc=67.45  F1=62.39

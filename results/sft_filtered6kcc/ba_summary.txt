@@ -1,0 +1,6 @@
+Filtered-6K SFT (5,797 completely_correct verified traces, from base) — BA
+ckpt-182 ep1: DS 76.55 / VisA 64.67
+ckpt-364 ep2: DS 79.60 / VisA 65.99
+ckpt-546 ep3: DS 77.58 / VisA 66.20
+ckpt-728 ep4: DS 76.67 / VisA 67.03
+vs unfiltered 6K (ckpt-564): DS 80.16 / VisA 64.78
