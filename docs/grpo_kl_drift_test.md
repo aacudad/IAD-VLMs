@@ -45,6 +45,34 @@ penalty** (β>0, anchoring to the SFT init) arrest that drift?
    stable* but is **too short to prove KL arrests the multi-epoch collapse** — that needs
    a 2–4 epoch KL run.
 
+## Reward summary (from train.log, logging_steps=1, 265 steps)
+
+`results/grpo_abc_C_kl0.1_halfep/reward_curve.png` (3 panels: reward+components, KL, eval BA):
+- total reward 1.42 → ~2.0; accuracy 0.73 → 1.12; format 0.69 → 0.88 — reward IS optimised.
+- **KL stayed tiny (max 0.0106)** — β=0.1 glued the policy to the init; the policy barely moved.
+- eval BA dipped then recovered (DS 80.97→81.90, VisA ~70), tracking just under the init.
+
+## Why the step-53 dip (82.80 → 80.97) is expected
+
+1. **Train/eval prompt mismatch** — GRPO trains on the short "…Are there any defects in the
+   query image?" prompt; we *eval* on "Analyze the provided image of the {product}…". The first
+   gradient steps adapt to the training prompt, perturbing eval-prompt behaviour.
+2. **RL nudges a strong SFT init off its optimum immediately.** The KL penalty bounds the
+   excursion to ~1–2pp (vs a collapse) and it then recovers. ~1pp on DS = ~17/1670 images,
+   so part is eval noise. Net: it converges back toward ~82, not above the 82.80 init.
+
+## Recommended next step (NOT yet run — decided 2026-06-17 to hold)
+
+A **1-epoch** run would give a clean contrast vs the no-KL run at 530 steps (80.32/70.34,
+already declining). Two caveats recorded for whenever we run it:
+- **No clean resume** — `save_only_model=true` saved no optimizer state, so a 1-epoch run must
+  be a **fresh run from ckpt-376 with `--max_steps 530`** (≈13h). This is also the correct way
+  (proper LR decay over 530 steps).
+- **β=0.1 will likely just recover to ~82.8 and plateau, not exceed it** — the KL≈0.01 shows the
+  policy is *over-anchored*. To chase a gain above the SFT init, **lower β to ~0.04** (looser
+  anchor, more room to move, higher drift risk). Launchers ready: `run_grpo_kl_halfep.sh`
+  (edit `BETA=` and `--max_steps`), `watch_and_eval_grpo_kl.sh`.
+
 ## Artifacts (not committed; weights excluded)
 
 `outputs/grpo_abc_C_kl0.1_halfep/`: `train.log`, `ba_table.txt`, `checkpoint-{53,106,159,212,265}/`
