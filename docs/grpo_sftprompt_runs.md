@@ -1,5 +1,10 @@
 # GRPO with the SFT/eval-aligned prompt — β-sweep + 3-epoch run
 
+> **STATUS = FUTURE WORK, not a thesis claim** (decided 2026-06-20, see
+> `../THESIS_HEADLINE_DECISION.md`). The thesis headline is **Arm-C SFT alone (82.80/72.07)**;
+> the eval-aligned GRPO result here (which *edges* that ceiling) is preliminary/in-progress and
+> is to be reported only once finalized + replicated. Do not write it as a result in the thesis body.
+
 Experiments testing whether aligning the GRPO **training** prompt to the **eval**
 prompt lets GRPO beat the Arm-C SFT ceiling (82.80 DS-MVTec / 72.07 VisA).
 All from Arm-C `checkpoint-376`, dataset `grpo_train.json` (4,236, Gemini-distilled
