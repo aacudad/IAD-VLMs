@@ -41,6 +41,19 @@ to a Real-IAD split it never saw during SFT or RL.
 > known mismatch is logged in [`UNVERIFIED.md`](UNVERIFIED.md) and
 > [`NUMBER_PROVENANCE.md`](NUMBER_PROVENANCE.md).
 
+### Released on Hugging Face
+
+The trained checkpoints and the trace corpus are openly released:
+
+| Artifact | Link |
+|---|---|
+| **AnomalyThink** dataset (reasoning traces) | <https://huggingface.co/datasets/aacudad/AnomalyThink> |
+| **Arm-C SFT**, best model (82.80 / 72.07) | <https://huggingface.co/aacudad/AnomalyThink-Qwen2.5-VL-7B> |
+| **SFT-6K** (80.16 / 64.78) | <https://huggingface.co/aacudad/AnomalyThink-Qwen2.5-VL-7B-SFT> |
+| **SFT + GRPO** (82.73 / 70.39) | <https://huggingface.co/aacudad/AnomalyThink-Qwen2.5-VL-7B-SFT-GRPO> |
+
+The dataset ships our reasoning traces only. The underlying Real-IAD images are not redistributed (obtain Real-IAD separately).
+
 ---
 
 ## 2. Repository layout
@@ -93,8 +106,10 @@ Run `ls -R` from the repo root to see the exact tree; the directories above are 
   counts, `trainer_state.json` loss/metric curves, the BA inventory, and `compute_ba.py`.
 
 **NOT included (re-downloadable or re-trainable):**
-- **Model weights.** Download Qwen2.5-VL from Hugging Face and re-run SFT/GRPO with
-  the shipped configs, or pull a released checkpoint.
+- **Model weights.** The large base/SFT/GRPO weights are not committed here, but the
+  headline checkpoints are released on Hugging Face (see *Released on Hugging Face* in
+  Section 1 above). Alternatively, download Qwen2.5-VL and re-run SFT/GRPO with the
+  shipped configs.
 - **Source / overlay images.** Real-IAD, MVTec/DS-MVTec, and MMAD are all
   re-downloadable — use the `download_*.py` scripts in [`scripts/00_generate/`](scripts/00_generate/).
   After downloading, point the trace JSONs at your copy with
