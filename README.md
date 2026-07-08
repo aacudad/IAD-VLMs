@@ -57,7 +57,7 @@ The dataset ships our reasoning traces only. The underlying Real-IAD images are 
 
 ### Explore the reasoning (trace viewers)
 
-Self-contained HTML viewers show, per model, the same fixed product-diverse sample of DS-MVTec/VisA images with the true defect region overlaid in red, alongside that model's own generated reasoning trace and verdict (correct/incorrect). Open any file directly in a browser (images embedded, nothing to fetch): [`docs/trace_viewers/index.html`](docs/trace_viewers/index.html) links one page per model (`base`, `sft6k`, `armC`, `sft_grpo`, `grpo954`, `iadr1`). Regenerate or resample with [`scripts/05_figures/build_trace_viewer.py`](scripts/05_figures/build_trace_viewer.py).
+Self-contained HTML viewers show, per model, EVERY DS-MVTec and VisA sample with the true defect region overlaid in red, alongside that model's own generated reasoning trace and verdict (correct/incorrect). Open any file directly in a browser (images embedded, nothing to fetch): [`docs/trace_viewers/index.html`](docs/trace_viewers/index.html) links one page per model per benchmark (e.g. `armC_dsmvtec.html`, `armC_visa.html`; base is DS-MVTec only). Regenerate with [`scripts/05_figures/build_trace_viewer.py`](scripts/05_figures/build_trace_viewer.py) (`--all` for every sample, `--per-bench N` for a diverse subset).
 
 ---
 

@@ -107,8 +107,8 @@ def build_meta(ref_rows, mmad):
             mpath = entry.get("mask_path") or ""
             if mpath and (base / mpath).exists(): mask = base / mpath
             gtype = gt_type_from_mmad(entry, key.split("/")[3] if key and len(key.split("/")) > 3 else "")
-        # anomaly is renderable only if we can show a mask overlay; normal just needs the image
-        renderable = img_ok and (gt == "no" or mask is not None)
+        # include any sample whose image exists; anomalies without a mask just show the plain image
+        renderable = img_ok
         meta[iid] = {"product": prod, "gt": gt, "abspath": ap, "mask": mask,
                      "gtype": gtype, "renderable": renderable}
     return meta
@@ -163,10 +163,11 @@ def esc(s): return html.escape(str(s or ""))
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--all", action="store_true", help="include EVERY sample (one file per model per benchmark)")
     ap.add_argument("--per-bench", type=int, default=200)
     ap.add_argument("--anom-frac", type=float, default=0.70)
-    ap.add_argument("--maxpx", type=int, default=384)
-    ap.add_argument("--quality", type=int, default=70)
+    ap.add_argument("--maxpx", type=int, default=288)
+    ap.add_argument("--quality", type=int, default=60)
     ap.add_argument("--seed", type=int, default=13)
     a = ap.parse_args()
     OUTDIR.mkdir(parents=True, exist_ok=True)
@@ -175,27 +176,27 @@ def main():
 
     # per-benchmark: universe = image_ids present in ALL models that have that benchmark
     benches = [("DS-MVTec", 2), ("VisA", 3)]  # (name, index into MODELS tuple for json path)
-    sample = {}   # bench -> ordered list of image_ids
-    meta_b = {}   # bench -> meta dict
-    imgcache = {} # bench -> {iid: {orig, ov, gtype, product, gt}}
+    bench_ids = {}  # bench -> ordered list of image_ids to render
+    imgcache = {}   # bench -> {iid: {orig, ov, gtype, product, gt}} (built ONCE, reused across models)
     for bench, idx in benches:
         model_rows = {}
         for m in MODELS:
-            p = m[idx]
-            if not p: continue
-            r = rows_of(p)
+            if not m[idx]: continue
+            r = rows_of(m[idx])
             if r is not None: model_rows[m[0]] = {x["image_id"]: x for x in r}
         if not model_rows: continue
         universe = set.intersection(*[set(v) for v in model_rows.values()])
         ref = next(iter(model_rows.values()))
         meta = build_meta([ref[i] for i in universe], mmad)
         rend = [i for i in universe if meta[i]["renderable"]]
-        anom = [i for i in rend if meta[i]["gt"] == "yes"]; norm = [i for i in rend if meta[i]["gt"] == "no"]
-        na = min(len(anom), int(round(a.per_bench * a.anom_frac))); nn = min(len(norm), a.per_bench - na)
-        picked = diverse(anom, na, meta, rng) + diverse(norm, nn, meta, rng)
-        sample[bench] = picked; meta_b[bench] = meta
+        if a.all:
+            ids = sorted(rend, key=lambda i: (meta[i]["product"], i))   # every sample, grouped by product
+        else:
+            anom = [i for i in rend if meta[i]["gt"] == "yes"]; norm = [i for i in rend if meta[i]["gt"] == "no"]
+            na = min(len(anom), int(round(a.per_bench * a.anom_frac))); nn = min(len(norm), a.per_bench - na)
+            ids = diverse(anom, na, meta, rng) + diverse(norm, nn, meta, rng)
         cache = {}
-        for iid in picked:
+        for iid in ids:
             md = meta[iid]; im = Image.open(md["abspath"])
             entry = {"orig": thumb(im, a.maxpx, a.quality), "ov": None,
                      "gtype": md["gtype"], "product": md["product"], "gt": md["gt"]}
@@ -203,19 +204,20 @@ def main():
                 try: entry["ov"] = thumb(make_overlay(im, md["mask"]), a.maxpx, a.quality)
                 except Exception: pass
             cache[iid] = entry
-        imgcache[bench] = cache
-        print(f"[{bench}] sampled {len(picked)} ({na} anom / {nn} normal) over {len({meta[i]['product'] for i in picked})} products")
+        bench_ids[bench] = ids; imgcache[bench] = cache
+        na = sum(meta[i]["gt"] == "yes" for i in ids)
+        print(f"[{bench}] {len(ids)} samples ({na} anom / {len(ids)-na} normal) over {len({meta[i]['product'] for i in ids})} products")
 
-    # one HTML per model
-    index_rows = []
+    # one HTML per model PER benchmark
+    SLUG = {"DS-MVTec": "dsmvtec", "VisA": "visa"}
+    index = collections.OrderedDict()  # display -> [(bench, filename, n, mb), ...]
     for m in MODELS:
         label, display = m[0], m[1]
-        cards = []; n = na_tot = nn_tot = 0
         for bench, idx in benches:
-            p = m[idx]
-            if not p or bench not in sample: continue
-            rows = {x["image_id"]: x for x in rows_of(p)}
-            for iid in sample[bench]:
+            if not m[idx] or bench not in bench_ids: continue
+            rows = {x["image_id"]: x for x in rows_of(m[idx])}
+            cards = []; na_tot = nn_tot = 0
+            for iid in bench_ids[bench]:
                 if iid not in rows: continue
                 r = rows[iid]; c = imgcache[bench][iid]
                 pred = r.get("pred_answer", "?"); gtv = c["gt"]
@@ -227,8 +229,8 @@ def main():
                     img_tags += f'<img src="{c["ov"]}" loading="lazy">'; single = ""
                 imgs_div = f'<div class="imgs {single}">{img_tags}</div>'
                 tags = r.get("pred_tags") or {}
-                # show only the compact structured tags here; 'reasoning' is the full trace (shown in
-                # the details section below) and 'answer' is already the verdict above -> both excluded
+                # only compact structured tags here; 'reasoning' is the full trace (details section)
+                # and 'answer' is already the verdict above -> both excluded
                 tagstr = " ".join(f"{k}={esc(tags[k])}" for k in ("type", "location")
                                   if isinstance(tags, dict) and tags.get(k))
                 cards.append(CARD.format(
@@ -240,21 +242,27 @@ def main():
                     gtype=(f" ({esc(c['gtype'])})" if gtv == "yes" and c["gtype"] else ""),
                     pred=("anomaly" if pred == "yes" else "normal" if pred == "no" else esc(pred)),
                     tags=tagstr, trace=esc(r.get("pred_full", ""))))
-                n += 1; na_tot += (gtv == "yes"); nn_tot += (gtv == "no")
-        out = OUTDIR / f"{label}.html"
-        out.write_text(PAGE.format(display=esc(display), n=n, na=na_tot, nn=nn_tot, cards="\n".join(cards)))
-        mb = out.stat().st_size / 1048576
-        print(f"  wrote {out.name}  ({n} cards, {mb:.1f} MB)")
-        index_rows.append(f'<li><a href="{label}.html">{esc(display)}</a> - {n} samples, {mb:.1f} MB</li>')
+                na_tot += (gtv == "yes"); nn_tot += (gtv == "no")
+            n = len(cards); fn = f"{label}_{SLUG[bench]}.html"
+            (OUTDIR / fn).write_text(PAGE.format(display=esc(f"{display}  -  {bench}"),
+                                                 n=n, na=na_tot, nn=nn_tot, cards="\n".join(cards)))
+            mb = (OUTDIR / fn).stat().st_size / 1048576
+            print(f"  wrote {fn}  ({n} cards, {mb:.1f} MB)")
+            index.setdefault(display, []).append((bench, fn, n, mb))
 
-    idx_html = ("<meta charset='utf-8'><title>AnomalyThink trace viewers</title>"
-        "<style>body{font-family:system-ui,Arial;margin:24px;max-width:820px;line-height:1.5}"
-        "li{margin:6px 0}</style><h1>AnomalyThink - per-model trace viewers</h1>"
-        "<p>Each page shows the same fixed, product-diverse sample of DS-MVTec/VisA images with the "
-        "true defect region overlaid in red, alongside that model's own generated reasoning trace and "
-        "verdict. Self-contained (images embedded); open any file directly in a browser.</p><ul>"
-        + "\n".join(index_rows) + "</ul>")
-    (OUTDIR / "index.html").write_text(idx_html)
+    parts = ["<meta charset='utf-8'><title>AnomalyThink trace viewers</title>",
+        "<style>body{font-family:system-ui,Arial;margin:24px;max-width:900px;line-height:1.5}"
+        "h2{margin:18px 0 4px;font-size:15px}li{margin:4px 0}</style>",
+        "<h1>AnomalyThink - per-model trace viewers</h1>",
+        "<p>Each page shows EVERY DS-MVTec or VisA sample for one model: the image, the true defect "
+        "region overlaid in red, the ground-truth type, and that model's own generated reasoning "
+        "trace and verdict. Self-contained (images embedded); open any file directly in a browser.</p>"]
+    for display, items in index.items():
+        parts.append(f"<h2>{esc(display)}</h2><ul>")
+        for bench, fn, n, mb in items:
+            parts.append(f'<li><a href="{fn}">{esc(bench)}</a> - {n} samples, {mb:.1f} MB</li>')
+        parts.append("</ul>")
+    (OUTDIR / "index.html").write_text("\n".join(parts))
     print(f"  wrote index.html -> {OUTDIR}")
 
 if __name__ == "__main__":
