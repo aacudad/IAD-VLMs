@@ -51,8 +51,13 @@ The trained checkpoints and the trace corpus are openly released:
 | **Arm-C SFT**, best model (82.80 / 72.07) | <https://huggingface.co/aacudad/AnomalyThink-Qwen2.5-VL-7B> |
 | **SFT-6K** (80.16 / 64.78) | <https://huggingface.co/aacudad/AnomalyThink-Qwen2.5-VL-7B-SFT> |
 | **SFT + GRPO** (82.73 / 70.39) | <https://huggingface.co/aacudad/AnomalyThink-Qwen2.5-VL-7B-SFT-GRPO> |
+| GRPO-on-Arm-C, research preview / future work (82.95 / 72.62) | <https://huggingface.co/aacudad/AnomalyThink-Qwen2.5-VL-7B-ArmC-GRPO> |
 
 The dataset ships our reasoning traces only. The underlying Real-IAD images are not redistributed (obtain Real-IAD separately).
+
+### Explore the reasoning (trace viewers)
+
+Self-contained HTML viewers show, per model, the same fixed product-diverse sample of DS-MVTec/VisA images with the true defect region overlaid in red, alongside that model's own generated reasoning trace and verdict (correct/incorrect). Open any file directly in a browser (images embedded, nothing to fetch): [`docs/trace_viewers/index.html`](docs/trace_viewers/index.html) links one page per model (`base`, `sft6k`, `armC`, `sft_grpo`, `grpo954`, `iadr1`). Regenerate or resample with [`scripts/05_figures/build_trace_viewer.py`](scripts/05_figures/build_trace_viewer.py).
 
 ---
 
