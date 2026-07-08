@@ -227,7 +227,10 @@ def main():
                     img_tags += f'<img src="{c["ov"]}" loading="lazy">'; single = ""
                 imgs_div = f'<div class="imgs {single}">{img_tags}</div>'
                 tags = r.get("pred_tags") or {}
-                tagstr = " ".join(f"{k}={esc(v)}" for k, v in tags.items() if v) if isinstance(tags, dict) else ""
+                # show only the compact structured tags here; 'reasoning' is the full trace (shown in
+                # the details section below) and 'answer' is already the verdict above -> both excluded
+                tagstr = " ".join(f"{k}={esc(tags[k])}" for k in ("type", "location")
+                                  if isinstance(tags, dict) and tags.get(k))
                 cards.append(CARD.format(
                     cls=verdict, verdict=verdict, anom=anom,
                     verdict_label=("correct" if ok else "incorrect"),
