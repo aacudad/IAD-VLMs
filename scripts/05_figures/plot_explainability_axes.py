@@ -21,7 +21,7 @@ SUM = "/bulk/aacudad/reasoning_traces/outputs/explainability_multi/summary.json"
 OUT = "/bulk/aacudad/reasoning_traces/outputs/explainability_multi"
 
 # documented reference categorical palette, slots 1-6 (light mode), fixed order
-CAT = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"]
+CAT = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7"]
 SURFACE = "#fcfcfb"
 INK, INK_MUTED, GRID = "#1a1a19", "#5c5b55", "#e6e5df"
 
@@ -29,7 +29,8 @@ AXES = [("j_visual_grounding", "Visual\ngrounding"), ("j_defect_faithfulness", "
         ("j_evidence_before_conclusion", "Evidence before\nconclusion"), ("j_coherence", "Coherence"),
         ("j_conciseness", "Conciseness")]
 # display order: pipeline story (bases -> finetuned), IAD-R1 as external baseline
-MODELS = [("qwen3_base", "Qwen3-VL base"), ("base_qwen25", "Qwen2.5-VL base"), ("iadr1", "IAD-R1"),
+MODELS = [("qwen3_base", "Qwen3-VL base"), ("base_qwen25", "Qwen2.5-VL base"), ("iadr1", "IAD-R1 (native prompt)"),
+          ("iadr1_trainprompt", "IAD-R1 (prompt-matched)"),
           ("armC_finalsft", "Arm-C (final SFT)"), ("sft_grpo", "SFT+GRPO"), ("qwen3_sft", "Qwen3-VL SFT")]
 BENCHES = ["DS-MVTec", "VisA"]
 

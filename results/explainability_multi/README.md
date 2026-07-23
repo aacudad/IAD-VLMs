@@ -43,6 +43,18 @@ IAD-R1 **4.50** vs 4.29 — i.e. consistent within noise.
 Regenerate: `scripts/04_eval/explainability_judge_multi.py` (scoring) →
 `scripts/05_figures/plot_explainability_axes.py` (figures).
 
+## The two IAD-R1 rows (read this before quoting its score)
+
+IAD-R1 appears **twice**, because the number depends entirely on which prompt it is given:
+
+| | DS-MVTec | VisA | what it measures |
+|---|--:|--:|---|
+| **IAD-R1 (native prompt)** | 4.50 | 6.32 | explanation **reliability** under its own GRPO prompt, which never asks for reasoning — ~40% of its answers are a bare "Yes" and score 0 |
+| **IAD-R1 (prompt-matched)** | **6.14** | **7.04** | explanation **quality** when asked the same way as our models — then 100% of its answers contain a trace |
+
+Both are honest; they answer different questions. Quoting only 4.50 understates IAD-R1. Either way it
+stays clearly below Arm-C (9.05 / 8.52).
+
 ## Reading the result
 
 - **Finetuning is what creates explainability.** Qwen3-VL base **1.79 → 9.23** (DS-MVTec) after SFT on the
