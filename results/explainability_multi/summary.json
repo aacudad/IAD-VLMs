@@ -1,0 +1,123 @@
+{
+  "base_qwen25|DS-MVTec": {
+    "j_overall": 8.03,
+    "j_visual_grounding": 1.71,
+    "j_defect_faithfulness": 1.46,
+    "j_evidence_before_conclusion": 1.12,
+    "j_coherence": 1.9,
+    "j_conciseness": 1.84,
+    "loc_met": 0.0,
+    "type_sim": 0.0,
+    "n": 100
+  },
+  "iadr1|DS-MVTec": {
+    "j_overall": 4.5,
+    "j_visual_grounding": 0.85,
+    "j_defect_faithfulness": 0.68,
+    "j_evidence_before_conclusion": 1.05,
+    "j_coherence": 1.01,
+    "j_conciseness": 0.91,
+    "loc_met": 0.44,
+    "type_sim": 0.337,
+    "n": 100
+  },
+  "iadr1|VisA": {
+    "j_overall": 6.32,
+    "j_visual_grounding": 1.21,
+    "j_defect_faithfulness": 0.92,
+    "j_evidence_before_conclusion": 1.6,
+    "j_coherence": 1.59,
+    "j_conciseness": 1.0,
+    "loc_met": 0.63,
+    "type_sim": 0.529,
+    "n": 100
+  },
+  "sft_grpo|DS-MVTec": {
+    "j_overall": 9.24,
+    "j_visual_grounding": 1.81,
+    "j_defect_faithfulness": 1.58,
+    "j_evidence_before_conclusion": 1.98,
+    "j_coherence": 1.93,
+    "j_conciseness": 1.94,
+    "loc_met": 0.72,
+    "type_sim": 0.547,
+    "n": 100
+  },
+  "sft_grpo|VisA": {
+    "j_overall": 8.62,
+    "j_visual_grounding": 1.67,
+    "j_defect_faithfulness": 1.32,
+    "j_evidence_before_conclusion": 1.98,
+    "j_coherence": 1.88,
+    "j_conciseness": 1.77,
+    "loc_met": 0.63,
+    "type_sim": 0.537,
+    "n": 100
+  },
+  "armC_finalsft|DS-MVTec": {
+    "j_overall": 9.05,
+    "j_visual_grounding": 1.76,
+    "j_defect_faithfulness": 1.48,
+    "j_evidence_before_conclusion": 1.99,
+    "j_coherence": 1.91,
+    "j_conciseness": 1.91,
+    "loc_met": 0.77,
+    "type_sim": 0.57,
+    "n": 100
+  },
+  "armC_finalsft|VisA": {
+    "j_overall": 8.52,
+    "j_visual_grounding": 1.63,
+    "j_defect_faithfulness": 1.19,
+    "j_evidence_before_conclusion": 1.97,
+    "j_coherence": 1.86,
+    "j_conciseness": 1.87,
+    "loc_met": 0.55,
+    "type_sim": 0.559,
+    "n": 100
+  },
+  "qwen3_base|DS-MVTec": {
+    "j_overall": 1.79,
+    "j_visual_grounding": 0.2,
+    "j_defect_faithfulness": 0.18,
+    "j_evidence_before_conclusion": 0.16,
+    "j_coherence": 0.2,
+    "j_conciseness": 1.05,
+    "loc_met": 0.0,
+    "type_sim": 0.0,
+    "n": 100
+  },
+  "qwen3_base|VisA": {
+    "j_overall": 0.94,
+    "j_visual_grounding": 0.02,
+    "j_defect_faithfulness": 0.02,
+    "j_evidence_before_conclusion": 0.02,
+    "j_coherence": 0.02,
+    "j_conciseness": 0.86,
+    "loc_met": 0.0,
+    "type_sim": 0.0,
+    "n": 100
+  },
+  "qwen3_sft|DS-MVTec": {
+    "j_overall": 9.23,
+    "j_visual_grounding": 1.84,
+    "j_defect_faithfulness": 1.54,
+    "j_evidence_before_conclusion": 1.99,
+    "j_coherence": 1.93,
+    "j_conciseness": 1.93,
+    "loc_met": 0.74,
+    "type_sim": 0.553,
+    "n": 100
+  },
+  "qwen3_sft|VisA": {
+    "j_overall": 8.77,
+    "j_visual_grounding": 1.7,
+    "j_defect_faithfulness": 1.35,
+    "j_evidence_before_conclusion": 1.96,
+    "j_coherence": 1.93,
+    "j_conciseness": 1.83,
+    "loc_met": 0.62,
+    "type_sim": 0.551,
+    "n": 100
+  }
+}
