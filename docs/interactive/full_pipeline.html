@@ -1,0 +1,605 @@
+<title>The Full Pipeline — Data to Explainable Inspector</title>
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#f4f5f8; --surface:#ffffff; --surface-2:#eef0f4; --surface-3:#e6e9ef;
+    --ink:#12151c; --ink-2:#525b6b; --ink-muted:#848da0; --hairline:#dde1e8;
+    --good:#0ca30c; --warn:#fab219; --serious:#ec835a;
+    --good-wash: rgba(12,163,12,.10); --warn-wash: rgba(250,178,25,.14); --serious-wash: rgba(236,131,90,.12);
+    --shadow: 0 1px 2px rgba(18,21,28,.04), 0 8px 24px -12px rgba(18,21,28,.10);
+    --p1:#2a78d6; --p2:#eb6834; --p3:#1baf7a; --p4:#eda100; --p5:#e87ba4; --p6:#008300;
+    --armc:#2a78d6; --grpo:#4a3aa7; --base:#848da0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:where(:not([data-theme="light"])){
+      color-scheme: dark;
+      --bg:#0b0d12; --surface:#12151d; --surface-2:#181c26; --surface-3:#1f2430;
+      --ink:#eef0f4; --ink-2:#a6aec0; --ink-muted:#6b7385; --hairline:#242938;
+      --good:#0ca30c; --warn:#fab219; --serious:#ec835a;
+      --good-wash: rgba(12,163,12,.16); --warn-wash: rgba(250,178,25,.16); --serious-wash: rgba(236,131,90,.16);
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+      --p1:#3987e5; --p2:#d95926; --p3:#199e70; --p4:#c98500; --p5:#d55181; --p6:#008300;
+      --armc:#3987e5; --grpo:#9085e9; --base:#6b7385;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:#0b0d12; --surface:#12151d; --surface-2:#181c26; --surface-3:#1f2430;
+    --ink:#eef0f4; --ink-2:#a6aec0; --ink-muted:#6b7385; --hairline:#242938;
+    --good:#0ca30c; --warn:#fab219; --serious:#ec835a;
+    --good-wash: rgba(12,163,12,.16); --warn-wash: rgba(250,178,25,.16); --serious-wash: rgba(236,131,90,.16);
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    --p1:#3987e5; --p2:#d95926; --p3:#199e70; --p4:#c98500; --p5:#d55181; --p6:#008300;
+    --armc:#3987e5; --grpo:#9085e9; --base:#6b7385;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{ font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
+  .mono{ font-family:ui-monospace,"Cascadia Code","SF Mono","Roboto Mono",Consolas,monospace; }
+  .tnum{ font-variant-numeric: tabular-nums; }
+  a{ color:var(--armc); }
+
+  header.mast{
+    position:sticky; top:0; z-index:20;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom:1px solid var(--hairline);
+    padding:14px 28px;
+  }
+  .mast-inner{ max-width:1120px; margin:0 auto; display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; }
+  .eyebrow{ font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-muted); font-weight:600; }
+  .mast-nav{ display:flex; gap:14px; flex-wrap:wrap; margin-left:auto; }
+  .mast-nav a{ font-size:11.5px; color:var(--ink-muted); text-decoration:none; font-weight:600; }
+  .mast-nav a:hover{ color:var(--ink); }
+
+  main{ max-width:1120px; margin:0 auto; padding:0 28px 96px; }
+  section{ padding-top:60px; scroll-margin-top:64px; }
+  section:first-of-type{ padding-top:40px; }
+  .stage-eyebrow{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--armc); font-weight:700; margin-bottom:6px; }
+  h2.serif{ font-size:27px; font-weight:500; line-height:1.25; margin:0 0 6px; text-wrap:balance; }
+  h3.serif{ font-size:18px; font-weight:600; margin:28px 0 4px; color:var(--ink); }
+  .section-dek{ color:var(--ink-2); font-size:14.5px; line-height:1.6; margin:0 0 24px; max-width:700px; }
+  .lede{ font-size:16.5px; line-height:1.7; color:var(--ink-2); max-width:700px; }
+  .lede b{ color:var(--ink); font-weight:600; }
+  p.body-p{ font-size:13.5px; line-height:1.7; color:var(--ink-2); max-width:700px; }
+  p.body-p b{ color:var(--ink); font-weight:600; }
+  code{
+    font-family:ui-monospace,"Cascadia Code","SF Mono","Roboto Mono",Consolas,monospace;
+    font-size:.88em; background:var(--surface-2); padding:1px 6px; border-radius:4px; color:var(--ink-2);
+  }
+
+  .meta-row{ display:flex; flex-wrap:wrap; gap:0; margin-top:24px; border-top:1px solid var(--hairline); border-bottom:1px solid var(--hairline); }
+  .meta-item{ flex:1 1 160px; padding:14px 18px 14px 0; border-right:1px solid var(--hairline); }
+  .meta-item:last-child{ border-right:none; }
+  .meta-item .k{ font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-muted); margin-bottom:4px; }
+  .meta-item .v{ font-size:13.5px; color:var(--ink); font-weight:500; }
+
+  /* ---- top pipeline map ---- */
+  .pipe-map{
+    display:flex; align-items:stretch; gap:2px; background:var(--surface); border:1px solid var(--hairline);
+    border-radius:14px; padding:16px 14px; box-shadow:var(--shadow); overflow-x:auto; margin-top:26px;
+  }
+  .pmap-item{ flex:1 1 0; min-width:126px; text-align:center; padding:6px 8px; text-decoration:none; border-radius:10px; transition:background .12s ease; }
+  .pmap-item:hover{ background:var(--surface-2); }
+  .pmap-n{ font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-muted); margin-bottom:5px; }
+  .pmap-name{ font-size:12px; font-weight:600; color:var(--ink); margin-bottom:5px; line-height:1.3; }
+  .pmap-ba{ font-size:14px; font-weight:600; color:var(--ink-2); }
+  .pmap-ba span{ font-size:9.5px; color:var(--ink-muted); font-weight:400; text-transform:uppercase; margin-left:2px;}
+  .pmap-arrow{ flex:none; display:flex; align-items:center; color:var(--ink-muted); font-size:15px; padding:0 2px; }
+
+  /* ---- generic steps ---- */
+  .steps{ display:flex; align-items:stretch; gap:0; overflow-x:auto; padding-bottom:4px; }
+  .step{ background:var(--surface); border:1px solid var(--hairline); border-radius:14px; padding:16px 16px 14px; box-shadow:var(--shadow); flex:1 1 0; min-width:170px; }
+  .step-n{ font-size:10px; letter-spacing:.06em; color:var(--ink-muted); text-transform:uppercase; margin-bottom:8px; }
+  .step-script{ font-size:11.5px; margin-bottom:8px; color:var(--ink); word-break:break-word; }
+  .step-desc{ font-size:12px; line-height:1.55; color:var(--ink-2); }
+  .step-arrow{ flex:none; display:flex; align-items:center; justify-content:center; width:26px; color:var(--ink-muted); font-size:16px; }
+
+  /* ---- six-phase mini chips ---- */
+  .phase-strip{ display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 4px; }
+  .phase-chip{ display:flex; align-items:center; gap:7px; background:var(--surface); border:1px solid var(--hairline); border-radius:20px; padding:5px 12px 5px 6px; box-shadow:var(--shadow); }
+  .phase-chip .dot{ width:20px; height:20px; border-radius:50%; color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none; }
+  .phase-chip .lbl{ font-size:12px; color:var(--ink-2); font-weight:500; }
+
+  /* ---- KPI ---- */
+  .kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+  .kpi-card{ background:var(--surface); border:1px solid var(--hairline); border-radius:14px; padding:20px 22px; box-shadow:var(--shadow); }
+  .kpi-bench{ font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-muted); font-weight:600; margin-bottom:12px; }
+  .kpi-scores{ display:flex; align-items:flex-end; gap:18px; flex-wrap:wrap; }
+  .kpi-block .label{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-2); margin-bottom:4px; }
+  .kpi-block .swatch{ width:9px; height:9px; border-radius:2.5px; display:inline-block; }
+  .kpi-block .val{ font-size:30px; font-weight:600; line-height:1; letter-spacing:-.01em; }
+
+  /* ---- results table ---- */
+  table.ba-table{ width:100%; border-collapse:collapse; font-size:13px; margin-top:4px; }
+  table.ba-table th{ text-align:left; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-muted); font-weight:600; padding:8px 12px; border-bottom:1px solid var(--hairline); }
+  table.ba-table td{ padding:10px 12px; border-bottom:1px solid var(--hairline); color:var(--ink-2); }
+  table.ba-table td:first-child, table.ba-table th:first-child{ color:var(--ink); font-weight:600; }
+  table.ba-table tr.headline td{ background:var(--armc-wash, rgba(42,120,214,.06)); }
+  table.ba-table td.num, table.ba-table th.num{ text-align:right; font-variant-numeric:tabular-nums; }
+
+  /* ---- grouped bar (reused pattern) ---- */
+  .panel-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:760px){ .panel-grid{ grid-template-columns:1fr; } .kpi-grid{ grid-template-columns:1fr 1fr; } }
+  .panel{ background:var(--surface); border:1px solid var(--hairline); border-radius:14px; padding:20px 22px 18px; box-shadow:var(--shadow); }
+  .panel-title{ font-size:13px; font-weight:600; margin-bottom:2px; }
+  .panel-sub{ font-size:11.5px; color:var(--ink-muted); margin-bottom:16px; }
+  .gbar-row{ margin-bottom:14px; position:relative; }
+  .gbar-row:last-child{ margin-bottom:0; }
+  .gbar-label{ font-size:12px; color:var(--ink-2); margin-bottom:5px; display:flex; justify-content:space-between; }
+  .gbar-label .max{ color:var(--ink-muted); font-size:10.5px; }
+  .gbar-track{ display:flex; flex-direction:column; gap:3px; }
+  .gbar{ height:16px; border-radius:0 4px 4px 0; position:relative; cursor:pointer; transition:filter .12s ease; }
+  .gbar:hover, .gbar:focus-visible{ filter:brightness(1.08); outline:none; }
+
+  /* ---- outcome bar ---- */
+  .outcome-bar{ display:flex; height:36px; border-radius:8px; overflow:hidden; }
+  .outcome-seg{ display:flex; align-items:center; justify-content:center; }
+  .outcome-seg + .outcome-seg{ margin-left:2px; }
+  .outcome-seg-label{ font-size:11.5px; font-weight:700; color:#0b0b0b; white-space:nowrap; }
+  .outcome-legend{ display:flex; gap:22px; margin-top:14px; flex-wrap:wrap; }
+  .outcome-legend-item{ display:flex; align-items:flex-start; gap:8px; font-size:12px; color:var(--ink-2); }
+  .outcome-legend-item .dot{ width:10px; height:10px; border-radius:3px; margin-top:3px; flex:none; }
+
+  /* ---- link-out card ---- */
+  .linkout{ display:flex; flex-wrap:wrap; gap:12px; margin-top:18px; }
+  .linkout a{
+    display:flex; align-items:center; gap:8px; text-decoration:none; background:var(--surface);
+    border:1px solid var(--hairline); border-radius:10px; padding:10px 16px; font-size:12.5px;
+    font-weight:600; color:var(--ink); box-shadow:var(--shadow);
+  }
+  .linkout a:hover{ background:var(--surface-2); }
+  .linkout a .arrow{ color:var(--armc); }
+
+  .status-tag{ display:inline-block; font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; font-weight:700; padding:3px 10px; border-radius:20px; margin-bottom:10px; }
+  .status-tag.done{ background:var(--good-wash); color:var(--good); }
+  .status-tag.progress{ background:var(--warn-wash); color:#8a6300; }
+
+  .callout{ margin-top:16px; background:var(--good-wash); border:1px solid color-mix(in srgb, var(--good) 30%, transparent); border-radius:10px; padding:14px 18px; font-size:12.5px; color:var(--ink-2); line-height:1.6; }
+  .callout b{ color:var(--ink); }
+  .callout.warn{ background:var(--warn-wash); border-color:color-mix(in srgb, var(--warn) 40%, transparent); }
+
+  .caveats{ font-size:12.5px; color:var(--ink-muted); line-height:1.7; border-top:1px solid var(--hairline); padding-top:22px; margin-top:70px; max-width:760px; }
+  .caveats li{ margin-bottom:8px; }
+  .src{ font-size:11px; color:var(--ink-muted); margin-top:18px; }
+
+  #tt{
+    position:fixed; pointer-events:none; z-index:50; background:var(--ink); color:var(--bg);
+    font-size:12px; padding:7px 10px; border-radius:8px; box-shadow:var(--shadow); max-width:240px;
+    opacity:0; transform:translateY(4px); transition:opacity .1s ease, transform .1s ease;
+  }
+  #tt.show{ opacity:1; transform:translateY(0); }
+</style>
+
+<div id="tt"></div>
+
+<header class="mast">
+  <div class="mast-inner">
+    <span class="eyebrow">Full Pipeline · Data → SFT → GRPO → Curation → Explainability</span>
+    <nav class="mast-nav">
+      <a href="#data">Data</a><a href="#sft">SFT</a><a href="#grpo">GRPO</a>
+      <a href="#curate1">Curation I</a><a href="#curate2">Curation II</a>
+      <a href="#explain">Explainability</a><a href="#models">Models</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <h2 class="serif">From Real-IAD pixels to an explainable inspector</h2>
+  <p class="lede">One pipeline, four training-relevant stages: distill Gemini's reasoning onto
+    Qwen2.5-VL with <b>SFT</b>, sharpen it with <b>GRPO</b> reinforcement learning, then
+    <b>curate the model's own rollouts</b> — twice, at two different scales — to build the
+    next round of training data. A separate <b>explainability judge</b> checks whether the
+    best model's reasoning is actually trustworthy, not just accurate. Every number below is
+    read from the eval JSONs / dataset files on disk, not the thesis prose.</p>
+
+  <div class="pipe-map">
+    <a href="#data" class="pmap-item"><div class="pmap-n">Stage 00</div><div class="pmap-name">Data Generation</div><div class="pmap-ba">14,472 <span>traces</span></div></a>
+    <div class="pmap-arrow">&rarr;</div>
+    <a href="#sft" class="pmap-item"><div class="pmap-n">Stage 01</div><div class="pmap-name">SFT (6K)</div><div class="pmap-ba tnum">80.16 <span>BA</span></div></a>
+    <div class="pmap-arrow">&rarr;</div>
+    <a href="#curate1" class="pmap-item"><div class="pmap-n">Curation I</div><div class="pmap-name">RAFT/STaR ablation → Arm‑C</div><div class="pmap-ba tnum">82.80 <span>BA</span></div></a>
+    <div class="pmap-arrow">&rarr;</div>
+    <a href="#grpo" class="pmap-item"><div class="pmap-n">Stage 02</div><div class="pmap-name">GRPO Run‑2</div><div class="pmap-ba tnum">82.73 <span>BA</span></div></a>
+    <div class="pmap-arrow">&rarr;</div>
+    <a href="#curate2" class="pmap-item"><div class="pmap-n">Curation II</div><div class="pmap-name">Held‑out STaR (in progress)</div><div class="pmap-ba tnum">86.7% <span>kept</span></div></a>
+    <div class="pmap-arrow">&rarr;</div>
+    <a href="#explain" class="pmap-item"><div class="pmap-n">Check</div><div class="pmap-name">Explainability judge</div><div class="pmap-ba tnum">+4.85 <span>pts</span></div></a>
+  </div>
+
+  <h3 class="serif" style="margin-top:30px;">Headline balanced accuracy, start to finish</h3>
+  <table class="ba-table">
+    <thead><tr><th>Stage</th><th>Model</th><th class="num">DS‑MVTec</th><th class="num">VisA</th><th class="num">Held‑out Real‑IAD</th></tr></thead>
+    <tbody>
+      <tr><td>Base</td><td>Qwen2.5‑VL‑7B, zero‑shot</td><td class="num">69.01</td><td class="num">53.79</td><td class="num">—</td></tr>
+      <tr><td>Stage 01</td><td>SFT headline, 7B‑frozen‑6K (ckpt‑564)</td><td class="num">80.16</td><td class="num">64.78</td><td class="num">—</td></tr>
+      <tr><td>Curation I</td><td>Arm‑C SFT, kept+corrected+rewritten (ckpt‑376)</td><td class="num">82.80</td><td class="num">72.07</td><td class="num">—</td></tr>
+      <tr class="headline"><td>Stage 02</td><td><b>SFT + GRPO Run‑2</b> (ckpt‑530) — project headline</td><td class="num">82.73</td><td class="num">70.39</td><td class="num">80.87</td></tr>
+      <tr><td>Reference</td><td>IAD‑R1, recanonicalized (external baseline)</td><td class="num">81.92</td><td class="num">71.34</td><td class="num">—</td></tr>
+    </tbody>
+  </table>
+  <p class="section-dek" style="margin-top:10px;">BA = 0.5·(TP/(TP+FN) + TN/(TN+FP)), recomputed from raw eval JSONs
+    (<code>results/compute_ba.py</code>). Arm‑C is the best <i>raw</i> checkpoint; SFT+GRPO Run‑2 is the
+    project's overall headline because it also generalizes to held‑out Real‑IAD.</p>
+</section>
+
+<section id="data">
+  <div class="stage-eyebrow">Stage 00 · Data Generation</div>
+  <h2 class="serif">Turning Real-IAD images into reasoning traces</h2>
+  <p class="lede">~14,472 single-pass traces, generated by <code>google/gemini-3-flash-preview</code>
+    (Vertex AI) over Real-IAD product photos — 30 products, C1 camera only, mask-filtered,
+    50/50 normal/anomalous, stratified with a fixed seed. Each trace is Gemini acting as an
+    inspector: one <code>&lt;think&gt;</code> block, then a structured verdict.</p>
+
+  <div class="meta-row">
+    <div class="meta-item"><div class="k">Source</div><div class="v">Real-IAD, 30 products, C1-only</div></div>
+    <div class="meta-item"><div class="k">Generator</div><div class="v">google/gemini-3-flash-preview, Vertex AI</div></div>
+    <div class="meta-item"><div class="k">Output</div><div class="v">14,472 traces, 30 products</div></div>
+    <div class="meta-item"><div class="k">Repo path</div><div class="v mono" style="font-size:12px;">scripts/00_generate/realiad_v4/</div></div>
+  </div>
+
+  <h3 class="serif">Generation pipeline</h3>
+  <div class="steps">
+    <div class="step"><div class="step-n">1</div><div class="step-script mono">download_realiad.py</div><div class="step-desc">Pulls Real-IAD images + masks from Hugging Face (30 products).</div></div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step"><div class="step-n">2</div><div class="step-script mono">sample_realiad_v4.py</div><div class="step-desc">C1-only, mask-filtered, 50/50 normal/anomaly, stratified, seed 42.</div></div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step"><div class="step-n">3</div><div class="step-script mono">generate_realiad_traces_v4.py</div><div class="step-desc">Prompts Gemini per image (+ red-mask overlay + normal reference for anomalies).</div></div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step"><div class="step-n">4</div><div class="step-script mono">compile_traces_v4.py</div><div class="step-desc">Assembles the final ShareGPT-format SFT/GRPO JSON splits.</div></div>
+  </div>
+
+  <h3 class="serif">The structured, six-phase generation prompt</h3>
+  <p class="body-p">The current generation prompt (<code>inspector_prompt_test_v2.txt</code>) forces every
+    <code>&lt;think&gt;</code> through six ordered phases before a verdict is allowed, plus 11 hard rules,
+    an 8-category self-scoring gate, and 6 auto-reject rules.</p>
+  <div class="phase-strip">
+    <div class="phase-chip"><div class="dot" style="background:var(--p1)">A</div><div class="lbl">Framing</div></div>
+    <div class="phase-chip"><div class="dot" style="background:var(--p2)">B</div><div class="lbl">Global scan</div></div>
+    <div class="phase-chip"><div class="dot" style="background:var(--p3)">C</div><div class="lbl">Focused inspection</div></div>
+    <div class="phase-chip"><div class="dot" style="background:var(--p4)">D</div><div class="lbl">Evidence evaluation</div></div>
+    <div class="phase-chip"><div class="dot" style="background:var(--p5)">E</div><div class="lbl">Alternative check</div></div>
+    <div class="phase-chip"><div class="dot" style="background:var(--p6)">F</div><div class="lbl">Decision</div></div>
+  </div>
+  <div class="callout warn"><b>Not the headline-corpus prompt.</b> This six-phase prompt is real and current,
+    but it's loaded by <code>generate_variety_traces.py</code> for the Real-IAD-Variety extension. The
+    14,472-trace headline corpus was generated by <code>generate_realiad_traces_v4.py</code> loading the
+    older, simpler <code>inspector_prompt.txt</code> (3–5 sentences, no six-phase structure, no auto-reject
+    rules). Full breakdown, including every rule and the self-scoring rubric, on the
+    <a href="prompt_generation_sixphase.html">dedicated prompt page →</a></div>
+
+  <h3 class="serif">What comes out: the AnomalyThink-15K splits</h3>
+  <table class="ba-table">
+    <thead><tr><th>Split</th><th class="num">Count</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td>SFT pool</td><td class="num">6,000 <span style="color:var(--ink-muted)">(3,000 + 3,000)</span></td><td>Supervised fine-tuning — the headline SFT model</td></tr>
+      <tr><td>GRPO pool</td><td class="num">4,236 <span style="color:var(--ink-muted)">(2,118 + 2,118)</span></td><td>RL training prompts</td></tr>
+      <tr><td>Held-out Real-IAD</td><td class="num">4,236</td><td>Generalization test set (disjoint from SFT, same images as GRPO split)</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>The "6K beats 15K" finding.</b> The 6K SFT split and the full 15K union have the
+    <b>same mean <code>&lt;think&gt;</code> length</b> (~137–141 words) — so SFT-on-6K outperforming
+    SFT-on-15K at fixed compute is a data-count/composition effect, not a verbosity or quality-filtering
+    artifact (no quality filter was applied to shrink 15K → 6K).</div>
+</section>
+
+<section id="sft">
+  <div class="stage-eyebrow">Stage 01 · Supervised Fine-Tuning</div>
+  <h2 class="serif">Distilling Gemini's reasoning onto Qwen2.5-VL</h2>
+  <p class="lede">LlamaFactory (<code>llamafactory-cli train</code>) full fine-tunes Qwen2.5-VL (3B or 7B)
+    on the reasoning traces above. "Frozen" vs "unfrozen" refers to whether the ViT tower moves during
+    training — the headline runs freeze it.</p>
+
+  <div class="meta-row">
+    <div class="meta-item"><div class="k">Trainer</div><div class="v">LlamaFactory, full fine-tune</div></div>
+    <div class="meta-item"><div class="k">Backbone</div><div class="v">Qwen2.5-VL-7B-Instruct</div></div>
+    <div class="meta-item"><div class="k">Headline config</div><div class="v mono" style="font-size:12px;">sft_qwen25vl_7b_zeroshot_6k_frozen.yaml</div></div>
+    <div class="meta-item"><div class="k">Image resolution</div><div class="v">max_pixels = 262,144 (512×512)</div></div>
+  </div>
+
+  <h3 class="serif">The 4-factor grid</h3>
+  <p class="body-p">Model size (3B/7B) × ViT frozen/unfrozen × corpus size (6K/15K) × teacher-ablation arm.
+    Two results anchor the grid: the <b>headline</b> run (7B‑frozen‑6K, ckpt‑564 → 80.16 / 64.78), and the
+    <b>best raw</b> checkpoint, Arm‑C (82.80 / 72.07) — which comes from curating the rollouts first,
+    covered in <a href="#curate1">Curation I</a> below.</p>
+</section>
+
+<section id="grpo">
+  <div class="stage-eyebrow">Stage 02 · GRPO (Reinforcement Learning)</div>
+  <h2 class="serif">Sharpening the SFT model with RL</h2>
+  <p class="lede">A GRPO trainer (<code>trl</code>'s <code>GRPOConfig</code>, subclassed, derived from
+    IAD-R1/AnomalyR1) fine-tunes on top of the SFT checkpoint, rewarding format, accuracy, defect-type
+    semantic similarity, and location match.</p>
+
+  <h3 class="serif">Headline run — GRPO Run-2</h3>
+  <table class="ba-table">
+    <tbody>
+      <tr><td>Base / reference model</td><td>7B-frozen-6K SFT, ckpt-564</td></tr>
+      <tr><td>Generations per group (G)</td><td class="num">4</td></tr>
+      <tr><td>KL coefficient (β)</td><td class="num">0 <span style="color:var(--ink-muted)">— monitored via Schulman k3, not added to loss</span></td></tr>
+      <tr><td>Learning rate (η)</td><td class="num">1e-6</td></tr>
+      <tr><td>Clip ε</td><td class="num">0.2</td></tr>
+      <tr><td>Training samples</td><td class="num">4,236</td></tr>
+      <tr><td>Max steps</td><td class="num">1,060 <span style="color:var(--ink-muted)">— save/eval every 250</span></td></tr>
+      <tr><td>Reward weights (fmt, acc, type, loc)</td><td class="num">0.3 / 0.3 / 0.2 / 0.2</td></tr>
+      <tr><td>Type-embedding model</td><td>nomic-embed-text-v2-moe</td></tr>
+      <tr><td>Batch (per-device × grad-accum)</td><td class="num">2 × 4 = 8 effective</td></tr>
+      <tr><td>Hardware</td><td>2× RTX A6000, ZeRO-3 CPU offload, bf16, seed 42</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn"><b>Older thesis-draft values are stale.</b> An earlier draft cites G=2, β=0.04,
+    η=5e-6, "13K samples" — the table above is read directly from the saved <code>training_args.bin</code>
+    of the actual run and is authoritative.</div>
+
+  <h3 class="serif">Result</h3>
+  <p class="body-p">SFT+GRPO Run-2 (ckpt-530): <b>82.73 / 70.39 BA</b>, and — uniquely among the checkpoints on
+    this page — it was also evaluated on the <b>4,236-item held-out Real-IAD split</b>: <b>80.87 BA</b>,
+    statistically close to its in-distribution score. This is the project's overall headline model, and it's
+    the exact checkpoint rolled out in both curation rounds below.</p>
+  <div class="callout"><b>GRPO on top of the already-strong Arm‑C init shows no further gain</b> — roughly 2pp
+    <i>below</i> the Arm‑C init while the reward itself rises, holding across all three advantage-estimator
+    variants tried. GRPO's lift is real starting from the plain 6K‑SFT init, not from the curated‑rollout
+    init.</div>
+</section>
+
+<section id="curate1">
+  <span class="status-tag done">Complete — fed the thesis-best model</span>
+  <div class="stage-eyebrow">Curation, round I · 10,236 items, in-distribution</div>
+  <h2 class="serif">How much curation does a rollout need?</h2>
+  <p class="lede">Before GRPO, checkpoint <code>run2/ckpt-530</code> was rolled out (k=8) on <b>all 10,236</b>
+    in-distribution SFT+GRPO images, judged, and selectively corrected/rewritten by Gemini. Three SFT
+    training sets were then built from the <i>same</i> rollout pool, each keeping progressively more of the
+    curation output — a clean ablation on how much curation actually matters.</p>
+
+  <div class="steps">
+    <div class="step"><div class="step-n">Rollout</div><div class="step-script mono">phase0_rollout_kscoring.py</div><div class="step-desc">run2/ckpt-530, k=8, T=0.7, on all 10,236 in-distribution items.</div></div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step"><div class="step-n">Judge</div><div class="step-script mono">phase1a_gemini_judge.py</div><div class="step-desc">Gemini judges each rollout: keep it, or flag it wrong.</div></div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step"><div class="step-n">Correct / rewrite</div><div class="step-script mono">phase1b_gemini_correct.py</div><div class="step-desc">Wrong-conclusion traces corrected; weak-but-right traces rewritten.</div></div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step"><div class="step-n">Build 3 arms</div><div class="step-script mono">build_abc_datasets.py</div><div class="step-desc">A/B/C SFT sets, each including more of the curated output.</div></div>
+  </div>
+
+  <div class="callout" style="margin-top:20px;"><b>86.7% of the 10,236 rollouts were kept as-is</b> — the
+    same outcome rate later reproduced on the disjoint held-out set in Curation II below, i.e. rollout
+    quality doesn't drop on unseen images.</div>
+
+  <h3 class="serif">Curation-depth ablation: RAFT vs. STaR vs. STaR+rewrite</h3>
+  <p class="section-dek">Same rollout pool, same base model, three cuts of how much gets fixed before SFT.
+    Each arm's <b>best checkpoint by mean BA</b>, from the raw eval JSONs.</p>
+  <div class="panel-grid" id="arm-grid"></div>
+  <p class="section-dek" style="margin-top:12px;">Arm B (kept + corrected) barely beats Arm A (kept-only) —
+    fixing <i>wrong-conclusion</i> traces alone isn't the lever. Arm C (kept + corrected +
+    <b>rewritten</b>) jumps +3.3 DS‑MVTec / +4.6 VisA over Arm B — grounding the traces that were
+    <i>already right but weakly reasoned</i> is what actually moves accuracy. Arm‑C's checkpoint‑376
+    becomes both the project's best raw SFT model and the reference init for further GRPO experiments.</p>
+
+  <table class="ba-table" style="margin-top:18px;">
+    <thead><tr><th>Arm</th><th>Curation applied</th><th class="num">SFT records</th></tr></thead>
+    <tbody>
+      <tr><td>A — RAFT</td><td>judge-kept rollouts only, balanced</td><td class="num">2,978</td></tr>
+      <tr><td>B — STaR</td><td>kept + Gemini-corrected wrong-conclusion traces</td><td class="num">4,369</td></tr>
+      <tr class="headline"><td>C — STaR + rewrite</td><td>kept + corrected + Gemini-<b>rewritten</b> weak-but-right traces</td><td class="num">6,000</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="curate2">
+  <span class="status-tag progress">In progress — thesis placeholder, not yet a headline result</span>
+  <div class="stage-eyebrow">Curation, round II · 4,236 held-out items</div>
+  <h2 class="serif">Does the curation loop generalize to unseen products?</h2>
+  <p class="lede">The identical pipeline — same model (<code>run2/ckpt-530</code>), same k=8, same
+    thresholds and prompts — run again on the <b>4,236-item held-out split</b> the model never trained on.
+    This round feeds the in-progress iteration-2 / Variety-STaR self-training loop, not Arm-C.</p>
+
+  <div class="panel" style="margin-top:16px;">
+    <div class="panel-title">4,236 held-out items — final disposition</div>
+    <div class="panel-sub">Each item's chosen rollout ends up in exactly one of three states</div>
+    <div class="outcome-bar" id="outcome-bar"></div>
+    <div class="outcome-legend" id="outcome-legend"></div>
+  </div>
+
+  <div class="callout"><b>Matches the in-distribution rate.</b> 86.7% good here vs. 86.7% good on the
+    10,236-item Curation I pool — the model's rollout quality on never-seen images is statistically
+    indistinguishable from images it trained on.</div>
+
+  <div class="linkout">
+    <a href="curation_pipeline.html"><span class="arrow">→</span> Full curation pipeline &amp; editing philosophy</a>
+    <a href="review_curated.html"><span class="arrow">→</span> 100-item manual pilot review</a>
+    <a href="curation_pipeline_fig.pdf"><span class="arrow">→</span> Publication-ready pipeline figure (PDF)</a>
+  </div>
+</section>
+
+<section id="explain">
+  <div class="stage-eyebrow">Explainability Check</div>
+  <h2 class="serif">Whose reasoning can you trust?</h2>
+  <p class="lede">Balanced accuracy alone can't distinguish two models that get the same answer for different
+    reasons. On the 398 images where <b>both</b> Arm-C SFT and IAD-R1 (external baseline) answer correctly,
+    a blind Gemini-3-Flash judge — not told which model wrote which trace — scored each trace's
+    <code>&lt;think&gt;</code> block on five faithfulness axes.</p>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-bench">DS-MVTec &middot; n=100 / 99</div>
+      <div class="kpi-scores">
+        <div class="kpi-block"><div class="label"><span class="swatch" style="background:var(--armc)"></span>Arm-C SFT</div><div class="val tnum">9.14</div></div>
+        <div class="kpi-block"><div class="label"><span class="swatch" style="background:var(--p2)"></span>IAD-R1</div><div class="val tnum">4.29</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-bench">VisA &middot; n=100 / 99</div>
+      <div class="kpi-scores">
+        <div class="kpi-block"><div class="label"><span class="swatch" style="background:var(--armc)"></span>Arm-C SFT</div><div class="val tnum">8.67</div></div>
+        <div class="kpi-block"><div class="label"><span class="swatch" style="background:var(--p2)"></span>IAD-R1</div><div class="val tnum">6.40</div></div>
+      </div>
+    </div>
+  </div>
+  <p class="section-dek" style="margin-top:14px;">Mean of 5 judged axes (visual grounding, defect
+    faithfulness, evidence-before-conclusion, coherence, conciseness), 0–10 total. On DS-MVTec, 29 of
+    IAD-R1's 99 traces are the bare word "Yes" — no reasoning to grade; excluding those, the gap narrows
+    from <b>+4.85</b> to a more honest <b>+3.07</b>. On VisA, no traces are bare and the gap holds at
+    <b>+2.27</b> unadjusted.</p>
+
+  <div class="callout warn"><b>Read before citing.</b> Single judge pass (k=1, not median-of-3);
+    reference-guided plausibility, not a mechanistic/perturbation-based faithfulness test; the judge model
+    family (Gemini) overlaps the trace-generation model family — blind-to-authorship scoring mitigates but
+    doesn't eliminate this.</div>
+
+  <div class="linkout">
+    <a href="explainability_dashboard.html"><span class="arrow">→</span> Full explainability dashboard — all 5 axes, mechanical accuracy, score histograms, matched example</a>
+  </div>
+</section>
+
+<section id="models">
+  <div class="stage-eyebrow">Where it lands</div>
+  <h2 class="serif">Four released checkpoints</h2>
+  <p class="lede">All on Hugging Face, all evaluated under <b>trainprompt</b> mode (mixing prompt modes across
+    a comparison silently corrupts it — see <code>Prompt Modes</code>).</p>
+  <table class="ba-table">
+    <thead><tr><th>Checkpoint</th><th class="num">DS-MVTec</th><th class="num">VisA</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td>armc</td><td class="num">82.80</td><td class="num">72.07</td><td>Best raw SFT accuracy (Curation I, Arm-C) — inference default</td></tr>
+      <tr><td>sft6k</td><td class="num">80.16</td><td class="num">64.78</td><td>Headline SFT, plain 6K corpus, no curation loop</td></tr>
+      <tr class="headline"><td>sftgrpo</td><td class="num">82.73</td><td class="num">70.39</td><td><b>Headline overall</b> — SFT + GRPO Run-2, also generalizes to held-out Real-IAD (80.87)</td></tr>
+      <tr><td>armcgrpo</td><td class="num">82.95</td><td class="num">72.62</td><td>Research preview — GRPO on top of Arm-C, future work</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="caveats">
+  <div style="font-weight:600;color:var(--ink-2);margin-bottom:8px;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;">Scope &amp; caveats</div>
+  <ul>
+    <li><b>Two curation rounds, easy to conflate.</b> Round I (10,236 in-distribution items) already
+      shipped and directly produced Arm-C, the best raw model in the project. Round II (4,236 held-out
+      items) is the separate, still-in-progress iteration-2 / Variety-STaR loop. Both use the identical
+      rollout→judge→correct/rewrite mechanics and the same source checkpoint (<code>run2/ckpt-530</code>),
+      which is why they're presented side by side here — but only Round I has produced a released model.</li>
+    <li><b>Corpus generation model discrepancy.</b> <code>scripts/00_generate/README.md</code> confirms the
+      generator calls <code>google/gemini-3-flash-preview</code> via Vertex AI; some thesis prose says
+      "Gemini 2.5-Flash." Tracked, not yet reconciled everywhere.</li>
+    <li><b>Six-phase prompt scope.</b> The six-phase structured prompt documented in Stage 00 above is real
+      and on-disk, but is the Variety-extension generator's prompt, not the one that produced the headline
+      14,472-trace corpus — see the dedicated page for the full discrepancy audit.</li>
+    <li>Arm A/B/C's per-checkpoint BA numbers above are this page's own selection (best mean BA across
+      DS-MVTec/VisA, recomputed from <code>results/eval_ba_inventory.txt</code>) — Arm-C's ckpt-376 is the
+      only one of the three formally called out as a project checkpoint elsewhere.</li>
+    <li>Model weights aren't in git — only eval JSONs and configs. The four released checkpoints are the
+      only weights available, via Hugging Face.</li>
+  </ul>
+  <div class="src">Sources: <code>Pipeline Map</code>, <code>Stage 00–04</code>, <code>Data Corpus</code>,
+    <code>Configs</code>, <code>Results</code>, <code>Released Models</code> (this vault);
+    <code>docs/data_card.md</code>, <code>docs/model_card.md</code>, <code>results/eval_ba_inventory.txt</code>,
+    <code>scripts/03_rollout_star/build_abc_datasets.py</code>, <code>scripts/03_rollout_star/run_pipeline_10k.sh</code>,
+    <code>results/explainability_judge/</code> (repo).</div>
+</div>
+
+</main>
+
+<script>
+const ttEl = document.getElementById('tt');
+function showTip(e, label, value){
+  ttEl.innerHTML = '';
+  const v = document.createElement('div'); v.style.fontWeight='700'; v.textContent = value;
+  const l = document.createElement('div'); l.style.opacity='.8'; l.style.marginTop='2px'; l.textContent = label;
+  ttEl.appendChild(v); ttEl.appendChild(l);
+  ttEl.classList.add('show'); moveTip(e);
+}
+function moveTip(e){
+  const pad = 14; let x = e.clientX + pad, y = e.clientY + pad;
+  const r = ttEl.getBoundingClientRect();
+  if (x + r.width > window.innerWidth - 8) x = e.clientX - r.width - pad;
+  if (y + r.height > window.innerHeight - 8) y = e.clientY - r.height - pad;
+  ttEl.style.left = x + 'px'; ttEl.style.top = y + 'px';
+}
+function hideTip(){ ttEl.classList.remove('show'); }
+
+// ---- Arm A/B/C grouped bars ----
+function panel(title, sub){
+  const p = document.createElement('div'); p.className = 'panel';
+  const t = document.createElement('div'); t.className = 'panel-title'; t.textContent = title;
+  const s = document.createElement('div'); s.className = 'panel-sub'; s.textContent = sub;
+  p.appendChild(t); p.appendChild(s);
+  return p;
+}
+function buildGroupedBar(container, rows, opts){
+  const max = opts.max;
+  rows.forEach(row=>{
+    const wrap = document.createElement('div'); wrap.className = 'gbar-row';
+    const lab = document.createElement('div'); lab.className = 'gbar-label';
+    const labText = document.createElement('span'); labText.textContent = row.label;
+    const maxText = document.createElement('span'); maxText.className='max'; maxText.textContent = 'max ' + max;
+    lab.appendChild(labText); lab.appendChild(maxText);
+    const track = document.createElement('div'); track.className = 'gbar-track';
+    row.arms.forEach(a=>{
+      const bar = document.createElement('div');
+      bar.className = 'gbar'; bar.style.background = a.color;
+      bar.style.width = Math.max(2, (a.val/max*100)) + '%';
+      bar.tabIndex = 0;
+      bar.addEventListener('pointermove', e=>showTip(e, row.label + ' — ' + a.name, a.val.toFixed(2)));
+      bar.addEventListener('pointerleave', hideTip);
+      bar.addEventListener('focus', e=>showTip(e, row.label + ' — ' + a.name, a.val.toFixed(2)));
+      bar.addEventListener('blur', hideTip);
+      track.appendChild(bar);
+    });
+    wrap.appendChild(lab); wrap.appendChild(track);
+    container.appendChild(wrap);
+  });
+}
+const armColors = {A:'#848da0', B:'#eda100', C:'#2a78d6'};
+const armData = {
+  'DS-MVTec': [
+    {label:'Arm A — RAFT (kept-only)',        arms:[{name:'DS-MVTec', val:78.69, color:armColors.A}]},
+    {label:'Arm B — STaR (+corrected)',       arms:[{name:'DS-MVTec', val:80.75, color:armColors.B}]},
+    {label:'Arm C — STaR+rewrite (headline)', arms:[{name:'DS-MVTec', val:82.80, color:armColors.C}]},
+  ],
+  'VisA': [
+    {label:'Arm A — RAFT (kept-only)',        arms:[{name:'VisA', val:69.35, color:armColors.A}]},
+    {label:'Arm B — STaR (+corrected)',       arms:[{name:'VisA', val:67.48, color:armColors.B}]},
+    {label:'Arm C — STaR+rewrite (headline)', arms:[{name:'VisA', val:72.07, color:armColors.C}]},
+  ],
+};
+const armGrid = document.getElementById('arm-grid');
+Object.entries(armData).forEach(([bench, rows])=>{
+  const p = panel(bench, 'balanced accuracy, best checkpoint per arm');
+  buildGroupedBar(p, rows, {max:85});
+  armGrid.appendChild(p);
+});
+
+// ---- held-out outcome bar ----
+const outcomes = [
+  {key:'good', color:'var(--good)', label:'Good — kept as-is', n:3673, pct:86.7, note:'No Gemini edit needed.'},
+  {key:'warn', color:'var(--warn)', label:'Corrected', n:563, pct:13.3, note:'Wrong conclusion — minimal-scope Gemini fix.'},
+  {key:'serious', color:'var(--serious)', label:'Rewritten', n:704, pct:16.6, note:'Right answer, weak grounding — full Gemini rewrite.'},
+];
+const bar = document.getElementById('outcome-bar');
+const legend = document.getElementById('outcome-legend');
+const totalPct = outcomes.reduce((s,o)=>s+o.pct,0);
+outcomes.forEach(o=>{
+  const seg = document.createElement('div');
+  seg.className = 'outcome-seg'; seg.style.background = o.color;
+  seg.style.width = (o.pct/totalPct*100) + '%'; seg.tabIndex = 0;
+  if (o.pct/totalPct > 0.12) {
+    const lab = document.createElement('span'); lab.className='outcome-seg-label'; lab.textContent = o.pct + '%';
+    seg.appendChild(lab);
+  }
+  seg.addEventListener('pointermove', e=>showTip(e, o.label, o.n.toLocaleString() + ' items (' + o.pct + '%)'));
+  seg.addEventListener('pointerleave', hideTip);
+  seg.addEventListener('focus', e=>showTip(e, o.label, o.n.toLocaleString() + ' items (' + o.pct + '%)'));
+  seg.addEventListener('blur', hideTip);
+  bar.appendChild(seg);
+
+  const item = document.createElement('div'); item.className = 'outcome-legend-item';
+  const dot = document.createElement('div'); dot.className = 'dot'; dot.style.background = o.color;
+  const text = document.createElement('div');
+  text.innerHTML = '<b>' + o.n.toLocaleString() + '</b> &middot; ' + o.pct + '% — ' + o.label + ' — ' + o.note;
+  item.appendChild(dot); item.appendChild(text);
+  legend.appendChild(item);
+});
+</script>
