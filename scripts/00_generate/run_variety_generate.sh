@@ -7,7 +7,8 @@ set -uo pipefail
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate llama_sft
 cd /bulk/aacudad/reasoning_traces/reasoning_traces_gen
-export GEMINI_API_KEYS=dummy   # config_mmad import gate; Vertex creds come from vertexai-amir-key.json
+export GEMINI_API_KEYS=dummy   # config_mmad import gate; Vertex creds come from the environment
+# Needs GOOGLE_APPLICATION_CREDENTIALS and GOOGLE_CLOUD_PROJECT set, see .env.example
 
 LOGDIR=variety_logs; mkdir -p "$LOGDIR"
 SHARDS=8

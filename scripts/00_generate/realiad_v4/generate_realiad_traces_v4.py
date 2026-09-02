@@ -39,14 +39,18 @@ load_dotenv()
 # ---------------------------------------------------------------------------
 # Vertex AI credentials — service account key
 # ---------------------------------------------------------------------------
-_KEY_FILE = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", str(Path(__file__).parent / "vertexai-amir-key.json"))
+# Both come from the environment, see .env.example. Nothing secret lives in this file.
+_KEY_FILE = Path(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+                 or Path(__file__).parent / "vertex-service-account.json")
 if _KEY_FILE.exists():
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(_KEY_FILE)
 else:
     raise FileNotFoundError(f"Service account key not found: {_KEY_FILE}")
 
-VERTEX_PROJECT  = "project-366f417b-7062-4a00-bc8"
-VERTEX_LOCATION = "global"
+VERTEX_PROJECT  = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
+VERTEX_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
+if not VERTEX_PROJECT:
+    raise SystemExit("Set GOOGLE_CLOUD_PROJECT (and GOOGLE_APPLICATION_CREDENTIALS); see .env.example")
 
 # ---------------------------------------------------------------------------
 # Paths

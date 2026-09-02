@@ -3,20 +3,26 @@ Explainability/faithfulness eval: best IAD-R1 vs best Arm-C (82.8) on MATCHED co
 images (both models correct), 100 product-diverse per benchmark (DS-MVTec, VisA). A Gemini-3-Flash
 judge scores REASONING quality (5 axes, blind to which model). Location (3x3 IoU vs GT mask) and
 Type (Nomic similarity vs GT defect class, DS-MVTec only) are scored SEPARATELY as their own points.
-Run: /users/aacudad/miniconda3/envs/llama_sft/bin/python explainability_judge.py [--n 100] [--smoke 6] [--ksamples 1]
+Run: python scripts/explainability_judge.py [--n 100] [--smoke 6] [--ksamples 1]
 """
 import os, io, re, json, time, argparse, collections, random
 from pathlib import Path
 from PIL import Image
 import numpy as np
 
-ROOT = Path("/bulk/aacudad/reasoning_traces")
-RES = ROOT / "repository_tu_delft_vlms/results"
+# ROOT is the workspace holding outputs/, MMAD_repo/ and reasoning_traces_gen/. It defaults
+# to the parent of this repository. On another machine:  export WORK_DIR=/path/to/workspace
+REPO_ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(os.environ.get("WORK_DIR") or REPO_ROOT.parent)
+RES = REPO_ROOT / "results"
 MMAD_JSON = ROOT / "MMAD_repo/dataset/MMAD/mmad.json"
 MMAD_IMG = ROOT / "reasoning_traces_gen/data/MMAD"
 OUT = ROOT / "outputs/explainability_judge"; OUT.mkdir(parents=True, exist_ok=True)
-KEY = "/bulk/aacudad/reasoning_traces/vertexai-amir-key.json"
-PROJECT, LOCATION, GMODEL = "project-366f417b-7062-4a00-bc8", "global", "gemini-3-flash-preview"
+# Vertex credentials and project come from the environment. Nothing secret lives in this file.
+KEY = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")
+PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
+LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
+GMODEL = os.environ.get("EXPLAIN_JUDGE_MODEL", "gemini-3-flash-preview")
 
 RUNS = {  # (model_label, benchmark) -> eval json  [best run of each]
  ("iadr1","DS-MVTec"): "iad_r1_qwen_recanon/eval_dsmvtec_full_iadr1native.json",
@@ -94,7 +100,10 @@ def b64part(im, Part):
 
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("--n",type=int,default=100); ap.add_argument("--smoke",type=int,default=0); ap.add_argument("--ksamples",type=int,default=1); a=ap.parse_args()
-    os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", KEY)
+    if KEY:
+        os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", KEY)
+    if not PROJECT:
+        raise SystemExit("set GOOGLE_CLOUD_PROJECT (and GOOGLE_APPLICATION_CREDENTIALS) for the Vertex judge")
     from google import genai
     from google.genai.types import Content, Part, GenerateContentConfig, ThinkingConfig
     client=genai.Client(vertexai=True, project=PROJECT, location=LOCATION)

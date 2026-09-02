@@ -11,7 +11,7 @@ prompt — see repo `prompts/`) via Vertex AI.
 > the thesis reports Gemini 2.5-Flash throughout.
 
 > ⚠️ **Credentials are NOT included in this repository.** The original bundle shipped a `.env`
-> (~20 Gemini API keys + an OpenAI key) and `vertexai-amir-key.json` (a Vertex AI service-account
+> (~20 Gemini API keys + an OpenAI key) and `vertex-service-account.json` (a Vertex AI service-account
 > key); both are **excluded here**, and the HF token in `download_realiad.py` has been replaced
 > with an `HF_TOKEN` env lookup. To run: create your own `.env` with `GEMINI_API_KEYS=...`, point
 > `GOOGLE_APPLICATION_CREDENTIALS` at your own Vertex key, and `export HF_TOKEN=...` (see the
@@ -33,7 +33,7 @@ sample_realiad_v4.py       --> 3k_realiad_v4/grpo_train.json  (3000 entries)
 generate_realiad_traces_v4.py  <-- prompts/inspector_prompt_test_v2.txt   (system prompt)
    |-- config_mmad.py             <-- .env  (GEMINI_API_KEYS)
    |-- utils_realiad.py           (create_overlay, ANOMALY_MAP)
-   |-- vertexai-amir-key.json     (Vertex AI auth)
+   |-- vertex-service-account.json     (Vertex AI auth)
    |-- model: google/gemini-3-flash-preview  (via Vertex AI)
         |
         v
@@ -67,8 +67,9 @@ compile_traces_v4.py       --> 3k_realiad_v4_compiled/{grpo,sft}_train.json   (f
 - **`.env`** — `GEMINI_API_KEYS` (comma-separated key pool), `GEMINI_MODELS`
   (preference list), `OPENAI_API_KEY` (used by the OpenAI-based verification scripts,
   not by the v4 generator itself).
-- **`vertexai-amir-key.json`** — Google Cloud service-account key. The generator points
-  `GOOGLE_APPLICATION_CREDENTIALS` at this file and authenticates to Vertex AI with it.
+- **Vertex AI service-account key** — supply your own JSON and point
+  `GOOGLE_APPLICATION_CREDENTIALS` at it. Set `GOOGLE_CLOUD_PROJECT` too, the generator
+  reads the project id from the environment and has no default.
 
 ### System prompt
 - **`prompts/inspector_prompt_test_v2.txt`** — the system instruction given to Gemini.
@@ -106,7 +107,7 @@ compile_traces_v4.py       --> 3k_realiad_v4_compiled/{grpo,sft}_train.json   (f
 ## How to run
 
 ```bash
-# NOTE: .env and vertexai-amir-key.json are NOT included in this repo; supply your own
+# NOTE: .env and vertex-service-account.json are NOT included in this repo; supply your own
 # (GEMINI_API_KEYS in .env, GOOGLE_APPLICATION_CREDENTIALS -> your Vertex key).
 # 1. download the dataset
 python download_realiad.py
