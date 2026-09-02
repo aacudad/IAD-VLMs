@@ -16,18 +16,32 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 
-ROOT = Path("/bulk/aacudad/reasoning_traces")
+# ROOT is the workspace holding outputs/, MMAD_repo/ and reasoning_traces_gen/. It defaults
+# to the parent of this repository. On another machine:  export WORK_DIR=/path/to/workspace
+# The MMAD images themselves are not redistributed here (see README section 3).
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.environ.get("WORK_DIR") or REPO_ROOT.parent)
 MMAD_JSON = ROOT / "MMAD_repo/dataset/MMAD/mmad.json"
 MMAD_IMG  = ROOT / "reasoning_traces_gen/data/MMAD"
 OUT = ROOT / "outputs/explainability_multi"; OUT.mkdir(parents=True, exist_ok=True)
-KEY = str(ROOT / "vertexai-amir-key.json")
-PROJECT, LOCATION, GMODEL = "project-366f417b-7062-4a00-bc8", "global", "gemini-3-flash-preview"
+# Vertex credentials and project come from the environment. Nothing secret lives in this file.
+KEY = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")
+PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
+LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
+GMODEL = os.environ.get("EXPLAIN_JUDGE_MODEL", "gemini-3-flash-preview")
 
 # model -> {benchmark: eval-json (relative to ROOT)}
 RUNS = {
- "base_qwen25": {"DS-MVTec": "outputs/qwen25vl_baseline_eval/eval_dsmvtec_full_trainprompt.json"},
+ "base_qwen25": {"DS-MVTec": "outputs/qwen25vl_baseline_eval/eval_dsmvtec_full_trainprompt.json",
+                 "VisA":     "outputs/qwen25vl_baseline_eval/eval_visa_full_trainprompt.json"},
+ # IAD-R1 under its NATIVE grpoprompt: that prompt never asks for reasoning, so ~35-40% of its
+ # answers are a bare "Yes" (score ~0) -> this measures explanation RELIABILITY under its own prompt.
  "iadr1":       {"DS-MVTec": "outputs/iad_r1_qwen_recanon/eval_dsmvtec_full_iadr1native.json",
                  "VisA":     "outputs/iad_r1_qwen_recanon/eval_visa_full_iadr1native.json"},
+ # IAD-R1 PROMPT-MATCHED to our models (trainprompt asks for detailed reasoning): 100% of its answers
+ # contain a trace -> this isolates explanation QUALITY. Report both; they answer different questions.
+ "iadr1_trainprompt": {"DS-MVTec": "outputs/iad_r1_qwen_recanon/eval_dsmvtec_full_trainprompt.json",
+                       "VisA":     "outputs/iad_r1_qwen_recanon/eval_visa_full_trainprompt.json"},
  "sft_grpo":    {"DS-MVTec": "outputs/grpo_qwen25vl_7b_6k_frozen_ep3_full_run2/checkpoint-530/eval_dsmvtec_full_trainprompt.json",
                  "VisA":     "outputs/grpo_qwen25vl_7b_6k_frozen_ep3_full_run2/checkpoint-530/eval_visa_full_trainprompt.json"},
  "armC_finalsft": {"DS-MVTec": "outputs/sft_qwen25vl_7b_abc_C_full_patched/checkpoint-376/eval_dsmvtec_full_trainprompt.json",
@@ -36,6 +50,20 @@ RUNS = {
                  "VisA":     "outputs/qwen3vl_8b_baseline_eval/eval_visa_full_trainprompt.json"},
  "qwen3_sft":   {"DS-MVTec": "outputs/sft_qwen3vl_8b_armC/checkpoint-376/eval_dsmvtec_full_trainprompt.json",
                  "VisA":     "outputs/sft_qwen3vl_8b_armC/checkpoint-376/eval_visa_full_trainprompt.json"},
+ # --- appended 2026-09-02 (LLaVA-OneVision cross-architecture rows). Appended at the END on purpose:
+ # the shared rng is consumed in RUNS order, so adding keys here leaves the draw of every pre-existing
+ # model unchanged in a full run. Eval JSONs are the vLLM path but the schema is byte-identical
+ # (prompt_info/metrics/results, rows with gt_answer/pred_answer/pred_full/pred_tags/absolute_path),
+ # so no adapter is needed. NOTE: any LLaVA-OV DS-MVTec number carries the vision_flan MVTec
+ # contamination caveat.
+ "llava_armC":  {"DS-MVTec": "outputs/sft_llava_ov_7b_frozen_llava_iter1_C/checkpoint-748/eval_dsmvtec_full_trainprompt_vllm.json",
+                 "VisA":     "outputs/sft_llava_ov_7b_frozen_llava_iter1_C/checkpoint-748/eval_visa_full_trainprompt_vllm.json"},
+ "llava_grpo":  {"DS-MVTec": "outputs/grpo_llava_ov_from_ep1/checkpoint-530/eval_dsmvtec_full_trainprompt_vllm.json",
+                 "VisA":     "outputs/grpo_llava_ov_from_ep1/checkpoint-530/eval_visa_full_trainprompt_vllm.json"},
+ # LLaVA SFT only, the 6K Gemini corpus, epoch 1 (85.91/68.26). Completes the three-stage
+ # LLaVA ladder: SFT -> SFT+GRPO -> SFT+GRPO+KCR. Appended at the END for the same rng reason.
+ "llava_sft":   {"DS-MVTec": "outputs/sft_llava_ov_7b_frozen_iad_sft_6k_train/checkpoint-188/eval_dsmvtec_full_trainprompt.json",
+                 "VisA":     "outputs/sft_llava_ov_7b_frozen_iad_sft_6k_train/checkpoint-188/eval_visa_full_trainprompt.json"},
 }
 
 JUDGE_SYS = """You are an expert evaluator of INDUSTRIAL-DEFECT INSPECTION EXPLANATIONS. A vision-language model inspected a product and wrote a reasoning trace ending in a defect verdict. Your job is to score the QUALITY OF ITS REASONING/EXPLANATION -- how well the written reasoning is grounded in and faithful to the actual visual evidence -- NOT whether the final yes/no is right (it is already known to be correct here), and NOT the exact <type>/<location> wording (scored separately).
@@ -109,8 +137,19 @@ def diverse(idmap, n, rng):
     return out
 
 def main():
-    ap=argparse.ArgumentParser(); ap.add_argument("--n",type=int,default=100); ap.add_argument("--ksamples",type=int,default=3); a=ap.parse_args()
-    os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", KEY)
+    ap=argparse.ArgumentParser(); ap.add_argument("--n",type=int,default=100); ap.add_argument("--ksamples",type=int,default=3)
+    ap.add_argument("--only",type=str,default="",help="comma-separated model keys to run (default: all)")
+    ap.add_argument("--tag",type=str,default="",help="suffix for output files, so a partial run does not clobber the full one")
+    ap.add_argument("--retries",type=int,default=6,help="attempts per judge call before that call is given up")
+    ap.add_argument("--pause",type=float,default=0.0,help="seconds to sleep after each judge call (be polite to the API)")
+    a=ap.parse_args()
+    sel=[s.strip() for s in a.only.split(",") if s.strip()]
+    raw_path=OUT/f"raw_results{('_'+a.tag) if a.tag else ''}.json"
+    sum_path=OUT/f"summary{('_'+a.tag) if a.tag else ''}.json"
+    if KEY:
+        os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", KEY)
+    if not PROJECT:
+        raise SystemExit("set GOOGLE_CLOUD_PROJECT (and GOOGLE_APPLICATION_CREDENTIALS) for the Vertex judge")
     from google import genai
     from google.genai.types import Content, Part, GenerateContentConfig, ThinkingConfig
     client=genai.Client(vertexai=True, project=PROJECT, location=LOCATION)
@@ -135,17 +174,23 @@ def main():
     def judge(img, ov, gt_type, trace):
         scores=[]
         for _ in range(a.ksamples):
-            try:
-                r=client.models.generate_content(model=GMODEL,
-                    contents=[Content(role="user", parts=[
-                        Part.from_text(text=f"Ground-truth defect category (context): {gt_type}\nORIGINAL image:"),
-                        b64part(img,Part), Part.from_text(text="OVERLAY (true defect in RED):"), b64part(ov,Part),
-                        Part.from_text(text="Model reasoning trace to score:\n"+trace)])],
-                    config=GenerateContentConfig(system_instruction=[Part.from_text(text=JUDGE_SYS)],
-                        thinking_config=ThinkingConfig(thinking_budget=512), response_mime_type="application/json"))
-                scores.append(json.loads(r.text))
-            except Exception as e:
-                print(f"   judge retry: {str(e)[:80]}", flush=True); time.sleep(3)
+            # bounded retry with exponential backoff (added 2026-09-02). Before, a single transient
+            # 429/500 dropped that judge call silently and turned median-of-3 into median-of-2, which
+            # biases the median upward. On a clean call this is byte-identical to the old behaviour.
+            for attempt in range(a.retries):
+                try:
+                    r=client.models.generate_content(model=GMODEL,
+                        contents=[Content(role="user", parts=[
+                            Part.from_text(text=f"Ground-truth defect category (context): {gt_type}\nORIGINAL image:"),
+                            b64part(img,Part), Part.from_text(text="OVERLAY (true defect in RED):"), b64part(ov,Part),
+                            Part.from_text(text="Model reasoning trace to score:\n"+trace)])],
+                        config=GenerateContentConfig(system_instruction=[Part.from_text(text=JUDGE_SYS)],
+                            thinking_config=ThinkingConfig(thinking_budget=512), response_mime_type="application/json"))
+                    scores.append(json.loads(r.text)); break
+                except Exception as e:
+                    print(f"   judge retry: {str(e)[:80]}", flush=True)
+                    time.sleep(min(3*(2**attempt), 90))
+            time.sleep(a.pause)
         if not scores: return None
         axes=["visual_grounding","defect_faithfulness","evidence_before_conclusion","coherence","conciseness"]
         med=lambda xs: sorted(xs)[len(xs)//2]
@@ -154,6 +199,7 @@ def main():
 
     rng=random.Random(13); results=[]
     for model, benches in RUNS.items():
+        if sel and model not in sel: continue
         for bench, rel in benches.items():
             fp=ROOT/rel
             if not fp.exists(): print(f"[{model}/{bench}] MISSING {rel}", flush=True); continue
@@ -181,15 +227,15 @@ def main():
                     "gt_defect":gtype,"loc_met":loc_met,"type_sim":tsim,**{f"j_{k}":v for k,v in j.items()}})
                 if (idx+1)%20==0:
                     print(f"   {model}/{bench} {idx+1}/{len(picked)}", flush=True)
-                    json.dump(results,open(OUT/"raw_results.json","w"),indent=1)
-    json.dump(results,open(OUT/"raw_results.json","w"),indent=1)
+                    json.dump(results,open(raw_path,"w"),indent=1)
+    json.dump(results,open(raw_path,"w"),indent=1)
 
     agg=collections.defaultdict(lambda: collections.defaultdict(list))
     for r in results:
         for k in ["j_overall","j_visual_grounding","j_defect_faithfulness","j_evidence_before_conclusion","j_coherence","j_conciseness","loc_met","type_sim"]:
             agg[(r["model"],r["bench"])][k].append(r[k])
     summary={f"{m}|{b}":{k:round(sum(v)/len(v),3) for k,v in d.items()}|{"n":len(d["j_overall"])} for (m,b),d in agg.items()}
-    json.dump(summary,open(OUT/"summary.json","w"),indent=2)
+    json.dump(summary,open(sum_path,"w"),indent=2)
     print("\n=== EXPLAINABILITY SUMMARY (mean; overall out of 10) ===", flush=True)
     print(f"  {'model/bench':28s} {'overall':>7} {'ground':>7} {'faith':>6} {'loc':>5} {'type':>5}  n", flush=True)
     for k in sorted(summary):

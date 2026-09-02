@@ -32,7 +32,12 @@ from typing import Dict, List, Optional
 from PIL import Image
 import torch
 
-os.environ["HF_HOME"] = "/bulk/aacudad/reasoning_traces/hf_cache"
+# Workspace root. WORK_DIR is the directory that holds Training/, outputs/, hf_cache/
+# and the downloaded datasets. It defaults to the parent of this repository, which is
+# how the cluster is laid out. On another machine:  export WORK_DIR=/path/to/workspace
+REPO_ROOT = Path(__file__).resolve().parents[2]
+WORK_DIR = Path(os.environ.get("WORK_DIR") or REPO_ROOT.parent)
+os.environ.setdefault("HF_HOME", str(WORK_DIR / "hf_cache"))
 
 logging.basicConfig(
     level=logging.INFO,
@@ -48,12 +53,24 @@ SEED = 42
 import os as _os
 PROBE_SAMPLES = int(_os.environ.get("PROBE_SAMPLES", "0") or "0")
 
+# Optional pre-resize cap in pixels (area), for models whose image processor has no
+# max_pixels support (e.g. LLaVA-OneVision anyres). Set EVAL_MAX_IMAGE_PIXELS=262144
+# to match the 512x512 training/eval protocol. Default 0 = off (Qwen path unchanged:
+# its processor.max_pixels already enforces the cap).
+EVAL_MAX_IMAGE_PIXELS = int(_os.environ.get("EVAL_MAX_IMAGE_PIXELS", "0") or "0")
+
+def _cap_image_pixels(img):
+    if EVAL_MAX_IMAGE_PIXELS and img.width * img.height > EVAL_MAX_IMAGE_PIXELS:
+        f = (EVAL_MAX_IMAGE_PIXELS / (img.width * img.height)) ** 0.5
+        img = img.resize((max(1, int(img.width * f)), max(1, int(img.height * f))), Image.LANCZOS)
+    return img
+
 DATA_PATHS = {
-    "test":  "/bulk/aacudad/reasoning_traces/Training/datasets/unified_test_zeroshot_full.json",
-    "train": "/bulk/aacudad/reasoning_traces/Training/datasets/unified_train_zeroshot_full.json",
-    "mmad_official": "/bulk/aacudad/reasoning_traces/MMAD_repo/dataset/MMAD/mmad.json",
-    "realiad_images_root": "/bulk/aacudad/reasoning_traces/reasoning_traces_gen/data/Real-IAD/images",
-    "mmad_images_root":    "/bulk/aacudad/reasoning_traces/reasoning_traces_gen/data/MMAD",
+    "test":  str(WORK_DIR / "Training/datasets/unified_test_zeroshot_full.json"),
+    "train": str(WORK_DIR / "Training/datasets/unified_train_zeroshot_full.json"),
+    "mmad_official": str(WORK_DIR / "MMAD_repo/dataset/MMAD/mmad.json"),
+    "realiad_images_root": str(WORK_DIR / "reasoning_traces_gen/data/Real-IAD/images"),
+    "mmad_images_root":    str(WORK_DIR / "reasoning_traces_gen/data/MMAD"),
 }
 
 # MMAD sub-datasets (first component of image_id path)
@@ -65,6 +82,17 @@ def make_train_prompt(product_name: str) -> str:
         "Determine if there are any anomalies present. "
         "If an anomaly is detected, specify its type and location, "
         "and provide a detailed reasoning for your conclusion."
+    )
+
+
+def make_noreason_prompt(product_name: str) -> str:
+    """Native prompt of the no-reasoning (labels-only) SFT baseline: same product-conditioned
+    preamble as make_train_prompt, but it asks for a bare verdict instead of type/location/reasoning.
+    Must match the training data (Training/datasets_noreason/) character for character."""
+    return (
+        f"Analyze the provided image of the {product_name}. "
+        "Determine if there are any anomalies present. "
+        "Answer with yes or no."
     )
 
 
@@ -80,9 +108,11 @@ GRPO_EVAL_PROMPT = (
 # model call is swapped for a Gemini call (Vertex AI). Used to produce a directly
 # comparable Gemini-2.5-Flash reference row on the SAME DS-MVTec / VisA eval set.
 # ---------------------------------------------------------------------------
-GEMINI_VERTEX_PROJECT = "project-366f417b-7062-4a00-bc8"
-GEMINI_VERTEX_LOCATION = "global"
-GEMINI_VERTEX_KEY = "/bulk/aacudad/reasoning_traces/vertexai-amir-key.json"
+# Vertex settings come from the environment. Nothing secret is stored in this file:
+# GOOGLE_APPLICATION_CREDENTIALS points at the service-account JSON (git-ignored).
+GEMINI_VERTEX_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
+GEMINI_VERTEX_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
+GEMINI_VERTEX_KEY = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")
 
 GEMINI_SYSTEM_PROMPT = (
     "You are an expert industrial visual-inspection system. You are given a single image of a "
@@ -102,15 +132,20 @@ def make_gemini_user_text(product_name: str) -> str:
 
 
 def build_gemini_client(model_name: str):
-    os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", GEMINI_VERTEX_KEY)
+    if GEMINI_VERTEX_KEY:
+        os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", GEMINI_VERTEX_KEY)
+    if not GEMINI_VERTEX_PROJECT:
+        raise SystemExit("--gemini needs GOOGLE_CLOUD_PROJECT (and GOOGLE_APPLICATION_CREDENTIALS) "
+                         "in the environment; see .env.example")
     from google import genai
     client = genai.Client(vertexai=True, project=GEMINI_VERTEX_PROJECT, location=GEMINI_VERTEX_LOCATION)
     logger.info(f"Gemini client ready: model={model_name} (Vertex {GEMINI_VERTEX_PROJECT}/{GEMINI_VERTEX_LOCATION}), thinking_budget=0")
     return client
 
 
-def gemini_predict_one(client, model_name: str, image, product_name: str, max_retries: int = 6) -> str:
-    """One Gemini call: structured-prompt, thinking_budget=0, returns raw text (with <answer> tags)."""
+def gemini_predict_one(client, model_name: str, image, product_name: str, thinking_level: Optional[str] = None, max_retries: int = 6) -> str:
+    """One Gemini call: structured-prompt, returns raw text (with <answer> tags). thinking_level
+    (Gemini-3, e.g. 'minimal'/'low'/'high') takes precedence; else thinking_budget=0 (Gemini-2.5)."""
     import io
     import time as _time
     from google.genai.types import Content, Part, GenerateContentConfig, ThinkingConfig
@@ -120,11 +155,12 @@ def gemini_predict_one(client, model_name: str, image, product_name: str, max_re
         Part.from_bytes(data=bio.getvalue(), mime_type="image/jpeg"),
         Part.from_text(text=make_gemini_user_text(product_name)),
     ]
+    tcfg = ThinkingConfig(thinking_level=thinking_level) if thinking_level else ThinkingConfig(thinking_budget=0)
     cfg = GenerateContentConfig(
         system_instruction=[Part.from_text(text=GEMINI_SYSTEM_PROMPT)],
         temperature=0.0,
-        max_output_tokens=700,
-        thinking_config=ThinkingConfig(thinking_budget=0),
+        max_output_tokens=1536,
+        thinking_config=tcfg,
     )
     delay = 4.0
     for _ in range(max_retries):
@@ -135,6 +171,60 @@ def gemini_predict_one(client, model_name: str, image, product_name: str, max_re
             return resp.text or ""
         except Exception as e:  # noqa: BLE001
             logger.warning(f"  gemini retry ({type(e).__name__}: {str(e)[:80]})")
+            _time.sleep(delay)
+            delay = min(delay * 1.8, 60.0)
+    return ""
+
+
+# ---------------------------------------------------------------------------
+# OpenAI (GPT) benchmark mode (--openai): identical data/GT/metrics/prompt as
+# --gemini, only the model call is swapped for an OpenAI Responses-API call.
+# Produces a directly comparable GPT reference row on the SAME eval set.
+# ---------------------------------------------------------------------------
+def load_openai_key() -> str:
+    """OPENAI_API_KEY from the environment, or from a git-ignored .env at the repo root."""
+    key = os.environ.get("OPENAI_API_KEY", "").strip()
+    if key:
+        return key
+    env_path = REPO_ROOT / ".env"
+    if env_path.exists():
+        for ln in env_path.read_text().splitlines():
+            if ln.strip().startswith("OPENAI_API_KEY"):
+                return ln.split("=", 1)[1].strip().strip('"').strip("'")
+    raise SystemExit("OPENAI_API_KEY is not set and there is no OPENAI_API_KEY line in .env")
+
+
+def build_openai_client():
+    from openai import OpenAI
+    return OpenAI(api_key=load_openai_key())
+
+
+def openai_predict_one(client, model_name: str, image, product_name: str, effort: str = "low", max_retries: int = 5) -> str:
+    """One OpenAI Responses-API call: same structured prompt as Gemini, returns raw text with <answer> tags."""
+    import io, base64
+    import time as _time
+    bio = io.BytesIO()
+    image.convert("RGB").save(bio, format="JPEG", quality=85)
+    b64 = base64.b64encode(bio.getvalue()).decode()
+    delay = 4.0
+    for _ in range(max_retries):
+        try:
+            r = client.responses.create(
+                model=model_name,
+                input=[{"role": "system", "content": GEMINI_SYSTEM_PROMPT},
+                       {"role": "user", "content": [
+                           {"type": "input_text", "text": make_gemini_user_text(product_name)},
+                           {"type": "input_image", "image_url": f"data:image/jpeg;base64,{b64}"}]}],
+                reasoning={"effort": effort}, max_output_tokens=2000)
+            txt = ""
+            for o in r.output:
+                if getattr(o, "type", None) == "message":
+                    for c in o.content:
+                        if getattr(c, "type", None) == "output_text":
+                            txt = c.text
+            return txt or ""
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"  openai retry ({type(e).__name__}: {str(e)[:80]})")
             _time.sleep(delay)
             delay = min(delay * 1.8, 60.0)
     return ""
@@ -321,7 +411,7 @@ def load_balanced_test_data(json_path: str, num_samples: Optional[int], realiad_
 
     if realiad_4k:
         # Load the new_sft_c1_train.json (4236 RealIAD samples) and convert SFT format to eval format
-        realiad_4k_path = "/bulk/aacudad/reasoning_traces/Training/datasets_small_15k_c1_only_fixed/new_sft_c1_train.json"
+        realiad_4k_path = str(WORK_DIR / "Training/datasets_small_15k_c1_only_fixed/new_sft_c1_train.json")
         with open(realiad_4k_path, "r") as f:
             sft_data = json.load(f)
         result = []
@@ -496,12 +586,20 @@ def load_model(checkpoint: Optional[str], base_model: str, load_in_4bit: bool = 
 # Inference (single image)
 # ---------------------------------------------------------------------------
 
-def run_inference_batch(model, processor, batch_items: list, no_system_prompt: bool = False, grpo_eval: bool = False, bare_question: bool = False, iadr1_native: bool = False) -> list:
+def run_inference_batch(model, processor, batch_items: list, no_system_prompt: bool = False, grpo_eval: bool = False, bare_question: bool = False, iadr1_native: bool = False, yesno_user: bool = False, noreason: bool = False) -> list:
     """batch_items: list of (image, product_name)"""
     texts = []
     all_images = []
     for img, product_name in batch_items:
-        if iadr1_native:
+        if noreason:
+            # Native mode of the no-reasoning (labels-only) SFT baseline: no system message,
+            # product-conditioned preamble that asks for a bare yes/no verdict.
+            prompt = make_noreason_prompt(product_name)
+            messages = [{"role": "user", "content": [
+                {"type": "image", "image": img},
+                {"type": "text",  "text": f"\n{prompt}"},
+            ]}]
+        elif iadr1_native:
             # Exact IAD-R1 native eval prompt (vLLM_Qwen_detect.py build_prompt):
             # system "Please answer by yes or no" + user "Are there any defects in the test image?"
             messages = [
@@ -524,6 +622,14 @@ def run_inference_batch(model, processor, batch_items: list, no_system_prompt: b
             messages = [{"role": "user", "content": [
                 {"type": "image", "image": img},
                 {"type": "text",  "text": GRPO_EVAL_PROMPT},
+            ]}]
+        elif yesno_user:
+            # Qwen-parity instruction relocated to the USER turn (for backbones that
+            # ignore the system slot, e.g. LLaVA-OneVision): identical wording.
+            prompt = make_train_prompt(product_name)
+            messages = [{"role": "user", "content": [
+                {"type": "image", "image": img},
+                {"type": "text",  "text": f"Please answer by yes or no\n{prompt}"},
             ]}]
         elif no_system_prompt:
             # Exact SFT training format: no system message
@@ -697,13 +803,23 @@ def evaluate(
     batch_size: int = 4,
     load_in_4bit: bool = False,
     no_system_prompt: bool = False,
+    yesno_user: bool = False,
     grpo_eval: bool = False,
     bare_question: bool = False,
     iadr1_native: bool = False,
+    noreason: bool = False,
     gemini: bool = False,
     gemini_model: str = "gemini-2.5-flash",
+    gemini_thinking_level: Optional[str] = None,
+    openai_bench: bool = False,
+    openai_model: str = "gpt-5-mini",
+    openai_effort: str = "low",
+    shard: int = 0,
+    num_shards: int = 1,
 ) -> None:
-    label = f"Gemini {gemini_model}" if gemini else ("SFT " + Path(checkpoint).name if checkpoint else "baseline")
+    label = (f"OpenAI {openai_model}" if openai_bench else
+             (f"Gemini {gemini_model}" if gemini else
+              ("SFT " + Path(checkpoint).name if checkpoint else "baseline")))
     logger.info("=" * 70)
     logger.info(f"Qwen2.5-VL-7B Evaluation — {label}")
     logger.info("=" * 70)
@@ -721,9 +837,15 @@ def evaluate(
     logger.info(f"No system prompt:{no_system_prompt}")
     logger.info(f"GRPO eval prompt:{grpo_eval}")
     logger.info(f"Bare question:   {bare_question}")
+    logger.info(f"No-reason prompt:{noreason}")
     logger.info(f"Batch size:      {batch_size}")
 
-    if gemini:
+    if openai_bench:
+        from concurrent.futures import ThreadPoolExecutor
+        oaclient = build_openai_client()
+        logger.info(f"OpenAI client ready: model={openai_model} effort={openai_effort}, shard {shard}/{num_shards}")
+        model, processor = None, None
+    elif gemini:
         from concurrent.futures import ThreadPoolExecutor
         gclient = build_gemini_client(gemini_model)
         model, processor = None, None
@@ -731,8 +853,8 @@ def evaluate(
         model, processor = load_model(checkpoint, base_model, load_in_4bit=load_in_4bit)
 
     logger.info("Building image map...")
-    # Gemini benchmark is MMAD-only (DS-MVTec / VisA) -> skip the slow 150K+ Real-IAD rglob
-    realiad_root = "" if (gemini and (ds_mvtec_only or visa_only)) else DATA_PATHS["realiad_images_root"]
+    # Gemini/OpenAI benchmark is MMAD-only (DS-MVTec / VisA) -> skip the slow 150K+ Real-IAD rglob
+    realiad_root = "" if ((gemini or openai_bench) and (ds_mvtec_only or visa_only)) else DATA_PATHS["realiad_images_root"]
     image_map = build_image_map(realiad_root, DATA_PATHS["mmad_images_root"])
     logger.info(f"Found {len(image_map)} images")
 
@@ -776,6 +898,11 @@ def evaluate(
             "gt_tags":     gt_tags,
         })
 
+    if num_shards > 1:
+        before = len(resolved)
+        resolved = resolved[shard::num_shards]
+        logger.info(f"Shard {shard}/{num_shards}: {len(resolved)}/{before} samples")
+
     results = []
     total_resolved = len(resolved)
     logger.info(f"Evaluating {total_resolved} samples...")
@@ -784,15 +911,19 @@ def evaluate(
         batch = resolved[batch_start:batch_start + batch_size]
         try:
             batch_items = [
-                (Image.open(b["target_path"]).convert("RGB"), b["question"])  # question = product_name
+                (_cap_image_pixels(Image.open(b["target_path"]).convert("RGB")), b["question"])  # question = product_name
                 for b in batch
             ]
-            if gemini:
+            if openai_bench:
                 with ThreadPoolExecutor(max_workers=max(1, len(batch_items))) as _pool:
                     predictions = list(_pool.map(
-                        lambda it: gemini_predict_one(gclient, gemini_model, it[0], it[1]), batch_items))
+                        lambda it: openai_predict_one(oaclient, openai_model, it[0], it[1], effort=openai_effort), batch_items))
+            elif gemini:
+                with ThreadPoolExecutor(max_workers=max(1, len(batch_items))) as _pool:
+                    predictions = list(_pool.map(
+                        lambda it: gemini_predict_one(gclient, gemini_model, it[0], it[1], thinking_level=gemini_thinking_level), batch_items))
             else:
-                predictions = run_inference_batch(model, processor, batch_items, no_system_prompt=no_system_prompt, grpo_eval=grpo_eval, bare_question=bare_question, iadr1_native=iadr1_native)
+                predictions = run_inference_batch(model, processor, batch_items, no_system_prompt=no_system_prompt, grpo_eval=grpo_eval, bare_question=bare_question, iadr1_native=iadr1_native, yesno_user=yesno_user, noreason=noreason)
         except Exception as e:
             import traceback
             logger.error(f"Batch {batch_start}-{batch_start+len(batch)} error: {e}\n{traceback.format_exc()}")
@@ -905,10 +1036,18 @@ def evaluate(
     # Record exactly which prompt was used so the file is self-describing
     # (the filename suffix alone has been a source of confusion: a file named
     #  *_trainprompt.json may have been produced under --grpo-eval).
-    if gemini:
+    if openai_bench:
+        prompt_mode = "openai_structured"
+        system_prompt = GEMINI_SYSTEM_PROMPT
+        user_prompt = make_gemini_user_text("{product_name}")
+    elif gemini:
         prompt_mode = "gemini25flash_structured"
         system_prompt = GEMINI_SYSTEM_PROMPT
         user_prompt = make_gemini_user_text("{product_name}")
+    elif noreason:
+        prompt_mode = "noreasonprompt"
+        system_prompt = None
+        user_prompt = make_noreason_prompt("{product_name}")
     elif iadr1_native:
         prompt_mode = "iadr1native"
         system_prompt = "Please answer by yes or no"
@@ -921,6 +1060,10 @@ def evaluate(
         prompt_mode = "grpoprompt"
         system_prompt = None
         user_prompt = GRPO_EVAL_PROMPT
+    elif yesno_user:
+        prompt_mode = "trainprompt_yesno_user"
+        system_prompt = None
+        user_prompt = "Please answer by yes or no\n" + make_train_prompt("{product_name}")
     elif no_system_prompt:
         prompt_mode = "trainprompt_nosys"
         system_prompt = None
@@ -935,8 +1078,11 @@ def evaluate(
         "user_prompt": user_prompt,
         "checkpoint": checkpoint,
         "base_model": base_model,
-        "model": gemini_model if gemini else (checkpoint or base_model),
-        "thinking_budget": 0 if gemini else None,
+        "model": openai_model if openai_bench else (gemini_model if gemini else (checkpoint or base_model)),
+        "thinking_budget": (0 if (gemini and not gemini_thinking_level) else None),
+        "gemini_thinking_level": gemini_thinking_level if gemini else None,
+        "openai_effort": openai_effort if openai_bench else None,
+        "shard": f"{shard}/{num_shards}" if num_shards > 1 else None,
     }
 
     out_path = Path(output_file)
@@ -978,6 +1124,8 @@ if __name__ == "__main__":
                         help="Evaluate on all VisA entries from mmad.json (no sampling)")
     parser.add_argument("--realiad-4k", action="store_true",
                         help="Evaluate on RealIAD 4k new SFT samples (new_sft_c1_train.json, 4236 images)")
+    parser.add_argument("--yesno-user", action="store_true",
+                        help="Put 'Please answer by yes or no' + trainprompt in the USER turn, no system message (LLaVA-parity mode)")
     parser.add_argument("--no-system-prompt", action="store_true",
                         help="Omit system message — use exact training format (for fine-tuned model eval)")
     parser.add_argument("--bare-question", action="store_true",
@@ -988,11 +1136,26 @@ if __name__ == "__main__":
     parser.add_argument("--iadr1-native", action="store_true",
                         help="Use IAD-R1's own native eval prompt (vLLM_Qwen_detect.py): system "
                              "'Please answer by yes or no' + user 'Are there any defects in the test image?'")
+    parser.add_argument("--noreason-prompt", action="store_true",
+                        help="noreasonprompt: native mode of the no-reasoning (labels-only) SFT "
+                             "baseline. No system message; product preamble ending 'Answer with yes "
+                             "or no.' Must match Training/datasets_noreason/. Suffix: _noreasonprompt")
     parser.add_argument("--gemini", action="store_true",
                         help="Benchmark Gemini-2.5-Flash (Vertex AI) instead of a local Qwen model, using the "
                              "structured think/type/location/answer prompt + thinking_budget=0. Same data/GT/metrics.")
     parser.add_argument("--gemini-model", type=str, default="gemini-2.5-flash",
                         help="Gemini model id for --gemini (default: gemini-2.5-flash)")
+    parser.add_argument("--gemini-thinking-level", type=str, default=None,
+                        help="Gemini-3 thinking_level (minimal|low|high); if set, overrides thinking_budget=0")
+    parser.add_argument("--openai", action="store_true",
+                        help="Benchmark an OpenAI model (Responses API) instead of a local Qwen model, using the "
+                             "same structured prompt as --gemini. Same data/GT/metrics.")
+    parser.add_argument("--openai-model", type=str, default="gpt-5-mini",
+                        help="OpenAI model id for --openai (default: gpt-5-mini)")
+    parser.add_argument("--openai-effort", type=str, default="low",
+                        help="Reasoning effort for --openai (minimal|low|medium|high; default: low)")
+    parser.add_argument("--shard", type=int, default=0, help="Shard index (0-based) for sharded API eval")
+    parser.add_argument("--num-shards", type=int, default=1, help="Total number of shards")
     parser.add_argument("--load-in-4bit", action="store_true",
                         help="Load model in 4-bit quantization (bitsandbytes)")
     parser.add_argument("--batch-size",   type=int, default=4,
@@ -1017,11 +1180,19 @@ if __name__ == "__main__":
         visa_only=args.visa_only,
         realiad_4k=args.realiad_4k,
         no_system_prompt=args.no_system_prompt,
+        yesno_user=args.yesno_user,
         grpo_eval=args.grpo_eval,
         bare_question=args.bare_question,
         iadr1_native=args.iadr1_native,
+        noreason=args.noreason_prompt,
         gemini=args.gemini,
         gemini_model=args.gemini_model,
+        gemini_thinking_level=args.gemini_thinking_level,
+        openai_bench=args.openai,
+        openai_model=args.openai_model,
+        openai_effort=args.openai_effort,
+        shard=args.shard,
+        num_shards=args.num_shards,
         batch_size=args.batch_size,
         load_in_4bit=args.load_in_4bit,
     )
