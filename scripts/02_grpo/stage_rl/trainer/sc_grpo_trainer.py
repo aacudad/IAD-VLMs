@@ -645,13 +645,22 @@ class SCGRPOTrainer(Trainer):
             vllm_prompts_text = copy.deepcopy(prompts_text)
             vllm_prompts = copy.deepcopy(prompts)
         
+        import os as _os
+        _grpo_max_px = int(_os.environ.get("GRPO_MAX_IMAGE_PIXELS", "0") or "0")
+        def _cap_px(im):
+            # Pre-resize for processors that ignore image_processor.max_pixels (LLaVA-OV anyres).
+            # Mirrors what --max_pixels does for Qwen (area cap, aspect preserved).
+            if _grpo_max_px and im.width * im.height > _grpo_max_px:
+                f = (_grpo_max_px / (im.width * im.height)) ** 0.5
+                im = im.resize((max(1, int(im.width * f)), max(1, int(im.height * f))), Image.LANCZOS)
+            return im
         images = []
         for x in inputs:
             if isinstance(x["image"], list):
                 for image in x["image"]:
-                    images.append(Image.open(image) if isinstance(image, str) else image)
+                    images.append(_cap_px(Image.open(image)) if isinstance(image, str) else _cap_px(image))
             else:
-                images = [Image.open(x["image"]) if isinstance(x["image"], str) else x["image"]]
+                images = [_cap_px(Image.open(x["image"])) if isinstance(x["image"], str) else _cap_px(x["image"])]
 
         prompt_inputs = self.processing_class(
             text=prompts_text,
@@ -831,7 +840,57 @@ class SCGRPOTrainer(Trainer):
         # x - x.detach() allows for preserving gradients from x
         per_token_loss = torch.exp(per_token_logps - per_token_logps.detach()) * advantages.unsqueeze(1)
         per_token_loss = -(per_token_loss - self.beta * per_token_kl)
-        loss = ((per_token_loss * completion_mask).sum(dim=1) / completion_mask.sum(dim=1)).mean()
+
+        # --- Flag-gated loss shaping (default-off). With both env flags unset, control falls
+        # through to the final else branch, which is the original loss line byte-for-byte, so a
+        # crash-restart without the flags behaves identically to the shipped trainer. ---
+        _mask_zero_std = os.environ.get("GRPO_MASK_ZERO_STD_GROUPS", "") == "1"
+        # GRPO_DRGRPO_TRUE is only meaningful together with --use_drgrpo (REPORT2 §1.3 code-change 1
+        # conditions the normalizer on use_drgrpo); without that arg it is deliberately inert.
+        _drgrpo_true = os.environ.get("GRPO_DRGRPO_TRUE", "") == "1" and getattr(
+            self.args, "use_drgrpo", False
+        )
+        if _mask_zero_std or _drgrpo_true:
+            # Both features act on the single shared loss line, downstream of every estimator
+            # branch (g2rpo / drgrpo / z-score), so they apply to all estimators identically.
+            loss_mask = completion_mask
+            if _mask_zero_std:
+                # GRPO_MASK_ZERO_STD_GROUPS=1 (REPORT2 §3.4 rank-1): groups whose within-group
+                # reward std == 0 (exact ties) contribute zero loss — zero the completion-mask
+                # rows of all G rollouts of each tied group BEFORE the loss mean. Implemented on
+                # a local copy (loss_mask) so the metric lines below (completion_length, kl)
+                # keep their original semantics; per-row denominators are clamped so fully
+                # masked rows contribute exactly 0 rather than 0/0 = NaN.
+                # Minimal-faithful reading (recorded per task constraint): the batch mean stays
+                # over all B*G rows — masked rows add 0 to the numerator and still count in
+                # .mean()'s denominator; no renormalization over surviving rows.
+                # std_grouped_rewards was repeat_interleaved above, so each view row is
+                # constant and column 0 recovers the per-group std.
+                _keep_groups = std_grouped_rewards.view(-1, self.num_generations)[:, 0] != 0
+                if bool(_keep_groups.any()):
+                    loss_mask = completion_mask * _keep_groups.repeat_interleave(
+                        self.num_generations
+                    ).unsqueeze(1).to(completion_mask.dtype)
+                else:
+                    # Denominator guard: every group in the batch is exactly tied, so masking
+                    # would zero the whole batch. Fall back to unmasked behavior with a logged
+                    # warning (step number in the message defeats the warnings dedup registry).
+                    warnings.warn(
+                        "GRPO_MASK_ZERO_STD_GROUPS: all groups tied (std==0) at step "
+                        f"{self.state.global_step}; falling back to unmasked loss for this batch."
+                    )
+            if _drgrpo_true:
+                # GRPO_DRGRPO_TRUE=1 + --use_drgrpo (REPORT2 §1.1/§1.3, arXiv 2503.20783
+                # Listing 1): the second Dr.GRPO deletion — replace the per-response mean
+                # 1/|o_i| with the constant generation-budget normalizer 1/MAX_TOKENS
+                # (self.max_completion_length, set from args at __init__), then batch mean.
+                loss = ((per_token_loss * loss_mask).sum(dim=1) / self.max_completion_length).mean()
+            else:
+                # Masking only: original per-response mean, with the denominator clamped to >= 1
+                # so rows of fully masked (tied) groups contribute exactly 0.
+                loss = ((per_token_loss * loss_mask).sum(dim=1) / loss_mask.sum(dim=1).clamp(min=1)).mean()
+        else:
+            loss = ((per_token_loss * completion_mask).sum(dim=1) / completion_mask.sum(dim=1)).mean()
 
         # Log the metrics
         completion_length = self.accelerator.gather_for_metrics(completion_mask.sum(1)).float().mean().item()
@@ -848,6 +907,46 @@ class SCGRPOTrainer(Trainer):
         self._metrics["reward"].append(self.accelerator.gather_for_metrics(rewards).mean().item())
 
         self._metrics["reward_std"].append(self.accelerator.gather_for_metrics(std_grouped_rewards).mean().item())
+
+        # --- Flag-gated per-group instrumentation (default-off; no-op unless GRPO_GROUP_STATS
+        # is set). REPORT2 §3.4 rank-0 / §1.3 code-change 2: closes the batch-mean-only blind
+        # spot of the reward metrics above by appending one JSON line per optimization step:
+        # {"step", "group_rewards" (per-rollout rewards of each group), "group_stds",
+        #  "group_means", "frac_zero_std", "mean_neg_logp"}.
+        # mean_neg_logp is the completion-mask-weighted mean of -per_token_logps (detached) —
+        # the sampled-token cross-entropy, the entropy proxy REPORT2 rank-0 asks for.
+        # Minimal-faithful choices, recorded per task constraint:
+        #   * main-process only, and only its LOCAL groups: no new collective op is introduced,
+        #     so an env var visible on a subset of ranks can never desynchronize/deadlock them;
+        #   * with gradient_accumulation_steps > 1 this appends one line per micro-batch, each
+        #     tagged with the same global_step (this method is the only per-batch hook here);
+        #   * frac_zero_std uses exact std == 0 (the "exact tie" statistic), Bessel-corrected
+        #     std matching the estimator branch above.
+        # Must never throw: the whole block is wrapped in try/except.
+        _group_stats_path = os.environ.get("GRPO_GROUP_STATS", "")
+        if _group_stats_path and self.accelerator.is_main_process:
+            try:
+                import json as _json
+
+                _grouped_rewards = rewards.view(-1, self.num_generations)
+                _group_means = _grouped_rewards.mean(dim=1)
+                _group_stds = _grouped_rewards.std(dim=1)
+                _mask_sum = completion_mask.sum()
+                _mean_neg_logp = (
+                    (-per_token_logps.detach() * completion_mask).sum() / _mask_sum.clamp(min=1)
+                )
+                _stats_line = {
+                    "step": int(self.state.global_step),
+                    "group_rewards": _grouped_rewards.detach().cpu().tolist(),
+                    "group_stds": _group_stds.detach().cpu().tolist(),
+                    "group_means": _group_means.detach().cpu().tolist(),
+                    "frac_zero_std": float((_group_stds == 0).float().mean().item()),
+                    "mean_neg_logp": float(_mean_neg_logp.item()),
+                }
+                with open(_group_stats_path, "a") as _stats_f:
+                    _stats_f.write(_json.dumps(_stats_line) + "\n")
+            except Exception as _stats_err:  # instrumentation must never kill a training step
+                warnings.warn(f"GRPO_GROUP_STATS logging failed: {_stats_err}")
 
         mean_kl = ((per_token_kl * completion_mask).sum(dim=1) / completion_mask.sum(dim=1)).mean()
         self._metrics["kl"].append(self.accelerator.gather_for_metrics(mean_kl).mean().item())

@@ -29,6 +29,21 @@ from trl import ModelConfig, ScriptArguments, TrlParser, get_peft_config
 
 logger = logging.getLogger(__name__)
 
+# ZeRO-3 guard: SigLIP's fan-based _init_weights crashes on zero3-partitioned
+# (0/1-D placeholder) tensors during from_pretrained. All weights are loaded from
+# the checkpoint afterwards, so init values are irrelevant — no-op the fan-based
+# init for such tensors. Affects only LLaVA-OV (SigLIP tower); Qwen path untouched.
+try:
+    from transformers.models.siglip import modeling_siglip as _msig
+    _orig_variance_scaling = _msig.variance_scaling_
+    def _vs_zero3_guard(tensor, *a, **k):
+        if tensor.dim() < 2 or tensor.numel() == 0:
+            return tensor
+        return _orig_variance_scaling(tensor, *a, **k)
+    _msig.variance_scaling_ = _vs_zero3_guard
+except Exception:
+    pass
+
 @dataclass
 class GRPOScriptArguments(ScriptArguments):
 
@@ -61,8 +76,12 @@ class GRPOScriptArguments(ScriptArguments):
         metadata={"help": "Minimum number of pixels for the image"},
     )
     single_img: int = field(
-        default=1, 
+        default=1,
         metadata={"help": "Whether to use single image mode"}
+    )
+    prompt_style: str = field(
+        default="grpo",
+        metadata={"help": "User-prompt style: 'grpo' (default, the IAD-R1 'Are there any defects in the query image?' question template) or 'sft' (the product-specific SFT/eval prompt 'Analyze the provided image of the {product}...'). 'grpo' preserves all existing behaviour."}
     )
 
 def main(script_args, training_args, model_args):
@@ -129,13 +148,14 @@ def main(script_args, training_args, model_args):
         "format": consistency_reward,
         "reasoning": reasoning_reward,
         "reasoning_gemini": reasoning_reward_gemini,
+        "reasoning_gemini_rank": reasoning_reward_gemini_rank,
     }
 
     reward_funcs = [reward_funcs_registry[func] for func in script_args.reward_funcs]
 
     if script_args.dataset_name.endswith('.json'):
         dataset = load_dataset('json', data_files=script_args.dataset_name)
-        def make_conversation(example, image_path=None, use_system_prompt=False):
+        def make_conversation(example, image_path=None, use_system_prompt=False, prompt_style="grpo"):
             SPEC_QUESTION_PROMPT = QUESTION_PROMPT
 
             # Support our dataset format (image_path/question/answer)
@@ -173,6 +193,58 @@ def main(script_args, training_args, model_args):
                 gt = example.get("gt_label", example.get("solution", ""))
                 solution = gt if re.search(r"<answer>", gt) else f"<answer>{gt}</answer>"
 
+            # SFT/eval-aligned prompt (opt-in): the product-specific "Analyze the
+            # provided image of the {product}..." prompt used by SFT and eval, as a
+            # single user turn with no system message. Default 'grpo' path below is
+            # untouched, so all other runs keep the IAD-R1 question template.
+            if prompt_style in ("sft", "sft_sys"):
+                product = example.get("product")
+                if not product:
+                    parts = images[0].replace("\\", "/").split("/")
+                    product = next((parts[i+1] for i, p in enumerate(parts)
+                                    if p == "images" and i+1 < len(parts)), "object")
+                sft_text = (
+                    f"Analyze the provided image of the {product}. "
+                    "Determine if there are any anomalies present. "
+                    "If an anomaly is detected, specify its type and location, "
+                    "and provide a detailed reasoning for your conclusion."
+                )
+                if prompt_style == "sft_sys":
+                    # eval-aligned: renders identically to the default eval prompt
+                    # (system "Please answer by yes or no" + user "\n"+sft_text).
+                    # NOTE: system content is a LIST (of one text part), not a bare
+                    # string, so it matches the user content type — otherwise
+                    # datasets.map -> pyarrow fails with "cannot mix list and
+                    # non-list". The chat template renders it the same either way.
+                    return {
+                        "prompt": [
+                            {"role": "system", "content": [{"type": "text", "text": "Please answer by yes or no"}]},
+                            {
+                                "role": "user",
+                                "content": [
+                                    *[{"type": "image"} for _ in images],
+                                    {"type": "text", "text": f"\n{sft_text}"},
+                                ],
+                            },
+                        ],
+                        "image": images,
+                        "solution": solution,
+                    }
+                # "sft": user-only, no system message (previous-run reproduction)
+                return {
+                    "prompt": [
+                        {
+                            "role": "user",
+                            "content": [
+                                *[{"type": "image"} for _ in images],
+                                {"type": "text", "text": sft_text},
+                            ],
+                        },
+                    ],
+                    "image": images,
+                    "solution": solution,
+                }
+
             if use_system_prompt:
                 return {
                     "prompt": [
@@ -203,7 +275,7 @@ def main(script_args, training_args, model_args):
                     "solution": solution,
                 }
 
-        dataset = dataset.map(partial(make_conversation, image_path=script_args.image_path, use_system_prompt=use_system_prompt))
+        dataset = dataset.map(partial(make_conversation, image_path=script_args.image_path, use_system_prompt=use_system_prompt, prompt_style=script_args.prompt_style))
     for split in dataset:
         if "messages" in dataset[split].column_names:
             dataset[split] = dataset[split].remove_columns("messages")
