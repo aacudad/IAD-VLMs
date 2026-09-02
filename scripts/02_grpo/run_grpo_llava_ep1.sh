@@ -12,11 +12,10 @@ GPUS="${1:?gpus e.g. 1,2}"; PORT="${2:?port}"; MAXSTEPS="${3:-2120}"; SAVESTEPS=
 # On another machine:  export WORK_DIR=/path/to/workspace
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 WORK_DIR="${WORK_DIR:-$(dirname "$REPO_ROOT")}"
-# NOTE: the LLaVA path needs the SigLIP ZeRO-3 init guard and GRPO_MAX_IMAGE_PIXELS,
-# which the snapshot in scripts/02_grpo/stage_rl/ does not have yet. Point
-# GRPO_STAGE_RL at the working iad_r1_grpo_custom/stage_rl checkout until that
-# snapshot is re-synced, otherwise from_pretrained crashes under ZeRO-3.
-GRPO_STAGE_RL="${GRPO_STAGE_RL:-$WORK_DIR/Training/iad_r1_grpo_custom/stage_rl}"
+# The LLaVA path needs the SigLIP ZeRO-3 init guard and GRPO_MAX_IMAGE_PIXELS.
+# Both are in the in-repo snapshot since the stage_rl re-sync, so that snapshot is
+# the default. Override GRPO_STAGE_RL to run against another checkout.
+GRPO_STAGE_RL="${GRPO_STAGE_RL:-$REPO_ROOT/scripts/02_grpo/stage_rl}"
 
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate llama_sft

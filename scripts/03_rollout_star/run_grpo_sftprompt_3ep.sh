@@ -7,9 +7,13 @@
 set -eo pipefail
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate llama_sft
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# --prompt_style lives in the in-repo stage_rl snapshot, so that is the default.
+# Override GRPO_STAGE_RL to run against another checkout.
+GRPO_STAGE_RL="${GRPO_STAGE_RL:-$REPO_ROOT/scripts/02_grpo/stage_rl}"
 export HF_HOME=/bulk/aacudad/reasoning_traces/hf_cache
 export TRANSFORMERS_CACHE=/bulk/aacudad/reasoning_traces/hf_cache
-export PYTHONPATH=/bulk/aacudad/reasoning_traces/Training/iad_r1_grpo_custom/stage_rl
+export PYTHONPATH=$GRPO_STAGE_RL
 export GEMINI_JUDGE_URL=http://127.0.0.1:5200
 export TRITON_CACHE_DIR=/bulk/aacudad/reasoning_traces/tmp_cache/triton
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
@@ -26,8 +30,8 @@ mkdir -p "$OUT"
 echo "════ GRPO sft_sys (eval-aligned) | β=$BETA | CUDA 1,2 | 3 epochs | $(date) ════"
 
 CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node=2 --nnodes=1 --master_port=29551 \
-  /bulk/aacudad/reasoning_traces/Training/iad_r1_grpo_custom/stage_rl/grpo_ad.py \
-  --deepspeed /bulk/aacudad/reasoning_traces/Training/zero3_offload.json \
+  $GRPO_STAGE_RL/grpo_ad.py \
+  --deepspeed $REPO_ROOT/configs/deepspeed/zero3_offload.json \
   --output_dir "$OUT" --model_name_or_path "$MODEL" --dataset_name "$DATA" \
   --image_path / --use_vllm_for_gen false --use_system_prompt false \
   --prompt_style sft_sys \

@@ -9,10 +9,12 @@ GPUS="${1:?train gpus}"; VGPU="${2:?vllm gpu}"; PORT="${3:?port}"; MAXSTEPS="${4
 # On another machine:  export WORK_DIR=/path/to/workspace
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 WORK_DIR="${WORK_DIR:-$(dirname "$REPO_ROOT")}"
-# NOTE: the LLaVA path needs the SigLIP ZeRO-3 init guard and GRPO_MAX_IMAGE_PIXELS,
-# which the snapshot in scripts/02_grpo/stage_rl/ does not have yet. Point
-# GRPO_STAGE_RL at the working iad_r1_grpo_custom_vllm/stage_rl checkout until that
-# snapshot is re-synced, otherwise from_pretrained crashes under ZeRO-3.
+# NOTE: this launcher needs the vLLM-generation variant of the trainer
+# (iad_r1_grpo_custom_vllm/stage_rl), which is a separate checkout and is NOT the
+# snapshot in scripts/02_grpo/stage_rl/. The in-repo snapshot mirrors the
+# HF-generation stack used by every other GRPO launcher here. Only the vLLM
+# variant has the in-process vLLM engine and the weight-sync path that
+# --use_vllm_for_gen true drives, so GRPO_STAGE_RL must point at that checkout.
 GRPO_STAGE_RL="${GRPO_STAGE_RL:-$WORK_DIR/Training/iad_r1_grpo_custom_vllm/stage_rl}"
 
 # Python 3.12 env with vLLM + TRL. Override with GRPO_FAST_ENV.
