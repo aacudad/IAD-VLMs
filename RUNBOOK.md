@@ -295,6 +295,27 @@ GRPO uses the IAD-R1-derived `SCGRPOTrainer` in
 > shell-script comments (e.g. in `run_grpo_abc_C_4gpu.sh`) also quote the old `β=0.04 / 5e-6` —
 > ignore the comments, trust the values above.
 
+**Optional switches in the trainer, all off unless you set them.** The snapshot in
+[`scripts/02_grpo/stage_rl/`](scripts/02_grpo/stage_rl/) carries a few study-only features.
+Every one is read from the environment and every one is a no-op when the variable is unset, so
+none of them changes the runs described above. Leave them alone to reproduce.
+
+| Variable | Effect when set |
+| --- | --- |
+| `REWARD_GATE_TAGS=1` | Type and location credit is paid only when the predicted verdict matches the gold label. Closes the hedging path. |
+| `REWARD_BAND_FORM=1` | Full band-form answer reward, `1 + b*(q - 1/2)` on a correct verdict with `b=0.1`. Implies the gate. |
+| `REWARD_COMPONENTS` | Comma list, default `verdict,format,type,loc`. Omit a name to zero that sub-signal. |
+| `GRPO_MAX_IMAGE_PIXELS` | Area cap applied to images before the processor. Needed for LLaVA-OneVision, which ignores `--max_pixels`. |
+| `GRPO_MASK_ZERO_STD_GROUPS=1` | Groups whose rollout rewards are exactly tied contribute no loss. |
+| `GRPO_DRGRPO_TRUE=1` | Replaces the per-response length normaliser with the constant generation budget. Only does anything together with `--use_drgrpo`. |
+| `GRPO_GROUP_STATS=<path>` | Appends one JSON line per step with the per-group rewards, standard deviations and the entropy proxy. |
+| `GRPO_COMPLETION_LOG=<path>` | Dumps the first completions of each reward call. Smoke-test aid. |
+
+[`scripts/02_grpo/stage_rl/test_reward_gating.py`](scripts/02_grpo/stage_rl/test_reward_gating.py)
+is a CPU-only test file for the reward switches. Its first three tests assert that with all of
+them unset the reward values are exactly the shipped ones. Run it with
+`cd scripts/02_grpo/stage_rl && python test_reward_gating.py`.
+
 **Start the type-embedding server** (required; the type reward calls it at
 `http://127.0.0.1:5200/embed_similarity`):
 

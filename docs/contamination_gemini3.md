@@ -51,21 +51,24 @@ a result. Decision: hold until/unless we have a clean (private/post-cutoff) eval
 
 ## Provenance / how to reproduce
 
-- **Model:** `gemini-3-flash-preview` on Vertex AI (project `project-366f417b-7062-4a00-bc8`,
-  location `global`, key `vertexai-amir-key.json`); `thinking_level=minimal` (Gemini-3 control,
-  *not* `thinking_budget=0`).
-- **Harness:** `Training/evaluate_qwen25vl_7b_trainprompt.py` — new flags
-  `--gemini --gemini-model gemini-3-flash-preview --gemini-thinking-level minimal`, with
-  generic `--shard k --num-shards 4` sharding (added 2026-06-20). Same structured
+- **Model:** `gemini-3-flash-preview` on Vertex AI, `thinking_level=minimal` (Gemini-3 control,
+  *not* `thinking_budget=0`). The harness reads the Vertex project, location and service-account
+  path from `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION` and
+  `GOOGLE_APPLICATION_CREDENTIALS`. Nothing is hardcoded, see `.env.example`.
+- **Harness:** `scripts/04_eval/evaluate_qwen25vl_7b_trainprompt.py` with
+  `--gemini --gemini-model gemini-3-flash-preview --gemini-thinking-level minimal`, plus the
+  generic `--shard k --num-shards 4` sharding. Same structured
   `<think>/<type>/<location>/<answer>` prompt + GT + metrics as the Gemini-2.5 row, so directly
   comparable. Env: `llama_sft` (google-genai 1.72.0, transformers 5.0.0).
 - **Run:** 8 shards (4 DS + 4 VisA), CPU-only. 603 retries on `429 RESOURCE_EXHAUSTED` (preview
   quota), all absorbed by backoff — `no_answer=1` per subset, so the BA is essentially clean.
-- **Artifacts:** `outputs/gemini3flash_eval/{ds,visa}_shard{0..3}of4.json`,
-  merged `outputs/gemini3flash_eval/eval_gemini3flash_minimal_{ds,visa}_merged.json`.
-- **Merge/BA:** `python merge_api_eval.py outputs/gemini3flash_eval gemini3flash_minimal`.
+- **Artifacts:** written to the workspace, not committed here:
+  `$WORK_DIR/outputs/gemini3flash_eval/{ds,visa}_shard{0..3}of4.json` and the merged
+  `eval_gemini3flash_minimal_{ds,visa}_merged.json` beside them.
+- **Merge/BA:** `python scripts/04_eval/merge_api_eval.py <outdir> gemini3flash_minimal`.
 
 ## See also
-- GPT-5-mini reference run: `outputs/gpt5mini_eval/` (merged via `merge_gpt5mini_eval.py`).
+- GPT-5-mini reference run: `$WORK_DIR/outputs/gpt5mini_eval/`, merged with the same
+  `scripts/04_eval/merge_api_eval.py` (that outdir is its default).
 - Thesis Limitation L5 (`chapters/07_discussion.tex`, `sec:disc-limitations`): trace-generator /
   evaluation contamination caveat — this finding is direct evidence for it.
