@@ -53,6 +53,56 @@ Use [`results/compute_ba.py`](results/compute_ba.py) on any `results/<run>/check
 
 ---
 
+# Part 0 — Post-thesis claims (added 2026-09-02)
+
+These claims are **not** in the submitted thesis PDF. They come from runs finished after submission
+and they are the claims the README and the conference paper lean on. Same columns and same status
+legend as the per-chapter tables in Part 2.
+
+Throughout: the method is **Keep-Correct-Revise (KCR)**. Keep the rollouts the policy already gets
+right, have a teacher correct the wrong ones and revise the ones that are right but weakly grounded,
+then fine-tune the base model on the result. "Arm C" is the same thing under its ablation name (A =
+keep only, B = keep + correct, C = keep + correct + revise = KCR) and it is what every path, dataset
+key and results directory below uses.
+
+## 0.1 Explanation quality (the number that changed)
+
+| Claim | Where | How it was derived | Evidence | Status |
+|---|---|---|---|---|
+| KCR/Arm-C explanations score **9.05** on DS-MVTec and **8.52** on VisA, against **6.14** and **7.04** for IAD-R1 asked the same way. | README §1, conference paper explanation table | Gemini-3-Flash judge shown image + red GT-mask overlay + GT defect type + the model's trace. 5 axes scored 0/1/2, summed 0–10. **Median of 3 judge samples.** n=100 product-diverse traces per model per benchmark. Each model scored **on its own correctly-detected anomalies** (`gt=yes & pred=yes`). | [`results/explainability_multi/explainability_5axes_table.md`](results/explainability_multi/explainability_5axes_table.md), `summary.json`, `raw_results.json`, `raw_results_iadr1_tp.json`; script [`scripts/04_eval/explainability_judge_multi.py`](scripts/04_eval/explainability_judge_multi.py) | supported |
+| The **older** 9.14 vs 4.29 (DS-MVTec) / 8.67 vs 6.40 (VisA) figures are superseded, not wrong-in-kind. | [`NUMBER_PROVENANCE.md`](NUMBER_PROVENANCE.md) 2026-09-02 entry, and the flagged 2026-06-16 entry | Old run scored IAD-R1 **under its own GRPO prompt**, which never asks for reasoning. About 35–40% of its answers are a bare "Yes" and score 0 on every axis. That measures explanation *reliability* under its own prompt, not explanation *quality*. It was also k=1, a single judge sample. | `outputs/explainability_judge/EXPLAINABILITY_EVAL.md` (source tree, not shipped); superseded row kept verbatim in `NUMBER_PROVENANCE.md` | supported |
+| The prompt-matched row is the fair comparison for **reasoning quality**. | `results/explainability_multi/README.md` | Asked the same way as our models, 100% of IAD-R1's answers carry a trace, so the two models are scored on the same task. k=3 median damps judge noise. Per-model own-correct-detections design avoids penalising a model through a shrinking cross-model intersection. | [`results/explainability_multi/README.md`](results/explainability_multi/README.md) "The two IAD-R1 rows" section | supported |
+| Both IAD-R1 rows should survive any rewrite, because they answer different questions. | same | Native prompt 4.50 / 6.32 = reliability. Prompt-matched 6.14 / 7.04 = quality. Quoting only 4.50 understates IAD-R1. Either way it stays clearly below KCR. | same table | supported |
+
+## 0.2 Cross-architecture replication on LLaVA-OneVision-7B-SI
+
+| Claim | Where | How it was derived | Evidence | Status |
+|---|---|---|---|---|
+| On LLaVA-OneVision-7B-SI the KCR corpus reaches **88.45 / 74.25**, above **87.66 / 72.58** for SFT+GRPO on the same backbone. | README §1 headline table, conference paper | Both trained and evaluated on the identical harness and subsets (DS-MVTec n=1670, VisA n=2141), `_trainprompt` mode, vLLM serving. BA recomputed from the `tp/tn/fp/fn` block with `results/compute_ba.py`. | KCR: [`results/sft_llava_ov_7b_frozen_llava_iter1_C/checkpoint-748/`](results/sft_llava_ov_7b_frozen_llava_iter1_C/checkpoint-748/) (DS tp1045 tn407 fp37 fn181; VisA tp942 tn659 fp285 fn255). GRPO: [`results/grpo_llava_ov_from_ep1/checkpoint-530/`](results/grpo_llava_ov_from_ep1/checkpoint-530/) (DS tp1078 tn388 fp56 fn148; VisA tp958 tn611 fp330 fn236) | supported |
+| The KCR loop is backbone-agnostic. Only the rollout sampler changed. | README §1, `docs/` KCR loop note | The LLaVA post-rollout pipeline reuses the already-shipped `phase0_bucket.py`, `phase1a_gemini_judge.py` and `phase1b_gemini_correct.py` unchanged. Only the rollout front-end and the arm builder are new. | [`scripts/03_rollout_star/`](scripts/03_rollout_star/) | supported |
+| The LLaVA KCR corpus is a **native** loop, not a Qwen corpus reused. | README §1 | Rollouts came from a LLaVA policy, the teacher corrected and revised LLaVA's own failures. Arms A 8,998 / B 9,124 / C 6,000, C at 50/50. | `Training/datasets_sft_llava_iter1/` (source tree); published as `llava_kcr/` in [`aacudad/AnomalyThink`](https://huggingface.co/datasets/aacudad/AnomalyThink) | supported |
+| GRPO does work on this backbone. It just does not reach the corpus. | README §1 | GRPO init is LLaVA 6K SFT ep1 (85.91 / 68.26). ckpt-530 is 87.66 / 72.58, so +1.75 / +4.32 over its own init. | [`results/sft_llava_ov_7b_frozen_iad_sft_6k_train/checkpoint-188/`](results/sft_llava_ov_7b_frozen_iad_sft_6k_train/checkpoint-188/) and [`results/grpo_llava_ov_from_ep1/checkpoint-530/`](results/grpo_llava_ov_from_ep1/checkpoint-530/) | supported |
+| **Contamination caveat.** DS-MVTec numbers for LLaVA-derived models carry a pretraining-exposure asterisk. VisA does not. | README §1, every LLaVA `NOTE.md` | `lmms-lab/LLaVA-OneVision-Data`, config `vision_flan(filtered)`, contains **426 rows** whose id matches `%MVTecAD%`. VisA matches **0**. Applies to IAD-R1's released model as well. | Verified live through the Hugging Face datasets-server filter; recorded in `NUMBER_PROVENANCE.md` 2026-09-02 entry and [`results/sft_llava_ov_7b_frozen_llava_iter1_C/NOTE.md`](results/sft_llava_ov_7b_frozen_llava_iter1_C/NOTE.md) | supported |
+| **Do NOT claim** "beats IAD-R1 on its own backbone" against the 81.92 / 71.34 row. | — | That row is IAD-R1's released **Qwen2.5-VL-7B** checkpoint re-evaluated on our harness. We never re-evaluated their LLaVA-OneVision checkpoint on the full subsets. The comparison is same-harness, not same-backbone. | [`results/iad_r1_qwen_recanon/`](results/iad_r1_qwen_recanon/); see also §2.5.3 row in Part 2 | unverified (as a same-backbone claim) |
+
+## 0.3 Corpus transfer to Qwen3-VL-8B-Instruct
+
+| Claim | Where | How it was derived | Evidence | Status |
+|---|---|---|---|---|
+| The KCR corpus transfers to a newer, stronger backbone: **78.68 / 64.45 → 85.82 / 76.52** (+7.14 / +12.07). | README §1 | `Qwen/Qwen3-VL-8B-Instruct` from base, 4 epochs, frozen vision tower, config mirrors `sft_abc_C.yaml` except model, `template: qwen3_vl`, output dir and batch. Same harness and subsets. Best checkpoint is ckpt-376. | Base: [`results/qwen3vl_8b_baseline_eval/`](results/qwen3vl_8b_baseline_eval/) (DS tp880 tn380 fp64 fn346; VisA tp446 tn865 fp79 fn751). SFT: [`results/sft_qwen3vl_8b_armC/checkpoint-376/`](results/sft_qwen3vl_8b_armC/checkpoint-376/) (DS tp1055 tn380 fp64 fn171; VisA tp883 tn747 fp196 fn313) | supported |
+| The corpus used is the same file the Qwen2.5-VL-7B headline Arm-C model trained on. | README §1 | LlamaFactory key `iad_sft_iter2` in both `sft_qwen3vl_8b_armC.yaml` and [`configs/sft/sft_abc_C.yaml`](configs/sft/sft_abc_C.yaml), 6,000 records. | [`traces/iter2/sft_iter2_train.json`](traces/iter2/sft_iter2_train.json) (len 6,000, verified) | supported |
+| **There is no GRPO comparison on Qwen3-VL-8B.** | README §1, [`results/sft_qwen3vl_8b_armC/NOTE.md`](results/sft_qwen3vl_8b_armC/NOTE.md) | Nothing was RL-trained on this backbone. The corpus-versus-RL comparison exists only on Qwen2.5-VL-7B and LLaVA-OneVision-7B-SI. | absence of any `grpo_qwen3vl_*` run in `outputs/` and in `results/` | supported |
+
+## 0.4 Labels-only control (how much of the gain is the reasoning?)
+
+| Claim | Where | How it was derived | Evidence | Status |
+|---|---|---|---|---|
+| Stripping the reasoning supervision costs **-4.94 DS-MVTec and -3.43 VisA**. | README §1 | Same 6,000 images, same hyperparameters, same 4-epoch checkpoint grid as the reported SFT-6K run. Only the supervision changes: prompt asks for a bare verdict, target is `<answer>Yes\|No</answer>`. Best labels-only epoch 77.86 / 68.64 against Arm-C SFT 82.80 / 72.07. | [`results/sft_qwen25vl_7b_6k_noreason/checkpoint-188/`](results/sft_qwen25vl_7b_6k_noreason/checkpoint-188/) (`_noreasonprompt` mode); config [`configs/sft/sft_qwen25vl_7b_6k_noreason.yaml`](configs/sft/sft_qwen25vl_7b_6k_noreason.yaml); builder [`scripts/01_sft/build_noreason_dataset.py`](scripts/01_sft/build_noreason_dataset.py) | supported |
+| Output format is not a confound in that control. | same | The `<answer>` wrapper is kept. The harness reads `<answer>` independently of `<think>`, so the parser is unchanged between the two arms. | `build_noreason_dataset.py` docstring; `--noreason-prompt` branch in the eval harness | supported |
+| Fine-tuning on our images alone still helps a lot, so the reasoning is not the whole story. | README §1 | Base 69.01 / 53.79 to labels-only 77.86 / 68.64. The reasoning adds the last ~5 pp / ~3.5 pp on top of that. | [`results/qwen25vl_baseline_eval/`](results/qwen25vl_baseline_eval/) and the row above | supported |
+
+---
+
 # Part 1 — Key design decisions: how we got here
 
 Each subsection answers: *what was the open question, what experiment/procedure resolved it, which file proves it, and what did we conclude.*

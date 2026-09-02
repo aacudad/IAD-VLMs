@@ -29,7 +29,96 @@ This file is a complete provenance ledger for **every number that appears in the
 
 ## Revision log
 
+### 2026-09-02 — Explanation-quality numbers superseded, cross-architecture line, corpus transfer, labels-only control
+
+**1. Explanation quality. The thesis table numbers change. New: DS-MVTec 9.05 against 6.14, VisA 8.52 against 7.04.**
+
+Source: `outputs/explainability_multi/`, shipped at [`results/explainability_multi/`](results/explainability_multi/)
+(`explainability_5axes_table.md`, `summary.json`, `raw_results.json`, `raw_results_iadr1_tp.json`).
+Script [`scripts/04_eval/explainability_judge_multi.py`](scripts/04_eval/explainability_judge_multi.py),
+figures [`scripts/05_figures/plot_explainability_axes.py`](scripts/05_figures/plot_explainability_axes.py).
+Judge is Gemini-3-Flash, shown the original image, a red GT-mask overlay, the GT defect type and the
+model's trace. Five axes scored 0/1/2, summed to 0 to 10. **Median of three judge samples** per trace.
+**n = 100** product-diverse traces per model per benchmark. Each model is scored **on its own
+correctly-detected anomalies** (`gt=yes & pred=yes`), so a weak model is not penalised by a shrinking
+cross-model intersection.
+
+| | DS-MVTec | VisA |
+|---|---:|---:|
+| Arm-C (KCR) final SFT | **9.05** | **8.52** |
+| IAD-R1, prompt-matched | **6.14** | **7.04** |
+| IAD-R1, native prompt | 4.50 | 6.32 |
+
+**Both numbers are on record, and here is why the newer one is the fair comparison.** The old
+9.14 against 4.29 (DS-MVTec) and 8.67 against 6.40 (VisA) came from `outputs/explainability_judge/`,
+where IAD-R1 was scored **under its own GRPO prompt**. That prompt never asks for reasoning. Roughly
+35 to 40 percent of its answers are a bare "Yes" and score 0 on every axis. So 4.29 measures
+explanation **reliability** under IAD-R1's own prompt, not explanation **quality**. The prompt-matched
+row asks IAD-R1 the same way our models are asked, and then 100 percent of its answers carry a trace,
+which is the like-for-like reasoning-quality comparison. Two further reasons the new run is better:
+k=3 median instead of a single judge sample damps run-to-run judge noise, and the old design scored
+both models on a matched intersection pool while the new one scores each model on its own correct
+detections. Keep both rows. Quoting only 4.50 or only 4.29 understates IAD-R1. Either way it stays
+clearly below Arm-C.
+
+The old paragraph in the 2026-06-16 entry below is kept verbatim and flagged as superseded. The
+figures and `explainability_5axes_table.md` in `results/` were already correct and did not change.
+
+**2. Cross-architecture replication on LLaVA-OneVision-7B-SI (new results, all shipped).**
+Same harness, same subsets (DS-MVTec n=1670, VisA n=2141), inference served through vLLM, hence the
+`_vllm` tail on some filenames. The prompt mode is still `_trainprompt`.
+
+| Row | BA DS-MVTec / VisA | Shipped evidence |
+|---|---|---|
+| Base, fair yes/no prompt (`--yesno-user`) | 75.66 / 53.80 | [`results/llava_ov_7b_zeroshot_eval/`](results/llava_ov_7b_zeroshot_eval/) |
+| 6K Gemini SFT, epoch 1 | 85.91 / 68.26 | [`results/sft_llava_ov_7b_frozen_iad_sft_6k_train/checkpoint-188/`](results/sft_llava_ov_7b_frozen_iad_sft_6k_train/checkpoint-188/) |
+| SFT then GRPO, ckpt-530 | 87.66 / 72.58 | [`results/grpo_llava_ov_from_ep1/checkpoint-530/`](results/grpo_llava_ov_from_ep1/checkpoint-530/) |
+| **KCR corpus SFT, epoch 4** | **88.45 / 74.25** | [`results/sft_llava_ov_7b_frozen_llava_iter1_C/checkpoint-748/`](results/sft_llava_ov_7b_frozen_llava_iter1_C/checkpoint-748/) |
+
+KCR epochs 1 to 4 are 85.29/72.32, 85.60/70.10, 86.45/73.56, 88.45/74.25. The KCR corpus beats
+SFT-plus-GRPO on the same backbone, which reproduces the Qwen2.5-VL ordering on a second architecture.
+**Contamination caveat, DS-MVTec only:** `lmms-lab/LLaVA-OneVision-Data`, config `vision_flan(filtered)`,
+contains 426 rows whose id matches `%MVTecAD%`, VisA matches 0. Every DS-MVTec cell for a
+LLaVA-derived model therefore carries a pretraining-exposure asterisk, including IAD-R1's own released
+model. VisA does not. Verified live through the Hugging Face datasets-server filter.
+**Do not write "beats IAD-R1 on its own backbone" against our 81.92 / 71.34 row.** That row is
+IAD-R1's released **Qwen2.5-VL-7B** checkpoint re-evaluated here
+([`results/iad_r1_qwen_recanon/`](results/iad_r1_qwen_recanon/)). The comparison is same-harness, not
+same-backbone. We did not re-evaluate their LLaVA-OneVision checkpoint on the full subsets.
+
+**3. Corpus transfer to Qwen3-VL-8B-Instruct (new results, shipped).** Base 78.68 / 64.45
+([`results/qwen3vl_8b_baseline_eval/`](results/qwen3vl_8b_baseline_eval/)) to 85.82 / 76.52 at
+ckpt-376 ([`results/sft_qwen3vl_8b_armC/checkpoint-376/`](results/sft_qwen3vl_8b_armC/checkpoint-376/)),
+so +7.14 DS-MVTec and +12.07 VisA. Epochs 1 to 4 are 82.62/77.67, 85.82/76.52, 85.18/76.62,
+82.59/73.26. The corpus is the Qwen KCR corpus, key `iad_sft_iter2`, shipped at
+[`traces/iter2/sft_iter2_train.json`](traces/iter2/sft_iter2_train.json), the same file the
+Qwen2.5-VL-7B Arm-C headline model trained on. **There is no GRPO comparison on this backbone.**
+Nothing was RL-trained on Qwen3-VL-8B, so this line supports a corpus-transfer claim only and must
+not be read as a corpus-versus-RL result on Qwen3-VL.
+
+**4. Labels-only control (new results, shipped).** Same 6,000 images, same hyperparameters, same
+4-epoch checkpoint grid as the reported SFT-6K run, supervision stripped to a bare
+`<answer>Yes|No</answer>`. Best epoch 77.86 / 68.64 at ckpt-188
+([`results/sft_qwen25vl_7b_6k_noreason/`](results/sft_qwen25vl_7b_6k_noreason/), eval mode
+`_noreasonprompt`) against Arm-C SFT 82.80 / 72.07. Stripping the reasoning supervision costs
+**-4.94 DS-MVTec and -3.43 VisA** at matched data, matched compute and matched checkpoint grid.
+
+**5. `results/eval_ba_inventory.txt` regenerated.** 206 rows to 256. Purely additive, 50 new rows for
+the LLaVA, Qwen3-VL and labels-only evals. One file was deliberately excluded,
+`outputs/grpo_llava_ov_from_ep1/checkpoint-530/eval_dsmvtec_BROKEN_rope.json`. It is not a result. It
+is the transformers-5.0 `rope_parameters` trap: a checkpoint saved under transformers 5.0 loads under
+4.57 or vLLM with a `rope_theta` off by 100x, and the model then answers "no" to nearly everything
+(BA 50.70, TP 17, FN 1204). It looks like training collapse and it is not. Documented in
+[`results/grpo_llava_ov_from_ep1/NOTE.md`](results/grpo_llava_ov_from_ep1/NOTE.md).
+
+**6. Naming.** The method is **Keep-Correct-Revise (KCR)**. Keep the rollouts the policy already gets
+right, have a teacher correct the wrong ones and revise the ones that are right but weakly grounded,
+then fine-tune the base model on the result. "Arm C" is the same thing under its ablation name and
+stays in every path, dataset key and results directory. Provenance rows in this file that quote a path
+keep `abc_C` / `arm_C` / `iter2`, because the whole point of those rows is that the link resolves.
+
 ### 2026-06-16 — Explainability eval, 15K verifier audit, Variety-continuation tables
+**⚠ SUPERSEDED on 2026-09-02 — the 9.14 / 4.29 and 8.67 / 6.40 numbers in this paragraph are the old k=1 single-judge-sample run. The current explanation-quality numbers are 9.05 vs 6.14 (DS-MVTec) and 8.52 vs 7.04 (VisA) from `results/explainability_multi/`. See the 2026-09-02 revision entry above for why the newer run is the fair comparison. The paragraph is kept verbatim as the audit trail.**
 **Explainability / reasoning-faithfulness eval (NEW thesis §`sec:res-explainability` + `tab:explainability` in Ch6; doc `outputs/explainability_judge/EXPLAINABILITY_EVAL.md`; script `repository_tu_delft_vlms/scripts/explainability_judge.py`).** Gemini-3-Flash judge (Vertex, blind to model, reference-guided: image + red GT-mask overlay + MMAD-MCQ GT type; 5 axes 0–2, sum/10), on **matched correctly-detected anomalies**, 100 product-diverse images/benchmark (overlap pools 916 DS / 549 VisA), IAD-R1-native vs Arm-C-82.8. Results (n≈100): **DS-MVTec Arm-C 9.14 vs IAD-R1 4.29; VisA Arm-C 8.67 vs IAD-R1 6.40**. Mechanical (separate): Loc-MET DS 0.82(ours)/0.43, VisA 0.56/0.64; Type-sim (Nomic) DS 0.557/0.341, VisA 0.528/0.542. Caveats: single judge sample (k=1); plausibility/grounding-consistency not mechanistic faithfulness; MCQ GT-type coverage 94.8% DS / 99.2% VisA. Sources cited in §: AutoRubric 2603.00077, CheckEval 2403.18771, GREEN 2405.03595, LLaVA-Critic 2410.02712, Jacovi&Goldberg 2004.03685, Gaming-the-Judge 2601.14691; \citep{li2025iadr1}, \citep{nomic2024embed}.
 **15K verifier audit (Ch7 §`sec:disc-quality` sentence added; doc `outputs/verify_15k_regen_results/FILTER_AUDIT.md`; script `verify_15k_traces.py`).** GPT-5-mini reference-guided verifier over the **real 14,472-trace `iad_sft_15k_regen_combined` corpus**: **97.8% KEEP** (14,015 completely_correct + 143 correct; 313 wrong + 1 completely_wrong = 2.2% drop), ~\$10. Top drop issues: illogical_reasoning 150, incoherent_content 88, extra_location_tag 45, wrong_product 18. Per-product keep uniformly 95.9–98%. **Implication (added to thesis):** the 15K is not noisy → the 6K<15K gap is composition/count, NOT a data-noise/quality-filter effect (resolves the contested "quality" framing). NB initial run mistakenly used the C1-only 10,236 file; corrected to the 14,472 regen corpus the headline 15K SFT actually trained on.
 **`tab:variety-cont` (Ch6):** filled the **3K-mix (rehearsal)** rows from best-DS epoch — Arm-C ep1 **81.09/71.48** (Δ−1.15), GRPO ep2 **81.15/69.53** (Δ−1.22); milder than full-Variety (−2.64/−1.37), rehearsal curbs forgetting but no net gain. The two **1K-only (no-rehearsal)** rows still TBD (eval re-running after an overnight interruption; ep1/ep2 so far show 1K-only worse than +rehearsal, and a catastrophic drop from the GRPO init — isolating the rehearsal as the anti-forgetting mechanism).
