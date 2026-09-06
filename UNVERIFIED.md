@@ -391,8 +391,6 @@ Full report: [`docs/verification/NUMBER_VERIFICATION_REPORT.md`](docs/verificati
 
 | Item | Thesis location | Why it is here |
 |---|---|---|
-| Welch t = 12.07 / 5.55 for LLaVA KCR vs IAD-R1 | §6.11 | recomputed 15.61 / 6.50 on `results/explainability_multi/raw_results*.json` with the same differences (+3.25 / +1.66); origin of the printed t unknown |
-| "every pairwise test among our six models is non-significant" | §8.2 RQ4 | true of the twelve tests reported; over all 15 pairs, Qwen KCR vs LLaVA SFT+GRPO on DS-MVTec has p ≈ 0.02 |
 | Appendix H, 6K VisA-versus-epoch curve | Figure H.1 | only ckpt-564 of the 6K run has a VisA evaluation on disk; drawing script not found |
 | Figure 6.9 / Appendix F.5 renderer | §6.10.3, F.5 | the PNGs and index files exist (`results/sft_vs_kcr_pairs/`), the arrow renderer was written in a session scratch area and is not on disk |
 | 3,557 kept + 2,443 patched, 94.8 % anomalous | §6.7 | reproduced only approximately (3,471 to 3,580 kept, 96 %), no build log |

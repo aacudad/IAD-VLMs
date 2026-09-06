@@ -60,7 +60,7 @@ Full report: [`docs/verification/NUMBER_VERIFICATION_REPORT.md`](docs/verificati
 
 **11. Frozen-vision GRPO ablation launched** (`results/grpo_qwen25vl_7b_6k_frozenvision_run1/`, `scripts/02_grpo/run_grpo_7b_frozen_vision.sh`, env-guarded `FREEZE_VISION_TOWER` block in the trainer). Evaluations pending.
 
-**12. Baseline file.** The thesis uses `results/baseline_named/7b_base_{dsmvtec,visa}.json` (69.08 / 53.79) everywhere except Appendix C's base column, which still comes from `results/qwen25vl_baseline_eval/` (69.01; transistor 67.08 vs 67.92, leather 90.83 vs 90.29). The "+11.2 pp" overall SFT gain in thesis Chapters 1 and 8 derives from 69.01 (it is +11.08 against 69.08). Left for the author's decision.
+**12. Baseline file (decided 2026-09-06 21:50).** The thesis now uses `results/baseline_named/7b_base_{dsmvtec,visa}.json` (69.08 / 53.79) everywhere. Appendix C's base column was moved to that file (transistor 67.92, leather 90.29, macro average 70.60, mean SFT gain +9.54) and the overall SFT gain in Chapters 1 and 8 reads +11.1 pp (80.16 − 69.08). The older run in `results/qwen25vl_baseline_eval/` (69.01) is history. Welch tests in §6.11 are now reported over all fifteen pairs per benchmark (VisA p 0.18 to 0.95, DS-MVTec p 0.09 to 0.96 with one pair at 0.02), and the IAD-R1 comparison prints the recomputed t = 15.6 / 6.5 (scipy `ttest_ind`, `equal_var=False`, on the per-trace median scores).
 
 ### 2026-09-02 — Explanation-quality numbers superseded, cross-architecture line, corpus transfer, labels-only control
 

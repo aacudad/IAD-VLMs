@@ -51,6 +51,6 @@ Python copies take the workspace root from `WORK_DIR` (default the parent of thi
 
 Strict scoring in Tables 6.6, 6.7 and 6.11; the prompt-aligned run noted in §6.8 and §8.4 as inconclusive; Arm A balance stated by verdict; the 15K under-training sentence replaced by what the logs show; pcb3 delta 7.5; reward-code line references; HF-vs-vLLM agreement range; 2.4x optimiser steps.
 
-## Left for the author
+## Resolved later the same evening (thesis commit ff0c141)
 
-The baseline file behind Appendix C's base column (69.01 vs 69.08) and the "+11.2 pp" phrasing; the wording of the twelve-test sentence in RQ4 and the printed Welch t values.
+Appendix C's base column moved to the Table 6.1 baseline file (69.08), the overall SFT gain reads +11.1 pp, and §6.11 / RQ4 report the Welch tests over all fifteen pairs per benchmark with the recomputed t values (15.6 / 6.5 against IAD-R1).
