@@ -1,3 +1,4 @@
+import os
 """Figure 4.1: SFT stage next to GRPO stage. House style taken from all_svg (method_overview_v4, anomalythink_generation, rl_correction_pipeline)."""
 import re,html
 ov=open('/bulk/aacudad/reasoning_traces/all_svg/method_overview_v4.svg').read()
@@ -21,7 +22,7 @@ ax,ay,aw,ah=40,30,740,660; R(ax,ay,aw,ah,Gf,Gs,3,40); T(ax+aw/2,ay+46,"1  SFT",2
 # data card
 R(ax+30,ay+95,680,120); A(f'<use href="#db" x="{ax+42}" y="{ay+104}" width="56" height="48"/>'); T(ax+108,ay+124,"AnomalyThink-6K",15,bold=True); T(ax+108,ay+142,"6,000 instances, one C1 image and one gold trace each",12,fill=MUT)
 R(ax+42,ay+160,300,44,"#F5F5F5","#DDDDDD",1,6); T(ax+52,ay+178,"user",11,bold=True,fill=MUT); T(ax+88,ay+178,"Analyze the provided image ...",11,mono=True); T(ax+52,ay+196,"image",11,bold=True,fill=MUT); T(ax+88,ay+196,"one test image, no reference, no mask",11,fill=MUT)
-R(ax+350,ay+160,354,44,"#F3F9EE",Gs,1,6); T(ax+360,ay+178,"assistant, gold",11,bold=True,fill="#0b7a3b"); T(ax+360,ay+196,"<think> six phases </think> <location> <type> <answer>",10,mono=True,fill="#0b7a3b")
+R(ax+350,ay+160,354,44,"#F3F9EE",Gs,1,6); T(ax+360,ay+178,"assistant, gold",11,bold=True,fill="#0b7a3b"); T(ax+470,ay+178,"normal trace: <think> <answer> only",10,mono=True,fill=MUT); T(ax+360,ay+196,"<think> six phases </think> <location> <type> <answer>",10,mono=True,fill="#0b7a3b")
 AR([(ax+370,ay+215),(ax+370,ay+245)],Gs,"arrGreen")
 # model card
 R(ax+30,ay+250,340,230); A(f'<use href="#qwen" x="{ax+42}" y="{ay+258}" width="34" height="34"/>'); T(ax+86,ay+280,"Qwen2.5-VL-7B",15,bold=True)
@@ -29,7 +30,7 @@ comp(ax+42,ay+300,316,"vision encoder (ViT)",True,Gs); comp(ax+42,ay+356,316,"pr
 # loss card
 AR([(ax+370,ay+365),(ax+410,ay+365)],Gs,"arrGreen")
 R(ax+420,ay+250,290,230,COf,COs,1.5,12); badge(ax+445,ay+275,"L",CO); T(ax+464,ay+280,"cross-entropy loss",15,bold=True,fill=CO)
-T(ax+436,ay+308,"for every assistant token: the gold token",12); T(ax+436,ay+326,"against the model's predicted next token",12); T(ax+436,ay+350,"user and image tokens are masked out",12,fill=MUT)
+T(ax+436,ay+308,"for every assistant token: the negative log-likelihood",12); T(ax+436,ay+326,"of the gold token given its prefix (teacher forcing)",12); T(ax+436,ay+350,"user and image tokens are masked out",12,fill=MUT)
 R(ax+436,ay+372,258,44,"#fff",COs,1,8); T(ax+565,ay+390,"gradient flows back to",12,"middle",fill=CO); T(ax+565,ay+408,"projector and language model only",12,"middle",True,CO)
 AR([(ax+436,ay+394),(ax+372,ay+394)],"#7a8b99","arrCoral",2.5,"6 5")
 # output pill
@@ -49,13 +50,13 @@ for i,(r,d) in enumerate(ex):
     a,b_=d.split("  type "); T(x+10,by+254,a.replace("  "," · "),12,fill=MUT); T(x+10,by+270,"type "+b_.replace("  loc ",", location "),12,fill=MUT)
 # step 2 reward
 badge(bx+45,by+306,2,P); T(bx+64,by+311,"score every rollout against the gold tags",15,bold=True)
-R(bx+30,by+324,680,54,"#fff",Ps,1.5,10); T(bx+370,by+346,"R  =  format (0/1)  +  verdict (0/1)  +  ½ · type (0 to 1)  +  ½ · location (0/1)",13,"middle",True,"#4a3a66"); T(bx+370,by+366,"two unweighted reward functions, four bounded sub-signals, maximum 3.0",12,"middle",fill=MUT)
+R(bx+30,by+324,680,54,"#fff",Ps,1.5,10); T(bx+370,by+346,"anomalous item:  R  =  format (0/1)  +  verdict (0/1)  +  ½ · type (0 to 1)  +  ½ · location (0/1)",12.5,"middle",True,"#4a3a66"); T(bx+370,by+366,"normal item: format + verdict, maximum 2.0.  Two unweighted reward functions, four bounded sub-signals, maximum 3.0",12,"middle",fill=MUT)
 # step 3 advantage
 badge(bx+45,by+400,3,P); T(bx+64,by+405,"compare within the group",15,bold=True)
 R(bx+30,by+418,330,54,"#fff",Ps,1.5,10); T(bx+195,by+441,"Â  =  ( R  -  mean )  /  std",15,"middle",True,"#4a3a66"); T(bx+195,by+461,"no value network, the group is the baseline",12,"middle",fill=MUT)
-R(bx+380,by+418,330,54,"#fff",Ps,1.5,10,"6 4"); T(bx+545,by+441,"KL to the reference is monitored",13,"middle",True,"#4a3a66"); T(bx+545,by+461,"β = 0, the reference is never updated",12,"middle",fill=MUT)
+R(bx+380,by+418,330,54,"#fff",Ps,1.5,10,"6 4"); T(bx+545,by+441,"KL to the reference is logged, not in the loss",13,"middle",True,"#4a3a66"); T(bx+545,by+461,"β = 0, the reference stays the SFT model",12,"middle",fill=MUT)
 # step 4 update
-badge(bx+45,by+504,4,P); T(bx+64,by+509,"update the policy with the clipped surrogate, ε = 0.2, lr 1e-6",15,bold=True)
+badge(bx+45,by+504,4,P); T(bx+64,by+509,"update the policy with the clipped surrogate, ε = 0.2, lr 1e-6, batch 8",15,bold=True)
 for i,lab in enumerate(("vision encoder","projector","language model")): comp(bx+30+i*230,by+522,220,lab,False,P)
 # output pill
 R(bx+215,by+596,310,56,"#fff",Ps,2.5,12); A(f'<use href="#qwen" x="{bx+228}" y="{by+606}" width="36" height="36"/>'); T(bx+276,by+618,"output:",12,fill=MUT); T(bx+276,by+640,"the SFT + GRPO model",16,bold=True)
