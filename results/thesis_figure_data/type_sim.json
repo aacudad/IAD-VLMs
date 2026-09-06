@@ -1,0 +1,296 @@
+{
+ "rows": [
+  {
+   "backbone": "\\qwenvl-7B",
+   "stage": "SFT",
+   "dsmvtec": {
+    "n": 988,
+    "mean": 0.5557923718140676,
+    "match": 9.412955465587045,
+    "n_pred_vocab": 27,
+    "n_gt_vocab": 429
+   },
+   "visa": {
+    "n": 851,
+    "mean": 0.543560197119427,
+    "match": 8.343125734430082,
+    "n_pred_vocab": 29,
+    "n_gt_vocab": 255
+   }
+  },
+  {
+   "backbone": "\\qwenvl-7B",
+   "stage": "SFT$+$GRPO",
+   "dsmvtec": {
+    "n": 971,
+    "mean": 0.5586987835739717,
+    "match": 10.50463439752832,
+    "n_pred_vocab": 14,
+    "n_gt_vocab": 416
+   },
+   "visa": {
+    "n": 762,
+    "mean": 0.5312606031344006,
+    "match": 4.0682414698162725,
+    "n_pred_vocab": 19,
+    "n_gt_vocab": 239
+   }
+  },
+  {
+   "backbone": "\\qwenvl-7B",
+   "stage": "KCR",
+   "dsmvtec": {
+    "n": 1003,
+    "mean": 0.5457089617031283,
+    "match": 8.374875373878366,
+    "n_pred_vocab": 18,
+    "n_gt_vocab": 435
+   },
+   "visa": {
+    "n": 683,
+    "mean": 0.5441028174683779,
+    "match": 5.856515373352855,
+    "n_pred_vocab": 18,
+    "n_gt_vocab": 218
+   }
+  },
+  {
+   "backbone": "LLaVA-OneVision-7B$^{\\dagger}$",
+   "stage": "SFT",
+   "dsmvtec": {
+    "n": 991,
+    "mean": 0.5813552494547081,
+    "match": 12.815338042381432,
+    "n_pred_vocab": 16,
+    "n_gt_vocab": 438
+   },
+   "visa": {
+    "n": 749,
+    "mean": 0.5714750356763323,
+    "match": 12.817089452603472,
+    "n_pred_vocab": 16,
+    "n_gt_vocab": 226
+   }
+  },
+  {
+   "backbone": "LLaVA-OneVision-7B$^{\\dagger}$",
+   "stage": "SFT$+$GRPO",
+   "dsmvtec": {
+    "n": 1078,
+    "mean": 0.552193544791227,
+    "match": 10.296846011131725,
+    "n_pred_vocab": 9,
+    "n_gt_vocab": 476
+   },
+   "visa": {
+    "n": 958,
+    "mean": 0.5462202654066564,
+    "match": 6.471816283924843,
+    "n_pred_vocab": 10,
+    "n_gt_vocab": 284
+   }
+  },
+  {
+   "backbone": "LLaVA-OneVision-7B$^{\\dagger}$",
+   "stage": "KCR",
+   "dsmvtec": {
+    "n": 1009,
+    "mean": 0.5576459096137313,
+    "match": 10.20812685827552,
+    "n_pred_vocab": 16,
+    "n_gt_vocab": 452
+   },
+   "visa": {
+    "n": 868,
+    "mean": 0.5544215189421782,
+    "match": 7.4884792626728105,
+    "n_pred_vocab": 15,
+    "n_gt_vocab": 263
+   }
+  }
+ ],
+ "vocab": {
+  "dsmvtec": {
+   "pred": [
+    [
+     "missing parts",
+     255
+    ],
+    [
+     "contamination",
+     187
+    ],
+    [
+     "pit",
+     131
+    ],
+    [
+     "scratch",
+     125
+    ],
+    [
+     "chip",
+     79
+    ],
+    [
+     "damage",
+     73
+    ]
+   ],
+   "gt": [
+    [
+     "crack",
+     67
+    ],
+    [
+     "scratch",
+     66
+    ],
+    [
+     "discoloration",
+     40
+    ],
+    [
+     "cut",
+     33
+    ],
+    [
+     "deformation",
+     27
+    ],
+    [
+     "contamination",
+     26
+    ]
+   ]
+  },
+  "visa": {
+   "pred": [
+    [
+     "missing parts",
+     206
+    ],
+    [
+     "contamination",
+     178
+    ],
+    [
+     "pit",
+     97
+    ],
+    [
+     "scratch",
+     44
+    ],
+    [
+     "deformation",
+     37
+    ],
+    [
+     "damage",
+     31
+    ]
+   ],
+   "gt": [
+    [
+     "discoloration",
+     165
+    ],
+    [
+     "chip",
+     44
+    ],
+    [
+     "scratch",
+     37
+    ],
+    [
+     "breakage",
+     26
+    ],
+    [
+     "scratches",
+     23
+    ],
+    [
+     "missing component",
+     18
+    ]
+   ]
+  }
+ },
+ "top_confusions": [
+  {
+   "bench": "visa",
+   "gt": "discoloration",
+   "pred": "contamination",
+   "n": 78
+  },
+  {
+   "bench": "visa",
+   "gt": "discoloration",
+   "pred": "pit",
+   "n": 43
+  },
+  {
+   "bench": "visa",
+   "gt": "chip",
+   "pred": "missing parts",
+   "n": 27
+  },
+  {
+   "bench": "dsmvtec",
+   "gt": "discoloration",
+   "pred": "contamination",
+   "n": 23
+  },
+  {
+   "bench": "dsmvtec",
+   "gt": "crack",
+   "pred": "missing parts",
+   "n": 19
+  },
+  {
+   "bench": "visa",
+   "gt": "discoloration",
+   "pred": "missing parts",
+   "n": 19
+  },
+  {
+   "bench": "dsmvtec",
+   "gt": "deformation",
+   "pred": "missing parts",
+   "n": 15
+  },
+  {
+   "bench": "dsmvtec",
+   "gt": "scratch",
+   "pred": "missing parts",
+   "n": 14
+  },
+  {
+   "bench": "dsmvtec",
+   "gt": "hole",
+   "pred": "pit",
+   "n": 13
+  },
+  {
+   "bench": "dsmvtec",
+   "gt": "contamination",
+   "pred": "missing parts",
+   "n": 12
+  },
+  {
+   "bench": "visa",
+   "gt": "breakage",
+   "pred": "missing parts",
+   "n": 11
+  },
+  {
+   "bench": "dsmvtec",
+   "gt": "cut",
+   "pred": "scratch",
+   "n": 10
+  }
+ ]
+}

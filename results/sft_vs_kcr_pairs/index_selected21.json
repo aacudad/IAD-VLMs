@@ -1,0 +1,305 @@
+[
+ {
+  "i": 1,
+  "image_id": "VisA/cashew/test/bad/086.JPG",
+  "bench": "visa",
+  "product": "cashew",
+  "gt_cells": [
+   "bottom-center"
+  ],
+  "kcr_cells": [
+   "bottom-center"
+  ],
+  "exact": true,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 3,
+  "image_id": "DS-MVTec/screw/image/manipulated_front/017.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "top-right"
+  ],
+  "kcr_cells": [
+   "top-right"
+  ],
+  "exact": true,
+  "kcr_type": "Chip"
+ },
+ {
+  "i": 9,
+  "image_id": "VisA/pcb2/test/bad/084.JPG",
+  "bench": "visa",
+  "product": "pcb2",
+  "gt_cells": [
+   "middle-left",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "middle-left"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 10,
+  "image_id": "VisA/fryum/test/bad/014.JPG",
+  "bench": "visa",
+  "product": "fryum",
+  "gt_cells": [
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": true,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 12,
+  "image_id": "DS-MVTec/metal_nut/image/scratch/003.png",
+  "bench": "ds",
+  "product": "metal_nut",
+  "gt_cells": [
+   "top-center",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "top-left"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 13,
+  "image_id": "DS-MVTec/carpet/image/color/014.png",
+  "bench": "ds",
+  "product": "carpet",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true,
+  "kcr_type": "Contamination"
+ },
+ {
+  "i": 15,
+  "image_id": "DS-MVTec/transistor/image/damaged_case/007.png",
+  "bench": "ds",
+  "product": "transistor",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true,
+  "kcr_type": "Deformation"
+ },
+ {
+  "i": 16,
+  "image_id": "DS-MVTec/zipper/image/split_teeth/009.png",
+  "bench": "ds",
+  "product": "zipper",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false,
+  "kcr_type": "Chip"
+ },
+ {
+  "i": 21,
+  "image_id": "DS-MVTec/screw/image/thread_side/018.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": true,
+  "kcr_type": "Chip"
+ },
+ {
+  "i": 24,
+  "image_id": "DS-MVTec/capsule/image/scratch/001.png",
+  "bench": "ds",
+  "product": "capsule",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 27,
+  "image_id": "VisA/pcb2/test/bad/090.JPG",
+  "bench": "visa",
+  "product": "pcb2",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "bottom-center"
+  ],
+  "exact": false,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 30,
+  "image_id": "DS-MVTec/metal_nut/image/bent/008.png",
+  "bench": "ds",
+  "product": "metal_nut",
+  "gt_cells": [
+   "top-center",
+   "top-right"
+  ],
+  "kcr_cells": [
+   "top-right"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 33,
+  "image_id": "DS-MVTec/screw/image/thread_top/013.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "bottom-center"
+  ],
+  "exact": false,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 37,
+  "image_id": "DS-MVTec/capsule/image/scratch/016.png",
+  "bench": "ds",
+  "product": "capsule",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 38,
+  "image_id": "VisA/pcb1/test/bad/010.JPG",
+  "bench": "visa",
+  "product": "pcb1",
+  "gt_cells": [
+   "bottom-center"
+  ],
+  "kcr_cells": [
+   "bottom-center"
+  ],
+  "exact": true,
+  "kcr_type": "Deformation"
+ },
+ {
+  "i": 41,
+  "image_id": "VisA/fryum/test/bad/016.JPG",
+  "bench": "visa",
+  "product": "fryum",
+  "gt_cells": [
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": true,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 42,
+  "image_id": "VisA/candle/test/bad/081.JPG",
+  "bench": "visa",
+  "product": "candle",
+  "gt_cells": [
+   "top-left"
+  ],
+  "kcr_cells": [
+   "top-left"
+  ],
+  "exact": true,
+  "kcr_type": "scratch"
+ },
+ {
+  "i": 45,
+  "image_id": "DS-MVTec/screw/image/thread_top/016.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": true,
+  "kcr_type": "Pit"
+ },
+ {
+  "i": 49,
+  "image_id": "DS-MVTec/capsule/image/faulty_imprint/018.png",
+  "bench": "ds",
+  "product": "capsule",
+  "gt_cells": [
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": true,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 60,
+  "image_id": "VisA/pcb2/test/bad/008.JPG",
+  "bench": "visa",
+  "product": "pcb2",
+  "gt_cells": [
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": true,
+  "kcr_type": "Deformation"
+ },
+ {
+  "i": 63,
+  "image_id": "DS-MVTec/screw/image/scratch_neck/004.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false,
+  "kcr_type": "Scratch"
+ }
+]

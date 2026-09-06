@@ -1,0 +1,24 @@
+{
+  "iadr1_trainprompt|DS-MVTec": {
+    "j_overall": 6.14,
+    "j_visual_grounding": 1.16,
+    "j_defect_faithfulness": 0.81,
+    "j_evidence_before_conclusion": 1.6,
+    "j_coherence": 1.58,
+    "j_conciseness": 0.99,
+    "loc_met": 0.71,
+    "type_sim": 0.538,
+    "n": 100
+  },
+  "iadr1_trainprompt|VisA": {
+    "j_overall": 7.04,
+    "j_visual_grounding": 1.45,
+    "j_defect_faithfulness": 1.07,
+    "j_evidence_before_conclusion": 1.76,
+    "j_coherence": 1.76,
+    "j_conciseness": 1.0,
+    "loc_met": 0.63,
+    "type_sim": 0.531,
+    "n": 100
+  }
+}

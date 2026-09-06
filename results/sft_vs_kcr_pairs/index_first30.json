@@ -1,0 +1,430 @@
+[
+ {
+  "i": 1,
+  "image_id": "VisA/cashew/test/bad/086.JPG",
+  "bench": "visa",
+  "product": "cashew",
+  "gt_cells": [
+   "bottom-center"
+  ],
+  "kcr_cells": [
+   "bottom-center"
+  ],
+  "exact": true
+ },
+ {
+  "i": 2,
+  "image_id": "DS-MVTec/pill/image/faulty_imprint/001.png",
+  "bench": "ds",
+  "product": "pill",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "center",
+   "middle-left",
+   "middle-right"
+  ],
+  "exact": false
+ },
+ {
+  "i": 3,
+  "image_id": "DS-MVTec/screw/image/manipulated_front/017.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "top-right"
+  ],
+  "kcr_cells": [
+   "top-right"
+  ],
+  "exact": true
+ },
+ {
+  "i": 4,
+  "image_id": "VisA/pcb4/test/bad/027.JPG",
+  "bench": "visa",
+  "product": "pcb4",
+  "gt_cells": [
+   "bottom-center",
+   "bottom-right",
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false
+ },
+ {
+  "i": 5,
+  "image_id": "DS-MVTec/cable/image/combined/003.png",
+  "bench": "ds",
+  "product": "cable",
+  "gt_cells": [
+   "center",
+   "middle-right",
+   "top-center",
+   "top-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false
+ },
+ {
+  "i": 6,
+  "image_id": "DS-MVTec/capsule/image/faulty_imprint/007.png",
+  "bench": "ds",
+  "product": "capsule",
+  "gt_cells": [
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": true
+ },
+ {
+  "i": 7,
+  "image_id": "DS-MVTec/bottle/image/contamination/015.png",
+  "bench": "ds",
+  "product": "bottle",
+  "gt_cells": [
+   "center",
+   "middle-right",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false
+ },
+ {
+  "i": 8,
+  "image_id": "VisA/pcb1/test/bad/097.JPG",
+  "bench": "visa",
+  "product": "pcb1",
+  "gt_cells": [
+   "center",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false
+ },
+ {
+  "i": 9,
+  "image_id": "VisA/pcb2/test/bad/084.JPG",
+  "bench": "visa",
+  "product": "pcb2",
+  "gt_cells": [
+   "middle-left",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "middle-left"
+  ],
+  "exact": false
+ },
+ {
+  "i": 10,
+  "image_id": "VisA/fryum/test/bad/014.JPG",
+  "bench": "visa",
+  "product": "fryum",
+  "gt_cells": [
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": true
+ },
+ {
+  "i": 11,
+  "image_id": "DS-MVTec/hazelnut/image/crack/010.png",
+  "bench": "ds",
+  "product": "hazelnut",
+  "gt_cells": [
+   "bottom-center",
+   "center",
+   "middle-left",
+   "middle-right",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": false
+ },
+ {
+  "i": 12,
+  "image_id": "DS-MVTec/metal_nut/image/scratch/003.png",
+  "bench": "ds",
+  "product": "metal_nut",
+  "gt_cells": [
+   "top-center",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "top-left"
+  ],
+  "exact": false
+ },
+ {
+  "i": 13,
+  "image_id": "DS-MVTec/carpet/image/color/014.png",
+  "bench": "ds",
+  "product": "carpet",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true
+ },
+ {
+  "i": 14,
+  "image_id": "VisA/candle/test/bad/020.JPG",
+  "bench": "visa",
+  "product": "candle",
+  "gt_cells": [
+   "top-left"
+  ],
+  "kcr_cells": [
+   "top-left"
+  ],
+  "exact": true
+ },
+ {
+  "i": 15,
+  "image_id": "DS-MVTec/transistor/image/damaged_case/007.png",
+  "bench": "ds",
+  "product": "transistor",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true
+ },
+ {
+  "i": 16,
+  "image_id": "DS-MVTec/zipper/image/split_teeth/009.png",
+  "bench": "ds",
+  "product": "zipper",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false
+ },
+ {
+  "i": 17,
+  "image_id": "VisA/macaroni1/test/bad/067.JPG",
+  "bench": "visa",
+  "product": "macaroni1",
+  "gt_cells": [
+   "center",
+   "top-center",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "top-left"
+  ],
+  "exact": false
+ },
+ {
+  "i": 18,
+  "image_id": "VisA/chewinggum/test/bad/087.JPG",
+  "bench": "visa",
+  "product": "chewinggum",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true
+ },
+ {
+  "i": 19,
+  "image_id": "VisA/cashew/test/bad/008.JPG",
+  "bench": "visa",
+  "product": "cashew",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true
+ },
+ {
+  "i": 20,
+  "image_id": "DS-MVTec/pill/image/crack/008.png",
+  "bench": "ds",
+  "product": "pill",
+  "gt_cells": [
+   "top-center",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "middle-left",
+   "top-center"
+  ],
+  "exact": false
+ },
+ {
+  "i": 21,
+  "image_id": "DS-MVTec/screw/image/thread_side/018.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": true
+ },
+ {
+  "i": 22,
+  "image_id": "VisA/pcb4/test/bad/033.JPG",
+  "bench": "visa",
+  "product": "pcb4",
+  "gt_cells": [
+   "bottom-center",
+   "center",
+   "middle-left"
+  ],
+  "kcr_cells": [
+   "middle-left"
+  ],
+  "exact": false
+ },
+ {
+  "i": 23,
+  "image_id": "DS-MVTec/cable/image/missing_cable/006.png",
+  "bench": "ds",
+  "product": "cable",
+  "gt_cells": [
+   "bottom-center",
+   "center",
+   "middle-left",
+   "middle-right",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false
+ },
+ {
+  "i": 24,
+  "image_id": "DS-MVTec/capsule/image/scratch/001.png",
+  "bench": "ds",
+  "product": "capsule",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false
+ },
+ {
+  "i": 25,
+  "image_id": "DS-MVTec/bottle/image/contamination/016.png",
+  "bench": "ds",
+  "product": "bottle",
+  "gt_cells": [
+   "bottom-center",
+   "center",
+   "middle-left",
+   "middle-right",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "middle-left"
+  ],
+  "exact": false
+ },
+ {
+  "i": 26,
+  "image_id": "VisA/pcb1/test/bad/037.JPG",
+  "bench": "visa",
+  "product": "pcb1",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false
+ },
+ {
+  "i": 27,
+  "image_id": "VisA/pcb2/test/bad/090.JPG",
+  "bench": "visa",
+  "product": "pcb2",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "bottom-center"
+  ],
+  "exact": false
+ },
+ {
+  "i": 28,
+  "image_id": "VisA/fryum/test/bad/082.JPG",
+  "bench": "visa",
+  "product": "fryum",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true
+ },
+ {
+  "i": 29,
+  "image_id": "DS-MVTec/hazelnut/image/print/007.png",
+  "bench": "ds",
+  "product": "hazelnut",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false
+ },
+ {
+  "i": 30,
+  "image_id": "DS-MVTec/metal_nut/image/bent/008.png",
+  "bench": "ds",
+  "product": "metal_nut",
+  "gt_cells": [
+   "top-center",
+   "top-right"
+  ],
+  "kcr_cells": [
+   "top-right"
+  ],
+  "exact": false
+ }
+]

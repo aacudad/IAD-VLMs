@@ -383,3 +383,24 @@ and the "corpus quality > RL" central finding) **are genuine and recompute exact
 The integrity problems are concentrated in (a) the Appendix-C fabricated per-product GRPO column/CM table,
 (b) the cross-contaminated tab:sft-summary rows, and (c) a large body of hyperparameter values that
 contradict the saved configs. Fix §1, disclose §2–§4, before any public commit.
+
+
+## 5. Verification pass of 2026-09-06 (what still cannot be backed from disk)
+
+Full report: [`docs/verification/NUMBER_VERIFICATION_REPORT.md`](docs/verification/NUMBER_VERIFICATION_REPORT.md).
+
+| Item | Thesis location | Why it is here |
+|---|---|---|
+| Welch t = 12.07 / 5.55 for LLaVA KCR vs IAD-R1 | §6.11 | recomputed 15.61 / 6.50 on `results/explainability_multi/raw_results*.json` with the same differences (+3.25 / +1.66); origin of the printed t unknown |
+| "every pairwise test among our six models is non-significant" | §8.2 RQ4 | true of the twelve tests reported; over all 15 pairs, Qwen KCR vs LLaVA SFT+GRPO on DS-MVTec has p ≈ 0.02 |
+| Appendix H, 6K VisA-versus-epoch curve | Figure H.1 | only ckpt-564 of the 6K run has a VisA evaluation on disk; drawing script not found |
+| Figure 6.9 / Appendix F.5 renderer | §6.10.3, F.5 | the PNGs and index files exist (`results/sft_vs_kcr_pairs/`), the arrow renderer was written in a session scratch area and is not on disk |
+| 3,557 kept + 2,443 patched, 94.8 % anomalous | §6.7 | reproduced only approximately (3,471 to 3,580 kept, 96 %), no build log |
+| MMAD ground-truth type coverage 94.8 % / 99.3 % | §6.11 | not recomputed (an older note says 99.2 % for VisA) |
+| "40 of 100 sampled IAD-R1 outputs are a bare Yes" | §6.11 | the 100-sample is not stored; over the full set 336 of 964 true positives (35 %) are bare "Yes" |
+| t-SNE pool n = 8,908 | §5.2 | the cached embeddings in `results/anomaly_type_analysis/` have n = 8,908 and reproduce 155.3 / 15.3 / 10.1 / 500 Scratch, but no dataset file with 8,908 type tags was identified (the 15K union has 7,247 anomalous traces) |
+| Probe initialisation 84.52 / 71.89 | Table 6.10 step 0 | no probe file for Arm-C ckpt-376 on disk; equals 82.80 + 1.72, consistent with the stated offset |
+| IAD-R1 group size G = 4 "matching their configuration" | §5.4 | not in the IAD-R1 paper text, would be in their released config |
+| Literature numbers without a local PDF | Chapter 2 | PatchCore 98.4 pixel AUROC (the paper reports 98.1 to 98.2), CFLOW 98.3, DRAEM 98.0, RD4AD 98.5, CutPaste 96.6, SimpleNet 77 FPS, EfficientAD 2 ms / 600 FPS, WinCLIP 91.8, InternVL3 72.2, LLaVA 158K / 92.5, ToT 4 to 74, OmniAD 79.1, ViT 675M, MVTec 5,354, VisA 10,821, Real-IAD 150K / ~50K |
+| Which Arm-C file version trained ckpt-376 | §5.7, `traces/iter2/` | two versions on disk differing in 316 `<location>` spellings, no log records which was present at launch |
+| 3B-frozen-6K epochs | Appendix A | the run trained six epochs (checkpoints to 1128); the thesis reports epochs 1 to 4 by decision |

@@ -42,8 +42,8 @@ Use [`results/compute_ba.py`](results/compute_ba.py) on any `results/<run>/check
 | Quantity | Value | Source |
 |---|---|---|
 | Corpus total | ~14,472 Gemini-2.5-Flash **C1-only** traces ("AnomalyThink-15K") | [`traces/anomalythink_15k/combined_sft_train.json`](traces/anomalythink_15k/combined_sft_train.json) (len 14,472, verified) |
-| Disjoint stratified splits | **6,000 SFT / 4,236 GRPO / 4,236 held-out RealIAD** (sum = 14,472) | [`traces/anomalythink_6k/combined_6k_train.json`](traces/anomalythink_6k/combined_6k_train.json) (6,000); [`traces/anomalythink_15k/grpo_train.json`](traces/anomalythink_15k/grpo_train.json) (4,236) |
-| Mean `<think>` length | ~141 words (≈137 recompute) — **identical for 6K and 15K** | python recompute on combined files |
+| Disjoint stratified splits | **6,000 SFT / 4,236 GRPO / 4,236 held-out RealIAD** (sum = 14,472) | [`traces/anomalythink_6k/combined_6k_train.json`](traces/anomalythink_6k/combined_6k_train.json) (6,000); the file GRPO trained on is [`traces/grpo_split/grpo_train.json`](traces/grpo_split/grpo_train.json) (4,236, 2,118 + 2,118); held-out [`traces/iter2/heldout_4236_disjoint.json`](traces/iter2/heldout_4236_disjoint.json) |
+| Mean `<think>` length | 136.8 words for both 6K and 15K (164.7 tokens on the 6K split with the Qwen tokenizer, p5 142, p95 187, range 121 to 223) | recompute 2026-09-06 on the combined files |
 | Generation | Gemini-2.5-Flash, temp 1.0, batch 5–10, 120–200 word target, 3 images/anomaly (orig+overlay+ref), 1/normal | [`scripts/00_generate/config_mmad.py`](scripts/00_generate/config_mmad.py); [`scripts/00_generate/generate_realiad_traces.py`](scripts/00_generate/generate_realiad_traces.py) |
 | QC | **in-prompt auto-reject + JSON/Pydantic schema only** — NO second-reviewer model, NO GPT-5-mini, NO 8-rubric filter | `generate_realiad_traces.py` Pydantic `BatchReasoningTraces` validation |
 | Eval harness | DS-MVTec n=1670; VisA n=2141; held-out RealIAD n=4236; prompt mode = filename suffix `_trainprompt`/`_grpoprompt`/`_bareprompt` | recomputed n from JSONs; [`results/eval_ba_inventory.txt`](results/eval_ba_inventory.txt) |
@@ -52,6 +52,28 @@ Use [`results/compute_ba.py`](results/compute_ba.py) on any `results/<run>/check
 > **Corrected-but-don't-forget.** Earlier drafts/notes used `G=2`, `β=0.04`, `η=5e-6`, or "13K samples." **Those are wrong.** The authoritative values are the saved `training_args.bin` figures above.
 
 ---
+
+# Part 0b — Verification pass and additions (2026-09-06)
+
+Source for everything in this block: [`docs/verification/NUMBER_VERIFICATION_REPORT.md`](docs/verification/NUMBER_VERIFICATION_REPORT.md) and the 2026-09-06 entry of [`NUMBER_PROVENANCE.md`](NUMBER_PROVENANCE.md).
+
+| Claim (thesis location) | Value | Evidence | Status |
+|---|---|---|---|
+| The KCR parity reproduces on LLaVA-OneVision-7B-SI with a clean corpus (§6.9, Appendix M) | KCR corrected 87.32 / 72.65 at ep2, 74.29 VisA at ep4, against SFT+GRPO 87.66 / 72.38 and restart 87.86 / 71.89 | `results/sft_llava_ov_7b_frozen_iad_sft_llava_iter1_C_original/`, `results/grpo_llava_ov_from_ep1{,_ep2}/`, corpus `traces/llava_kcr/sft_llava_C_original_train.json` (all 6,000 images in the SFT split, 3,000 / 3,000) | supported |
+| GRPO is the stage that teaches localisation (§6.10.4, §7.5, RQ2) | of detected anomalies: Qwen 73.2 / 38.1 → 82.4 / 55.9 → 74.9 / 52.7; LLaVA 77.5 / 54.2 → 83.1 / 71.2 → 83.1 / 63.7 | `results/thesis_figure_data/loc_hit.json`, `scripts/05_figures/thesis_figures_v2/loc_hit_table.py` | supported |
+| The `<type>` tag does not transfer to MMAD's label vocabulary (Appendix J.5) | similarity 0.53 to 0.58 for every stage, match below 13 %, 18 predicted strings vs 435 / 218 labels | `results/thesis_figure_data/type_sim.json` | supported |
+| GRPO on the strong Arm-C initialisation did not improve the verdict under the production recipe (§6.8) | every checkpoint 1.6 to 4.0 below on DS-MVTec, reward 1.99 → 2.39, peak 3.25 | `results/grpo_qwen25vl_7b_abc_C_grpo/` | supported |
+| A prompt-aligned beta 0.1 variant is inconclusive (§6.8, §8.4) | one of fifteen checkpoints at 82.95 / 72.62 (+0.15 / +0.55), run ends at 81.25 / 71.51, single seed | `results/grpo_sftprompt_kl0.1_sys_3ep/` | partially-supported (the thesis says so explicitly) |
+| The estimator is not the explanation (§6.8) | 18 probe cells, only G2RPO step 20 above init by 0.75 | `results/grpo_probe_{ctrl,drgrpo,g2rpo}/checkpoint-*/probe_*.json` | supported |
+| The judge separates our models from IAD-R1 but not from each other (§6.11, RQ4) | gaps +2.91 to +3.37 and +1.36 to +1.73; SE 0.12 to 0.23; twelve tests p 0.10 to 0.94 | `results/explainability_multi/` | supported for the twelve tests reported; over all 15 pairs one DS-MVTec pair (Qwen KCR vs LLaVA SFT+GRPO) has p ≈ 0.02, and the printed t values 12.07 / 5.55 recompute as 15.61 / 6.50 |
+| LLaVA-OneVision-Data contains MVTec-AD material, VisA none (§6.1) | 1,999 of 186,060 rows | `results/contamination_llava_ov_data/` | supported |
+| Rollout pass rates 84.6 % / 90.8 % (§5.7) | over the 6,000 SFT images; whole pool 84.0 / 90.2 | `traces/rollout_pools/qwen_phase0_10k/rollouts_raw.jsonl.gz`, `answer_match` field | supported |
+| Arm A is a balanced subset (§5.7) | balanced on the acquisition folder 1,489 / 1,489; by verdict 1,298 / 1,680 | `traces/teacher_ablation_abc/sft_A_kept_balanced.json` | supported as reworded in the thesis |
+| 3,557 kept + 2,443 patched, 94.8 % anomalous (§6.7) | matching traces to rollouts gives 3,471 to 3,580 kept and 96 % anomalous among patched | `traces/iter2/`, `traces/rollout_pools/qwen_phase0_10k/` | partially-supported (no build log) |
+| SFT gain over base is +11.2 pp overall (§1.4, §8.1) | +11.08 against the Table 6.1 baseline (69.08); +11.15 against the older 69.01 file | `results/baseline_named/` vs `results/qwen25vl_baseline_eval/` | partially-supported, author to decide |
+| 15K training loss is still descending at epoch 4 (old §7.2) | plateaus at 0.57 to 0.58 through epochs 3 and 4 | `results/sft_qwen25vl_7b_15k_frozen/checkpoint-1812/trainer_state.json` | removed from the thesis on 2026-09-06 |
+| Mask area 1.0 % VisA / 3.8 % DS-MVTec, VisA downscaled about 2.5x per side (§7.3) | 1.00 % / 3.79 %, 2.39x at the median image | recomputed from the MMAD masks and images | supported |
+| GPT-5-mini verifier passes 97.8 % of the 15K corpus (§7.2) | 14,158 of 14,472 | `results/verify_15k_regen/summary.json` | supported |
 
 # Part 0 — Post-thesis claims (added 2026-09-02)
 

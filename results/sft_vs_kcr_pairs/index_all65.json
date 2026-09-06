@@ -1,0 +1,994 @@
+[
+ {
+  "i": 1,
+  "image_id": "VisA/cashew/test/bad/086.JPG",
+  "bench": "visa",
+  "product": "cashew",
+  "gt_cells": [
+   "bottom-center"
+  ],
+  "kcr_cells": [
+   "bottom-center"
+  ],
+  "exact": true,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 2,
+  "image_id": "DS-MVTec/pill/image/faulty_imprint/001.png",
+  "bench": "ds",
+  "product": "pill",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "center",
+   "middle-left",
+   "middle-right"
+  ],
+  "exact": false,
+  "kcr_type": "Contamination"
+ },
+ {
+  "i": 3,
+  "image_id": "DS-MVTec/screw/image/manipulated_front/017.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "top-right"
+  ],
+  "kcr_cells": [
+   "top-right"
+  ],
+  "exact": true,
+  "kcr_type": "Chip"
+ },
+ {
+  "i": 4,
+  "image_id": "VisA/pcb4/test/bad/027.JPG",
+  "bench": "visa",
+  "product": "pcb4",
+  "gt_cells": [
+   "bottom-center",
+   "bottom-right",
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 5,
+  "image_id": "DS-MVTec/cable/image/combined/003.png",
+  "bench": "ds",
+  "product": "cable",
+  "gt_cells": [
+   "center",
+   "middle-right",
+   "top-center",
+   "top-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 6,
+  "image_id": "DS-MVTec/capsule/image/faulty_imprint/007.png",
+  "bench": "ds",
+  "product": "capsule",
+  "gt_cells": [
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": true,
+  "kcr_type": "Pit"
+ },
+ {
+  "i": 7,
+  "image_id": "DS-MVTec/bottle/image/contamination/015.png",
+  "bench": "ds",
+  "product": "bottle",
+  "gt_cells": [
+   "center",
+   "middle-right",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 8,
+  "image_id": "VisA/pcb1/test/bad/097.JPG",
+  "bench": "visa",
+  "product": "pcb1",
+  "gt_cells": [
+   "center",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false,
+  "kcr_type": "Contamination"
+ },
+ {
+  "i": 9,
+  "image_id": "VisA/pcb2/test/bad/084.JPG",
+  "bench": "visa",
+  "product": "pcb2",
+  "gt_cells": [
+   "middle-left",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "middle-left"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 10,
+  "image_id": "VisA/fryum/test/bad/014.JPG",
+  "bench": "visa",
+  "product": "fryum",
+  "gt_cells": [
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": true,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 11,
+  "image_id": "DS-MVTec/hazelnut/image/crack/010.png",
+  "bench": "ds",
+  "product": "hazelnut",
+  "gt_cells": [
+   "bottom-center",
+   "center",
+   "middle-left",
+   "middle-right",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 12,
+  "image_id": "DS-MVTec/metal_nut/image/scratch/003.png",
+  "bench": "ds",
+  "product": "metal_nut",
+  "gt_cells": [
+   "top-center",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "top-left"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 13,
+  "image_id": "DS-MVTec/carpet/image/color/014.png",
+  "bench": "ds",
+  "product": "carpet",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true,
+  "kcr_type": "Contamination"
+ },
+ {
+  "i": 14,
+  "image_id": "VisA/candle/test/bad/020.JPG",
+  "bench": "visa",
+  "product": "candle",
+  "gt_cells": [
+   "top-left"
+  ],
+  "kcr_cells": [
+   "top-left"
+  ],
+  "exact": true,
+  "kcr_type": "Chip"
+ },
+ {
+  "i": 15,
+  "image_id": "DS-MVTec/transistor/image/damaged_case/007.png",
+  "bench": "ds",
+  "product": "transistor",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true,
+  "kcr_type": "Deformation"
+ },
+ {
+  "i": 16,
+  "image_id": "DS-MVTec/zipper/image/split_teeth/009.png",
+  "bench": "ds",
+  "product": "zipper",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false,
+  "kcr_type": "Chip"
+ },
+ {
+  "i": 17,
+  "image_id": "VisA/macaroni1/test/bad/067.JPG",
+  "bench": "visa",
+  "product": "macaroni1",
+  "gt_cells": [
+   "center",
+   "top-center",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "top-left"
+  ],
+  "exact": false,
+  "kcr_type": "Contamination"
+ },
+ {
+  "i": 18,
+  "image_id": "VisA/chewinggum/test/bad/087.JPG",
+  "bench": "visa",
+  "product": "chewinggum",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true,
+  "kcr_type": "Pit"
+ },
+ {
+  "i": 19,
+  "image_id": "VisA/cashew/test/bad/008.JPG",
+  "bench": "visa",
+  "product": "cashew",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true,
+  "kcr_type": "Pit"
+ },
+ {
+  "i": 20,
+  "image_id": "DS-MVTec/pill/image/crack/008.png",
+  "bench": "ds",
+  "product": "pill",
+  "gt_cells": [
+   "top-center",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "middle-left",
+   "top-center"
+  ],
+  "exact": false,
+  "kcr_type": "Contamination"
+ },
+ {
+  "i": 21,
+  "image_id": "DS-MVTec/screw/image/thread_side/018.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": true,
+  "kcr_type": "Chip"
+ },
+ {
+  "i": 22,
+  "image_id": "VisA/pcb4/test/bad/033.JPG",
+  "bench": "visa",
+  "product": "pcb4",
+  "gt_cells": [
+   "bottom-center",
+   "center",
+   "middle-left"
+  ],
+  "kcr_cells": [
+   "middle-left"
+  ],
+  "exact": false,
+  "kcr_type": "Contamination"
+ },
+ {
+  "i": 23,
+  "image_id": "DS-MVTec/cable/image/missing_cable/006.png",
+  "bench": "ds",
+  "product": "cable",
+  "gt_cells": [
+   "bottom-center",
+   "center",
+   "middle-left",
+   "middle-right",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 24,
+  "image_id": "DS-MVTec/capsule/image/scratch/001.png",
+  "bench": "ds",
+  "product": "capsule",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 25,
+  "image_id": "DS-MVTec/bottle/image/contamination/016.png",
+  "bench": "ds",
+  "product": "bottle",
+  "gt_cells": [
+   "bottom-center",
+   "center",
+   "middle-left",
+   "middle-right",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "middle-left"
+  ],
+  "exact": false,
+  "kcr_type": "Stain"
+ },
+ {
+  "i": 26,
+  "image_id": "VisA/pcb1/test/bad/037.JPG",
+  "bench": "visa",
+  "product": "pcb1",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 27,
+  "image_id": "VisA/pcb2/test/bad/090.JPG",
+  "bench": "visa",
+  "product": "pcb2",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "bottom-center"
+  ],
+  "exact": false,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 28,
+  "image_id": "VisA/fryum/test/bad/082.JPG",
+  "bench": "visa",
+  "product": "fryum",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 29,
+  "image_id": "DS-MVTec/hazelnut/image/print/007.png",
+  "bench": "ds",
+  "product": "hazelnut",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false,
+  "kcr_type": "Contamination"
+ },
+ {
+  "i": 30,
+  "image_id": "DS-MVTec/metal_nut/image/bent/008.png",
+  "bench": "ds",
+  "product": "metal_nut",
+  "gt_cells": [
+   "top-center",
+   "top-right"
+  ],
+  "kcr_cells": [
+   "top-right"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 31,
+  "image_id": "VisA/cashew/test/bad/000.JPG",
+  "bench": "visa",
+  "product": "cashew",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false,
+  "kcr_type": "Pit"
+ },
+ {
+  "i": 32,
+  "image_id": "DS-MVTec/pill/image/scratch/002.png",
+  "bench": "ds",
+  "product": "pill",
+  "gt_cells": [
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": true,
+  "kcr_type": "Contamination"
+ },
+ {
+  "i": 33,
+  "image_id": "DS-MVTec/screw/image/thread_top/013.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "bottom-center"
+  ],
+  "exact": false,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 34,
+  "image_id": "VisA/pcb4/test/bad/031.JPG",
+  "bench": "visa",
+  "product": "pcb4",
+  "gt_cells": [
+   "center",
+   "middle-left"
+  ],
+  "kcr_cells": [
+   "middle-left"
+  ],
+  "exact": false,
+  "kcr_type": "scratch"
+ },
+ {
+  "i": 35,
+  "image_id": "DS-MVTec/cable/image/cut_outer_insulation/008.png",
+  "bench": "ds",
+  "product": "cable",
+  "gt_cells": [
+   "bottom-right",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "bottom-right"
+  ],
+  "exact": false,
+  "kcr_type": "Damage"
+ },
+ {
+  "i": 36,
+  "image_id": "DS-MVTec/bottle/image/broken_large/011.png",
+  "bench": "ds",
+  "product": "bottle",
+  "gt_cells": [
+   "bottom-center",
+   "bottom-left",
+   "bottom-right",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "bottom-right"
+  ],
+  "exact": false,
+  "kcr_type": "scratch"
+ },
+ {
+  "i": 37,
+  "image_id": "DS-MVTec/capsule/image/scratch/016.png",
+  "bench": "ds",
+  "product": "capsule",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 38,
+  "image_id": "VisA/pcb1/test/bad/010.JPG",
+  "bench": "visa",
+  "product": "pcb1",
+  "gt_cells": [
+   "bottom-center"
+  ],
+  "kcr_cells": [
+   "bottom-center"
+  ],
+  "exact": true,
+  "kcr_type": "Deformation"
+ },
+ {
+  "i": 39,
+  "image_id": "VisA/pcb2/test/bad/049.JPG",
+  "bench": "visa",
+  "product": "pcb2",
+  "gt_cells": [
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": true,
+  "kcr_type": "Deformation"
+ },
+ {
+  "i": 40,
+  "image_id": "DS-MVTec/carpet/image/color/002.png",
+  "bench": "ds",
+  "product": "carpet",
+  "gt_cells": [
+   "center",
+   "middle-left",
+   "top-center",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": false,
+  "kcr_type": "Contamination"
+ },
+ {
+  "i": 41,
+  "image_id": "VisA/fryum/test/bad/016.JPG",
+  "bench": "visa",
+  "product": "fryum",
+  "gt_cells": [
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": true,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 42,
+  "image_id": "VisA/candle/test/bad/081.JPG",
+  "bench": "visa",
+  "product": "candle",
+  "gt_cells": [
+   "top-left"
+  ],
+  "kcr_cells": [
+   "top-left"
+  ],
+  "exact": true,
+  "kcr_type": "scratch"
+ },
+ {
+  "i": 43,
+  "image_id": "VisA/cashew/test/bad/042.JPG",
+  "bench": "visa",
+  "product": "cashew",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false,
+  "kcr_type": "Pit"
+ },
+ {
+  "i": 44,
+  "image_id": "DS-MVTec/pill/image/color/002.png",
+  "bench": "ds",
+  "product": "pill",
+  "gt_cells": [
+   "bottom-center",
+   "center",
+   "middle-left",
+   "middle-right",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false,
+  "kcr_type": "Crack"
+ },
+ {
+  "i": 45,
+  "image_id": "DS-MVTec/screw/image/thread_top/016.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": true,
+  "kcr_type": "Pit"
+ },
+ {
+  "i": 46,
+  "image_id": "VisA/pcb4/test/bad/056.JPG",
+  "bench": "visa",
+  "product": "pcb4",
+  "gt_cells": [
+   "center",
+   "middle-left"
+  ],
+  "kcr_cells": [
+   "middle-left"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 47,
+  "image_id": "DS-MVTec/cable/image/cut_inner_insulation/007.png",
+  "bench": "ds",
+  "product": "cable",
+  "gt_cells": [
+   "center",
+   "middle-right",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 48,
+  "image_id": "DS-MVTec/bottle/image/broken_large/010.png",
+  "bench": "ds",
+  "product": "bottle",
+  "gt_cells": [
+   "bottom-center",
+   "bottom-left",
+   "middle-left",
+   "top-center",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "top-left"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 49,
+  "image_id": "DS-MVTec/capsule/image/faulty_imprint/018.png",
+  "bench": "ds",
+  "product": "capsule",
+  "gt_cells": [
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": true,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 50,
+  "image_id": "VisA/pcb1/test/bad/074.JPG",
+  "bench": "visa",
+  "product": "pcb1",
+  "gt_cells": [
+   "bottom-center",
+   "center",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": false,
+  "kcr_type": "Foreign Object"
+ },
+ {
+  "i": 51,
+  "image_id": "VisA/pcb2/test/bad/000.JPG",
+  "bench": "visa",
+  "product": "pcb2",
+  "gt_cells": [
+   "center",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 52,
+  "image_id": "VisA/cashew/test/bad/071.JPG",
+  "bench": "visa",
+  "product": "cashew",
+  "gt_cells": [
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": true,
+  "kcr_type": "Contamination"
+ },
+ {
+  "i": 53,
+  "image_id": "DS-MVTec/pill/image/scratch/001.png",
+  "bench": "ds",
+  "product": "pill",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "bottom-right",
+   "middle-left",
+   "middle-right",
+   "top-center"
+  ],
+  "exact": false,
+  "kcr_type": "Contamination"
+ },
+ {
+  "i": 54,
+  "image_id": "DS-MVTec/screw/image/thread_top/008.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "bottom-center"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 55,
+  "image_id": "VisA/pcb4/test/bad/099.JPG",
+  "bench": "visa",
+  "product": "pcb4",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false,
+  "kcr_type": "Foreign Object"
+ },
+ {
+  "i": 56,
+  "image_id": "DS-MVTec/cable/image/poke_insulation/001.png",
+  "bench": "ds",
+  "product": "cable",
+  "gt_cells": [
+   "middle-left",
+   "top-left"
+  ],
+  "kcr_cells": [
+   "top-left"
+  ],
+  "exact": false,
+  "kcr_type": "Damage"
+ },
+ {
+  "i": 57,
+  "image_id": "DS-MVTec/bottle/image/contamination/012.png",
+  "bench": "ds",
+  "product": "bottle",
+  "gt_cells": [
+   "bottom-center",
+   "center",
+   "middle-left",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-left"
+  ],
+  "exact": false,
+  "kcr_type": "Chip"
+ },
+ {
+  "i": 58,
+  "image_id": "DS-MVTec/capsule/image/faulty_imprint/020.png",
+  "bench": "ds",
+  "product": "capsule",
+  "gt_cells": [
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": true,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 59,
+  "image_id": "VisA/pcb1/test/bad/072.JPG",
+  "bench": "visa",
+  "product": "pcb1",
+  "gt_cells": [
+   "bottom-center",
+   "center"
+  ],
+  "kcr_cells": [
+   "bottom-center"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 60,
+  "image_id": "VisA/pcb2/test/bad/008.JPG",
+  "bench": "visa",
+  "product": "pcb2",
+  "gt_cells": [
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": true,
+  "kcr_type": "Deformation"
+ },
+ {
+  "i": 61,
+  "image_id": "VisA/cashew/test/bad/065.JPG",
+  "bench": "visa",
+  "product": "cashew",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false,
+  "kcr_type": "Pit"
+ },
+ {
+  "i": 62,
+  "image_id": "DS-MVTec/pill/image/scratch/007.png",
+  "bench": "ds",
+  "product": "pill",
+  "gt_cells": [
+   "center",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "top-center"
+  ],
+  "exact": false,
+  "kcr_type": "Pit"
+ },
+ {
+  "i": 63,
+  "image_id": "DS-MVTec/screw/image/scratch_neck/004.png",
+  "bench": "ds",
+  "product": "screw",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false,
+  "kcr_type": "Scratch"
+ },
+ {
+  "i": 64,
+  "image_id": "VisA/pcb4/test/bad/057.JPG",
+  "bench": "visa",
+  "product": "pcb4",
+  "gt_cells": [
+   "center",
+   "middle-left",
+   "middle-right",
+   "top-center"
+  ],
+  "kcr_cells": [
+   "center"
+  ],
+  "exact": false,
+  "kcr_type": "Missing Parts"
+ },
+ {
+  "i": 65,
+  "image_id": "VisA/cashew/test/bad/039.JPG",
+  "bench": "visa",
+  "product": "cashew",
+  "gt_cells": [
+   "center",
+   "middle-right"
+  ],
+  "kcr_cells": [
+   "middle-right"
+  ],
+  "exact": false,
+  "kcr_type": "Pit"
+ }
+]

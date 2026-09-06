@@ -1,0 +1,56 @@
+# Changelog, 2026-09-06: verification pass and repository sync
+
+Everything added to the thesis between 3 and 6 September was verified against this workspace and brought into the repository. The verification report is `docs/verification/NUMBER_VERIFICATION_REPORT.md`. Two companion notes came along: `docs/verification/KCR_VS_GRPO_MEMO.md` (how to read KCR against GRPO, with the OpenVLThinker and RAFT comparison) and `docs/verification/WHOLE_THESIS_AUDIT.md` (the earlier whole-thesis audit).
+
+## Results added (`results/`)
+
+| folder | what | thesis use |
+|---|---|---|
+| `sft_llava_ov_7b_frozen_iad_sft_llava_iter1_C_original/` | LLaVA KCR, corrected corpus, 4 epochs, vLLM and HF files | Tables 6.9, 6.12, 6.13, Appendix M, Figures 1.1, 6.1 to 6.8 |
+| `sft_llava_ov_7b_frozen_iad_sft_iter2/` | LLaVA on the Qwen KCR corpus, epoch 1 | Table 6.9 |
+| `grpo_llava_ov_from_ep1_ep2/` | LLaVA SFT+GRPO restart | §6.9 |
+| `grpo_llava_ov_from_ep1/`, `sft_llava_ov_7b_frozen_iad_sft_6k_train/` | HF-path and vLLM-path files added where missing | §6.9 two-paths paragraph |
+| `gemini_25flash_eval/`, `gpt5mini_eval/` | proprietary zero-shot references | Table 6.14, Appendix G |
+| `sft_filtered6kcc_from_base/` | retrain on verifier-passing traces | §7.2 |
+| `grpo_probe_ctrl/`, `grpo_probe_drgrpo/`, `grpo_probe_g2rpo/` | 400-sample probe JSONs per 20 steps | Table 6.10, Figure 6.6 |
+| `grpo_sftprompt_kl0.1_sys_3ep/` (all 15 checkpoints), `grpo_sftprompt_kl0.1/`, `grpo_abc_C_kl0.1_halfep/` | prompt-aligned and beta 0.1 GRPO-on-C runs | §6.8, §8.4 (inconclusive) |
+| `explainability_multi/` | judge outputs for the LLaVA rows and the corrected KCR row, regenerated axis table | Table 6.13 |
+| `thesis_figure_data/` | `figdata.json`, `loc_hit.json`, `type_sim.json`, the two generated tables | every Chapter 6 figure, Table 6.12, Appendix J.5 |
+| `contamination_llava_ov_data/` | the 1,999-of-186,060 count and its code | §6.1 caveat |
+| `sft_vs_kcr_pairs/` | indices of the 65 / 30 / 21 SFT-no, KCR-yes pairs | Figure 6.9, Appendix F.5 |
+| `grpo_qwen25vl_7b_6k_frozenvision_run1/` | partial training log of the frozen-vision GRPO ablation | pending |
+
+Each new folder has a `NOTE.md` with the numbers and caveats.
+
+## Corpora added (`traces/`)
+
+- `llava_kcr/`: the corrected LLaVA KCR corpus and the first (leaky) build.
+- `grpo_split/grpo_train.json`: the file every GRPO run trained on. Not the same traces as `anomalythink_15k/grpo_train.json`.
+- `rollout_pools/{qwen,llava}_phase0_10k/`: both 10,236 x 8 rollout pools, judge reports, kept / corrected / rewritten buckets (large files gzipped).
+- `controls/`: verifier-filtered 6K, Balanced-192, labels-only.
+- `iter2/sft_iter2_train.json` replaced by the location-spelling-fixed version, the previous file kept as `sft_iter2_train_v1_prepatch.json`.
+
+## Scripts added (`scripts/`)
+
+- `05_figures/thesis_figures_v2/`: the complete Chapter 6 figure pipeline (`registry.py`, `export_data.py`, `f1..f6`, `g1..g5`, `thesisify.py`, `loc_hit_table.py`, `type_sim_table.py`, `stages/f7_stages.py`, final SVGs). `05_figures/analyze_anomaly_types.py` (t-SNE of type strings).
+- `03_rollout_star/build_llava_arms_original.py`, `armc_original_autostart.sh`: the corrected LLaVA corpus builder and its launcher.
+- `04_eval/hf_llava_backfill.sh`, `evaluate_vllm_qwen3vl.py`, `run_on_folder.py`, `explainability_judge_multi_corrected.py`, `watch_and_eval_grpo_frozenvision.sh`.
+- `02_grpo/run_grpo_7b_frozen_vision.sh` and the env-guarded `FREEZE_VISION_TOWER` block in `stage_rl/trainer/sc_grpo_trainer.py` (off by default).
+
+Python copies take the workspace root from `WORK_DIR` (default the parent of this repository); shell launchers carry a header noting the same.
+
+## Ledgers
+
+- `NUMBER_PROVENANCE.md`: 2026-09-06 entry with every new number and file, figure-provenance rows, and a revised authority note (the thesis is authoritative where the older entries disagree).
+- `CLAIMS_EVIDENCE.md`: Part 0b with the verification-pass claims and their status, inventory rows corrected (GRPO file, trace length).
+- `UNVERIFIED.md`: section 5, what still cannot be backed from disk.
+- `THESIS_HEADLINE_DECISION.md`: prompt-aligned run marked complete and inconclusive.
+- `README.md`: section 0 pointer, corrected LLaVA rows, contamination count, layout table, corpora table.
+
+## Thesis changes of the same day (local commit c7a4093 of the thesis repository, not yet pushed)
+
+Strict scoring in Tables 6.6, 6.7 and 6.11; the prompt-aligned run noted in §6.8 and §8.4 as inconclusive; Arm A balance stated by verdict; the 15K under-training sentence replaced by what the logs show; pcb3 delta 7.5; reward-code line references; HF-vs-vLLM agreement range; 2.4x optimiser steps.
+
+## Left for the author
+
+The baseline file behind Appendix C's base column (69.01 vs 69.08) and the "+11.2 pp" phrasing; the wording of the twelve-test sentence in RQ4 and the printed Welch t values.

@@ -184,6 +184,21 @@ class SCGRPOTrainer(Trainer):
                     "This argument can only be used when the `model` argument is a string."
                 )
 
+        if os.environ.get("FREEZE_VISION_TOWER","0")=="1":
+            import torch as _torch
+            n_f=n_t=0
+            for _n,_p in model.named_parameters():
+                if ".visual." in ("."+_n) and ".merger." not in _n:
+                    _p.requires_grad_(False); n_f+=1
+                else: n_t+=1
+            _vis=getattr(model,"visual",None) or getattr(getattr(model,"model",None),"visual",None)
+            _blocks=getattr(_vis,"blocks",None)
+            # run the tower under no_grad so no backward recomputation touches its frozen, partitioned blocks
+            _orig_fwd=_vis.forward
+            def _nograd_forward(*a,**k):
+                with _torch.no_grad(): return _orig_fwd(*a,**k)
+            _vis.forward=_nograd_forward
+            print(f"[freeze] FREEZE_VISION_TOWER=1: {n_f} vision-tower tensors frozen, {n_t} tensors trainable (merger + LM); tower forward wrapped in no_grad; blocks={len(_blocks) if _blocks is not None else '?'}", flush=True)
         self.model_id = model_id
         self.use_vllm = use_vllm_for_gen
 

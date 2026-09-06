@@ -1,0 +1,110 @@
+[
+ {
+  "backbone": "\\qwenvl-7B",
+  "stage": "SFT",
+  "dsmvtec": {
+   "hit": 723,
+   "tp": 988,
+   "anom": 1226,
+   "hit_tp": 73.17813765182186,
+   "hit_all": 58.97226753670473
+  },
+  "visa": {
+   "hit": 324,
+   "tp": 851,
+   "anom": 1197,
+   "hit_tp": 38.072855464159815,
+   "hit_all": 27.06766917293233
+  }
+ },
+ {
+  "backbone": "\\qwenvl-7B",
+  "stage": "SFT$+$GRPO",
+  "dsmvtec": {
+   "hit": 800,
+   "tp": 971,
+   "anom": 1226,
+   "hit_tp": 82.38928939237898,
+   "hit_all": 65.25285481239804
+  },
+  "visa": {
+   "hit": 426,
+   "tp": 762,
+   "anom": 1197,
+   "hit_tp": 55.90551181102362,
+   "hit_all": 35.58897243107769
+  }
+ },
+ {
+  "backbone": "\\qwenvl-7B",
+  "stage": "KCR",
+  "dsmvtec": {
+   "hit": 751,
+   "tp": 1003,
+   "anom": 1226,
+   "hit_tp": 74.87537387836491,
+   "hit_all": 61.256117455138664
+  },
+  "visa": {
+   "hit": 360,
+   "tp": 683,
+   "anom": 1197,
+   "hit_tp": 52.7086383601757,
+   "hit_all": 30.075187969924812
+  }
+ },
+ {
+  "backbone": "LLaVA-OneVision-7B$^{\\dagger}$",
+  "stage": "SFT",
+  "dsmvtec": {
+   "hit": 768,
+   "tp": 991,
+   "anom": 1226,
+   "hit_tp": 77.49747729566094,
+   "hit_all": 62.64274061990212
+  },
+  "visa": {
+   "hit": 406,
+   "tp": 749,
+   "anom": 1197,
+   "hit_tp": 54.205607476635514,
+   "hit_all": 33.91812865497076
+  }
+ },
+ {
+  "backbone": "LLaVA-OneVision-7B$^{\\dagger}$",
+  "stage": "SFT$+$GRPO",
+  "dsmvtec": {
+   "hit": 896,
+   "tp": 1078,
+   "anom": 1226,
+   "hit_tp": 83.11688311688312,
+   "hit_all": 73.08319738988581
+  },
+  "visa": {
+   "hit": 682,
+   "tp": 958,
+   "anom": 1197,
+   "hit_tp": 71.18997912317327,
+   "hit_all": 56.97577276524645
+  }
+ },
+ {
+  "backbone": "LLaVA-OneVision-7B$^{\\dagger}$",
+  "stage": "KCR",
+  "dsmvtec": {
+   "hit": 838,
+   "tp": 1009,
+   "anom": 1226,
+   "hit_tp": 83.05252725470763,
+   "hit_all": 68.35236541598695
+  },
+  "visa": {
+   "hit": 553,
+   "tp": 868,
+   "anom": 1197,
+   "hit_tp": 63.70967741935484,
+   "hit_all": 46.198830409356724
+  }
+ }
+]

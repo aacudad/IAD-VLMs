@@ -33,6 +33,16 @@ KL term and no rollout budget at training time.
 
 ---
 
+## 0. What changed on 2026-09-06
+
+The thesis was verified number by number against this workspace and the repository was brought level with it.
+The full report is [`docs/verification/NUMBER_VERIFICATION_REPORT.md`](docs/verification/NUMBER_VERIFICATION_REPORT.md)
+and the itemised list of additions is [`docs/CHANGELOG_2026-09-06.md`](docs/CHANGELOG_2026-09-06.md). In short: the LLaVA
+KCR row is now the corrected corpus (87.32 / 72.65, 74.29 VisA at epoch 4) with the first build kept on record, every
+eval file the thesis cites is under `results/`, the two rollout pools and the LLaVA corpora are under `traces/`, the
+Chapter 6 figure pipeline is under `scripts/05_figures/thesis_figures_v2/`, and `NUMBER_PROVENANCE.md` no longer
+claims authority over the thesis where the two disagreed (the baseline file and the patched-pool counts).
+
 ## 1. Headline results
 
 **Balanced accuracy (BA)** on the two primary benchmarks, defined as
@@ -45,7 +55,7 @@ checkpoint we ever evaluated is in [`results/eval_ba_inventory.txt`](results/eva
 
 | Stage | Model / checkpoint | DS-MVTec BA | VisA BA | Held-out Real-IAD BA | Source eval JSON |
 |---|---|---:|---:|---:|---|
-| Base | Qwen2.5-VL-7B (zero-shot) | 69.01 | 53.79 | — | [`results/qwen25vl_baseline_eval/`](results/qwen25vl_baseline_eval/) |
+| Base | Qwen2.5-VL-7B (zero-shot) | 69.08 | 53.79 | — | [`results/baseline_named/`](results/baseline_named/) (the thesis file; an earlier run in `results/qwen25vl_baseline_eval/` scores 69.01) |
 | Control | Labels-only, same 6K images, ckpt-188 | 77.86 | 68.64 | — | [`results/sft_qwen25vl_7b_6k_noreason/checkpoint-188/`](results/sft_qwen25vl_7b_6k_noreason/checkpoint-188/) |
 | SFT | 7B-frozen-6K, ckpt-564 | 80.16 | 64.78 | — | [`results/sft_qwen25vl_7b_zeroshot_6k_frozen/checkpoint-564/`](results/sft_qwen25vl_7b_zeroshot_6k_frozen/checkpoint-564/) |
 | **KCR SFT (headline)** | 7B KCR / Arm-C, ckpt-376 | **82.80** | **72.07** | — | [`results/sft_qwen25vl_7b_abc_C_full_patched/checkpoint-376/`](results/sft_qwen25vl_7b_abc_C_full_patched/checkpoint-376/) |
@@ -61,15 +71,17 @@ is the hardest place to argue that our result is a Qwen artefact.
 |---|---|---:|---:|---|
 | Base | LLaVA-OV-7B-SI zero-shot, fair yes/no prompt | 75.66 | 53.80 | [`results/llava_ov_7b_zeroshot_eval/`](results/llava_ov_7b_zeroshot_eval/) |
 | SFT | 6K Gemini traces, epoch 1 | 85.91 | 68.26 | [`results/sft_llava_ov_7b_frozen_iad_sft_6k_train/checkpoint-188/`](results/sft_llava_ov_7b_frozen_iad_sft_6k_train/checkpoint-188/) |
-| SFT + GRPO | from SFT ep1, ckpt-530 | 87.66 | 72.58 | [`results/grpo_llava_ov_from_ep1/checkpoint-530/`](results/grpo_llava_ov_from_ep1/checkpoint-530/) |
-| **KCR SFT** | native KCR corpus, epoch 4 | **88.45** | **74.25** | [`results/sft_llava_ov_7b_frozen_llava_iter1_C/checkpoint-748/`](results/sft_llava_ov_7b_frozen_llava_iter1_C/checkpoint-748/) |
+| SFT + GRPO | from SFT ep1, ckpt-530 (vLLM path, 6 unparsed counted wrong) | 87.66 | 72.38 | [`results/grpo_llava_ov_from_ep1/checkpoint-530/`](results/grpo_llava_ov_from_ep1/checkpoint-530/) |
+| **KCR SFT** | native KCR corpus, corrected build, epoch 2 (selected on DS-MVTec) | **87.32** | **72.65** | [`results/sft_llava_ov_7b_frozen_iad_sft_llava_iter1_C_original/checkpoint-376/`](results/sft_llava_ov_7b_frozen_iad_sft_llava_iter1_C_original/checkpoint-376/) |
+| KCR SFT, epoch 4 | same run, VisA rises every epoch | 86.60 | 74.29 | [`.../checkpoint-748/`](results/sft_llava_ov_7b_frozen_iad_sft_llava_iter1_C_original/checkpoint-748/) |
+| KCR SFT, first build | leaky corpus (Appendix M), epoch 4, kept on record | 88.45 | 74.25 | [`results/sft_llava_ov_7b_frozen_llava_iter1_C/checkpoint-748/`](results/sft_llava_ov_7b_frozen_llava_iter1_C/checkpoint-748/) |
 
 #### Corpus transfer, Qwen3-VL-8B-Instruct
 
 | Stage | Model / checkpoint | DS-MVTec BA | VisA BA | Source eval JSON |
 |---|---|---:|---:|---|
 | Base | Qwen3-VL-8B-Instruct zero-shot | 78.68 | 64.45 | [`results/qwen3vl_8b_baseline_eval/`](results/qwen3vl_8b_baseline_eval/) |
-| **KCR SFT** | Qwen KCR corpus, ckpt-376 | **85.82** | **76.52** | [`results/sft_qwen3vl_8b_armC/checkpoint-376/`](results/sft_qwen3vl_8b_armC/checkpoint-376/) |
+| **KCR SFT** | Qwen KCR corpus, ckpt-376 | **85.82** | **76.45** | [`results/sft_qwen3vl_8b_armC/checkpoint-376/`](results/sft_qwen3vl_8b_armC/checkpoint-376/) |
 
 #### Explanation quality (the point of the whole project)
 
@@ -82,6 +94,9 @@ detected anomalies.
 | Model | DS-MVTec /10 | VisA /10 |
 |---|---:|---:|
 | **KCR / Arm-C SFT** | **9.05** | **8.52** |
+| Qwen SFT+GRPO | 9.24 | 8.62 |
+| Qwen3-VL-8B on the Qwen KCR corpus | 9.23 | 8.77 |
+| LLaVA SFT / SFT+GRPO / KCR (corrected) | 9.27 / 9.51 / 9.39 | 8.40 / 8.54 / 8.70 |
 | IAD-R1, asked the same way (prompt-matched) | 6.14 | 7.04 |
 | IAD-R1, under its own prompt | 4.50 | 6.32 |
 
@@ -98,14 +113,20 @@ Real-IAD split it never saw during SFT or RL.
 
 ### The cross-architecture result, and its caveat
 
-**This is the strongest thing in the repository.** On LLaVA-OneVision-7B-SI the KCR corpus
-reaches **88.45 / 74.25** from supervised fine-tuning alone. SFT plus GRPO on that same
-backbone reaches **87.66 / 72.58**. Corpus curation beats reinforcement learning on IAD-R1's
-own architecture, which is the same ordering we already measured on Qwen2.5-VL-7B. So it is
-a property of the method, not of one backbone.
+**This is the strongest thing in the repository.** On LLaVA-OneVision-7B-SI the corrected KCR corpus
+reaches **87.32 / 72.65** at the DS-MVTec-selected epoch and **74.29** on VisA by epoch 4, from supervised
+fine-tuning alone. SFT plus GRPO on that same backbone reaches **87.66 / 72.38**. The supervised stage ties
+reinforcement learning on DS-MVTec and leads on VisA on IAD-R1's own architecture, which is the same
+ordering measured on Qwen2.5-VL-7B (82.80 / 72.07 against 82.73 / 70.39). So it is a property of the
+method, not of one backbone. The 88.45 / 74.25 figure of the first LLaVA build is on record in
+`results/sft_llava_ov_7b_frozen_llava_iter1_C/` but rests on a corpus that leaked 2,484 GRPO-split images
+(thesis Appendix M).
 
 GRPO is not useless there. It lifts its own init (LLaVA 6K SFT epoch 1, 85.91 / 68.26) by
-+1.75 DS-MVTec and +4.32 VisA. It just does not reach what a better corpus reaches for free.
++1.75 DS-MVTec and +4.12 VisA, and on both backbones it is the stage that teaches localisation
+(`results/thesis_figure_data/loc_hit.json`: among detected anomalies the SFT+GRPO checkpoint places the
+`<location>` tag in a correct cell 82.4 / 55.9 % of the time on Qwen and 83.1 / 71.2 % on LLaVA, against
+73.2 / 38.1 and 77.5 / 54.2 after SFT). It just does not raise the verdict beyond what a better corpus reaches.
 
 The LLaVA KCR corpus is a **native** loop, not the Qwen corpus reused. The rollouts came
 from a LLaVA policy and the teacher corrected and revised LLaVA's own failures. Only the
@@ -113,18 +134,19 @@ rollout sampler changed between the two backbones. Every judging, bucketing and 
 script is shared.
 
 > **Contamination caveat, DS-MVTec only.** The LLaVA-OneVision training mixture
-> (`lmms-lab/LLaVA-OneVision-Data`, config `vision_flan(filtered)`) contains **426 rows**
-> whose id matches `%MVTecAD%`. VisA matches **0**. Every DS-MVTec number for a
+> (`lmms-lab/LLaVA-OneVision-Data`, config `vision_flan(filtered)`) contains **1,999 of 186,060 rows**
+> whose id matches `MVTecAD` (counted over all 50 parquet shards, `results/contamination_llava_ov_data/`;
+> the earlier 426 came from a truncated index). VisA matches **0**. Every DS-MVTec number for a
 > LLaVA-derived model in this repo therefore carries a pretraining-exposure asterisk,
 > including IAD-R1's released checkpoint. **VisA does not.** Read the VisA column as the
-> clean one. Verified live through the Hugging Face datasets-server filter.
+> clean one.
 
 > **One comparison we do not make.** Our IAD-R1 reference row (81.92 / 71.34) is their
 > released **Qwen2.5-VL-7B** checkpoint re-evaluated on our harness. We never re-evaluated
 > their LLaVA-OneVision checkpoint on the full subsets. So "we beat IAD-R1 on its own
 > backbone" is not a claim this repo supports. What it supports is that our pipeline on
-> their backbone scores 88.45 / 74.25 under the same harness that scores their released
-> model 81.92 / 71.34.
+> their backbone scores 87.32 / 72.65 (74.29 VisA at epoch 4) under the same harness that
+> scores their released model 81.92 / 71.34.
 
 ### Corpus transfer to a newer backbone
 
@@ -235,7 +257,18 @@ the same `results/<run>/checkpoint-X/eval_<bench>_full_<mode>.json` layout, and 
 | [`results/llava_ov_7b_zeroshot_eval/`](results/llava_ov_7b_zeroshot_eval/) | LLaVA-OV-7B-SI base row, fair yes/no prompt |
 | [`results/sft_llava_ov_7b_frozen_iad_sft_6k_train/`](results/sft_llava_ov_7b_frozen_iad_sft_6k_train/) | LLaVA 6K Gemini SFT, 4 epochs |
 | [`results/grpo_llava_ov_from_ep1/`](results/grpo_llava_ov_from_ep1/) | LLaVA SFT + GRPO, ckpt-530 |
-| [`results/sft_llava_ov_7b_frozen_llava_iter1_C/`](results/sft_llava_ov_7b_frozen_llava_iter1_C/) | **LLaVA native KCR, 4 epochs, the 88.45 / 74.25 run** |
+| [`results/sft_llava_ov_7b_frozen_iad_sft_llava_iter1_C_original/`](results/sft_llava_ov_7b_frozen_iad_sft_llava_iter1_C_original/) | **LLaVA native KCR, corrected corpus, 4 epochs, the 87.32 / 72.65 thesis row** (vLLM and HF files) |
+| [`results/sft_llava_ov_7b_frozen_llava_iter1_C/`](results/sft_llava_ov_7b_frozen_llava_iter1_C/) | LLaVA native KCR, first (leaky) build, the 88.45 / 74.25 run kept on record |
+| [`results/sft_llava_ov_7b_frozen_iad_sft_iter2/`](results/sft_llava_ov_7b_frozen_iad_sft_iter2/) | LLaVA trained on the Qwen KCR corpus, epoch 1 (87.70 / 70.97) |
+| [`results/grpo_llava_ov_from_ep1_ep2/`](results/grpo_llava_ov_from_ep1_ep2/) | LLaVA SFT+GRPO restart, ckpt-530 (87.86 / 71.89) |
+| [`results/gemini_25flash_eval/`](results/gemini_25flash_eval/), [`results/gpt5mini_eval/`](results/gpt5mini_eval/) | Proprietary zero-shot references (81.52 / 75.18 and 77.10 / 68.23) |
+| [`results/grpo_probe_ctrl/`](results/grpo_probe_ctrl/), `grpo_probe_drgrpo/`, `grpo_probe_g2rpo/` | Advantage-estimator probe from Arm-C, 400-sample probe JSONs per 20 steps |
+| [`results/grpo_sftprompt_kl0.1_sys_3ep/`](results/grpo_sftprompt_kl0.1_sys_3ep/) | Prompt-aligned GRPO on Arm-C, beta 0.1, all 15 checkpoints (inconclusive, thesis §6.8) |
+| [`results/sft_filtered6kcc_from_base/`](results/sft_filtered6kcc_from_base/) | Retrain on verifier-passing 6K traces (79.60 / 65.99) |
+| [`results/thesis_figure_data/`](results/thesis_figure_data/) | Data behind every Chapter 6 figure, the localisation table and the type-transfer table |
+| [`results/contamination_llava_ov_data/`](results/contamination_llava_ov_data/) | The 1,999-of-186,060 MVTec-AD count in LLaVA-OneVision-Data |
+| [`results/sft_vs_kcr_pairs/`](results/sft_vs_kcr_pairs/) | Index of the 65 SFT-no / KCR-yes pairs behind Figure 6.9 and Appendix F.5 |
+| [`results/grpo_qwen25vl_7b_6k_frozenvision_run1/`](results/grpo_qwen25vl_7b_6k_frozenvision_run1/) | GRPO with a frozen vision tower, in progress |
 | [`results/qwen3vl_8b_baseline_eval/`](results/qwen3vl_8b_baseline_eval/) | Qwen3-VL-8B base row |
 | [`results/sft_qwen3vl_8b_armC/`](results/sft_qwen3vl_8b_armC/) | Qwen3-VL-8B on the Qwen KCR corpus, 4 epochs |
 | [`results/sft_qwen25vl_7b_6k_noreason/`](results/sft_qwen25vl_7b_6k_noreason/) | Labels-only control, 4 epochs |
@@ -303,18 +336,22 @@ corpus built on top of them, one per backbone:
 | Qwen KCR (Arm C), the 82.80 / 72.07 and 85.82 / 76.52 models | 6,000 (50/50) | [`traces/iter2/sft_iter2_train.json`](traces/iter2/sft_iter2_train.json), key `iad_sft_iter2` |
 | Qwen Arm A (keep only) | 2,978 | [`traces/teacher_ablation_abc/sft_A_kept_balanced.json`](traces/teacher_ablation_abc/sft_A_kept_balanced.json) |
 | Qwen Arm B (keep + correct) | 4,369 | [`traces/teacher_ablation_abc/sft_B_kept_corrected.json`](traces/teacher_ablation_abc/sft_B_kept_corrected.json) |
-| LLaVA KCR (Arm C), the 88.45 / 74.25 model | 6,000 (50/50) | Hugging Face dataset, `llava_kcr/sft_llava_C_train.json` |
-| LLaVA Arm A / Arm B | 8,998 / 9,124 | Hugging Face dataset, `llava_kcr/` |
+| LLaVA KCR (Arm C), corrected build, the 87.32 / 72.65 model | 6,000 (3,000 / 3,000 by verdict, all in the SFT split) | [`traces/llava_kcr/sft_llava_C_original_train.json`](traces/llava_kcr/sft_llava_C_original_train.json) |
+| LLaVA KCR, first build, the 88.45 / 74.25 model (leaky, Appendix M) | 6,000 (45.0 % anomalous by verdict) | [`traces/llava_kcr/sft_llava_C_first_build_train.json`](traces/llava_kcr/sft_llava_C_first_build_train.json) |
+| The GRPO training file itself | 4,236 | [`traces/grpo_split/grpo_train.json`](traces/grpo_split/grpo_train.json) (not the same traces as `anomalythink_15k/grpo_train.json`, see its README) |
+| Rollout pools behind both loops | 10,236 x 8 each | [`traces/rollout_pools/`](traces/rollout_pools/) (gzipped) |
+| Control corpora (verifier-filtered 6K, Balanced-192, labels-only) | 5,797 / 192 / 6,000 | [`traces/controls/`](traces/controls/) |
 
-As of 2026-09-02 the LLaVA arms live on Hugging Face and not under `traces/`. Arms A and B were
-never trained on for LLaVA, so they are pool that supports no number in this repo, and shipping
-only Arm C would make the folder read as if the other two did not exist. If a `traces/llava_kcr/`
-folder later appears, it holds the same files.
+Arm A is balanced on the Real-IAD acquisition folder (1,489 NG / 1,489 OK); by the `<answer>` verdict it is
+1,298 anomalous / 1,680 normal, because a kept rollout on an NG capture whose defect is not visible at C1
+answers no. Arm C and both LLaVA builds are stated by verdict above. `traces/iter2/` holds two versions of the
+Qwen Arm-C file (a location-spelling fix, 316 traces), see its README.
 
-The **bucket counts** of the loop itself, before any balancing. Qwen: 8,872 kept, 1,364
-corrected, 2,406 rewritten. LLaVA: out of 10,236 rollouts, 9,179 kept, 1,057 needing correction
-and 2,499 needing a rewrite locally, after which the Gemini judge demoted a further 133 from keep
-to rewrite. The arm files above are **balanced, stratified subsets** of those buckets, which is
+The **bucket counts** of the loop itself, before any balancing, now shipped in `traces/rollout_pools/`.
+Qwen: 8,872 kept, 1,364 corrected, 2,406 rewritten (of the 10,236, 84.6 % of rollouts on the 6,000 SFT
+images give the correct verdict and 90.8 % of those images have at least one correct rollout). LLaVA: out of
+10,236 rollouts, 9,179 kept, 1,057 needing correction and 2,499 needing a rewrite locally, after which the
+Gemini judge demoted a further 133 from keep to rewrite (2,513 rewrites in total, 9,045 judge-confirmed). The arm files above are **balanced, stratified subsets** of those buckets, which is
 why Arm A is 2,978 and not 8,872. Both loops end at a 6,000-record 50/50 Arm C.
 
 The ablation is what justifies the third step. On Qwen2.5-VL-7B, best-epoch DS-MVTec goes

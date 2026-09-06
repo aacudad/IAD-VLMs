@@ -45,6 +45,12 @@ So **GRPO is *upstream* of the headline** (its rollouts seed Arm-C), even though
 - **§7 line 65** still calls SFT+GRPO (82.73/70.39) the "published headline" — the Arm-C reversal is **not fully propagated** here.
 
 ## FUTURE WORK (do NOT write as a current result): prompt-aligned GRPO on the strong init
+
+> **Status 2026-09-06.** The run finished (15 checkpoints, 3 epochs, `results/grpo_sftprompt_kl0.1_sys_3ep/`).
+> Best ckpt-954: 82.95 / 72.62 (+0.15 / +0.55 over the init), final ckpt-1590: 81.25 / 71.51. Two of fifteen
+> checkpoints above the init on DS-MVTec, eleven on VisA. Single seed, inside the run-to-run variation of
+> thesis L1. The thesis now mentions it in §6.8 and §8.4 as inconclusive future work, and keeps the
+> production-recipe GRPO-on-C table as the reported result. Nothing below this note changes.
 - **Do NOT claim in the thesis body that we ran GRPO on Arm-C and beat it.** Frame as future work:
   *"Preliminary: GRPO may give a small further gain on the strong SFT init when the RL
   training prompt is aligned with the evaluation prompt — to be reported once finalized."*
@@ -98,7 +104,7 @@ Same Arm-C SFT recipe trained on a **newer/larger backbone, Qwen3-VL-8B-Instruct
 | filtered-6K (wash) | 79.60/65.99 best (avg 72.79) vs 80.16/64.78 | `results/sft_filtered6kcc/ba_summary.txt`; written into §`sec:disc-quality` of `07_discussion.tex` |
 | held-out 4k curated pool | 3673 good / 563 corr / 704 rewr | `docs/heldout_4k_rollout.md` |
 | reward design | acc + format (unweighted, max 3.0) | `docs/grpo_beta_kl_explainer.md`, thesis App E |
-| prompt-aligned GRPO (FUTURE WORK) | DS 82.88 / VisA 73.70 (in progress) | `outputs/grpo_sftprompt_kl0.1_sys_3ep/`; `docs/grpo_sftprompt_runs.md` |
+| prompt-aligned GRPO (FUTURE WORK, run complete) | best single ckpt 82.95 / 72.62; VisA up to 73.70 at ckpt-636 | `outputs/grpo_sftprompt_kl0.1_sys_3ep/`; `docs/grpo_sftprompt_runs.md` |
 | Qwen3-VL-8B Arm-C (secondary, NOT headline) | best ep2 85.82 / 76.52 (not 1-on-1 vs 7B) | `outputs/sft_qwen3vl_8b_armC/checkpoint-376/eval_*` |
 
 See also `NUMBER_PROVENANCE.md`, `CLAIMS_EVIDENCE.md`, `FIX_CHECKLIST.md`, `UNVERIFIED.md`.
