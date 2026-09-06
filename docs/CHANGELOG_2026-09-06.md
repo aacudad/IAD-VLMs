@@ -62,3 +62,13 @@ Shared-set explainability judge: all nine rows scored on 90 + 47 identical image
 ## Model names unified (thesis commits b116d51, 5c8e26f, a7f1fe7)
 
 The thesis now uses four names for the Qwen2.5-VL-7B models, matching the figures: Base, SFT (ckpt-564), SFT+GRPO (ckpt-530) and KCR (ckpt-376), with a naming table in §6.1. "Run 2", "the production run" and "SFT-Iter1" are gone from the prose; "Arm C" survives only inside the teacher ablation. The folder names in `results/` are unchanged (`grpo_qwen25vl_7b_6k_frozen_ep3_full_run2` is SFT+GRPO, `sft_qwen25vl_7b_abc_C_full_patched` is KCR). Three appendix figures that carried the old labels were regenerated from the eval files: `scripts/05_figures/thesis_figures_v2/appendix/h1_grpo_curves.py` (Appendix H reward and KL curves) and `h2_iter2_overlays.py` (Appendix F overlays and Appendix D per-product VisA plot, SFT+GRPO against the post-GRPO refinement on the cleaned 6K pool). A Gemini pass over all 25 thesis figures confirmed no other figure carries an old name.
+
+## 2026-09-07, early morning (thesis commits 8b00bcd, 41b4881, 5b18e0a, all on Overleaf)
+
+Every example figure in the thesis redrawn in the house style: Figure 6.9, the 21 Appendix F.5 pairs, the Appendix F
+galleries (now selected by judge score, one per product), the F.3 walk-through (cable poke_insulation/001 through
+Base, SFT and SFT+GRPO), the F.4 overlays (lighter mask tint) and the five Appendix G teacher-against-student cases.
+Generators: `scripts/05_figures/thesis_figures_v2/f8_pairs.py` and `f9_appendix_examples.py`; selections in
+`results/sft_vs_kcr_pairs/`. Frozen-vision GRPO ablation, checkpoint-265 (epoch 1 of 4), strict: DS-MVTec 80.57,
+VisA 67.25 (SFT start 80.16 / 64.78, SFT+GRPO ckpt-530 82.73 / 70.39). Files under
+`results/grpo_qwen25vl_7b_6k_frozenvision_run1/` once the run completes.

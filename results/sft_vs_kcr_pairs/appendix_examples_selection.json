@@ -1,0 +1,78 @@
+{
+ "f1": [
+  "DS-MVTec/cable/image/bent_wire/004.png",
+  "DS-MVTec/bottle/image/contamination/000.png",
+  "DS-MVTec/zipper/image/fabric_border/003.png",
+  "DS-MVTec/wood/image/hole/005.png",
+  "DS-MVTec/carpet/image/color/018.png",
+  "DS-MVTec/grid/image/glue/004.png",
+  "DS-MVTec/pill/image/crack/025.png",
+  "VisA/pcb1/test/bad/009.JPG",
+  "VisA/pcb3/test/bad/018.JPG",
+  "VisA/fryum/test/bad/033.JPG",
+  "VisA/candle/test/bad/075.JPG",
+  "VisA/macaroni1/test/bad/024.JPG"
+ ],
+ "f2": {
+  "fp": [
+   "VisA/macaroni2/test/good/0024.JPG",
+   "VisA/pcb3/test/good/0026.JPG",
+   "VisA/capsules/test/good/011.JPG",
+   "DS-MVTec/transistor/image/good/000.png",
+   "VisA/pcb4/test/good/0013.JPG",
+   "DS-MVTec/hazelnut/image/good/001.png",
+   "DS-MVTec/capsule/image/good/000.png",
+   "DS-MVTec/bottle/image/good/001.png"
+  ],
+  "fn": [
+   "VisA/pcb1/test/bad/000.JPG",
+   "VisA/pcb2/test/bad/005.JPG",
+   "DS-MVTec/cable/image/bent_wire/000.png",
+   "DS-MVTec/zipper/image/broken_teeth/000.png",
+   "VisA/macaroni1/test/bad/000.JPG",
+   "DS-MVTec/screw/image/manipulated_front/021.png",
+   "VisA/candle/test/bad/000.JPG",
+   "VisA/cashew/test/bad/002.JPG"
+  ],
+  "weak": [
+   "DS-MVTec/pill/image/faulty_imprint/003.png",
+   "VisA/capsules/test/bad/019.JPG",
+   "VisA/pcb3/test/bad/097.JPG",
+   "DS-MVTec/screw/image/scratch_neck/013.png"
+  ]
+ },
+ "f3": "DS-MVTec/cable/image/poke_insulation/001.png",
+ "f4": [
+  [
+   "both correct",
+   "DS-MVTec/tile/image/crack/000.png",
+   "yes",
+   "yes"
+  ],
+  [
+   "normal part, over-predicted by the refinement",
+   "DS-MVTec/transistor/image/good/000.png",
+   "no",
+   "yes"
+  ],
+  [
+   "both miss",
+   "DS-MVTec/cable/image/bent_wire/002.png",
+   "no",
+   "no"
+  ],
+  [
+   "refinement catches, SFT+GRPO misses",
+   "DS-MVTec/zipper/image/broken_teeth/002.png",
+   "no",
+   "yes"
+  ]
+ ],
+ "g": [
+  "DS-MVTec/bottle/image/good/005.png",
+  "DS-MVTec/capsule/image/faulty_imprint/016.png",
+  "DS-MVTec/hazelnut/image/cut/007.png",
+  "VisA/fryum/test/bad/046.JPG",
+  "VisA/macaroni2/test/good/0016.JPG"
+ ]
+}

@@ -22,5 +22,10 @@ THESIS_FIGURES=/path/to/thesis/figures python thesisify.py   # crops, strips cap
 - `prep_gallery.py` and `prep_images.py` prepare the case images for `f6_gallery.py`.
 - The generated data files are also shipped under `results/thesis_figure_data/`.
 
-The renderer for the SFT-vs-KCR pair images (Figure 6.9, Appendix F.5) is not part of this folder, see
-`results/sft_vs_kcr_pairs/README.md`.
+- `f8_pairs.py` draws Figure 6.9 and the 21 Appendix F.5 pairs (image beside the SFT and KCR traces, decisive
+  sentence shaded). `ALL_PAIRS=1` renders all 21; the pair list is `results/sft_vs_kcr_pairs/index_selected21.json`.
+- `f9_appendix_examples.py` draws the Appendix F.1 to F.4 and G.1 to G.5 example figures in the same style.
+  Selection is by judge score, not by hand: F.1 from KCR images the explainability judge scored 10/10, F.2 from
+  wrong verdicts plus judge scores of 5 or lower, F.3 from images where the judge scored SFT+GRPO 10/10 and SFT
+  answered no. The chosen ids are in `results/sft_vs_kcr_pairs/appendix_examples_selection.json`.
+  Both scripts measure text width with Noto Sans (what cairosvg substitutes for Verdana on the render box).
