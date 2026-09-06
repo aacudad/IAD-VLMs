@@ -15,7 +15,7 @@ TR_IAD=("During my thorough inspection of this component, focusing particularly 
  "precisely with identifying 'missing parts' as per defined criteria provided earlier today.")
 AX=["visual grounding","defect faithfulness","evidence before conclusion","coherence","conciseness"]
 KCR_AX=[2,2,2,2,2]; IAD_AX=[0,0,1,1,1]
-KCR_MEAN=[1.63,1.19,1.97,1.86,1.87]; IAD_MEAN=[1.45,1.07,1.76,1.76,1.00]
+KCR_MEAN=[1.79,1.47,2.00,1.94,1.91]; IAD_MEAN=[1.47,1.06,1.74,1.79,0.89]  # shared set, 47 VisA images, outputs/explainability_shared/NOTE.md
 W=980; PX,PW2=24,932; LH=18; CHARS=56
 def band(x,y,w,h,col,n,title,sub=None):
     o=[panel(x,y,w,h,col,rx=22,sw=2), numbadge(x+34,y+32,n,col,r=17), txt(x+62,y+39,title,"t18 b")]
@@ -66,7 +66,7 @@ s+=band(PX,y,PW2,DH,C["purple"],4,"Blind judge, five axes scored 0 to 2")
 s.append(txt(40,y+58,"The judge sees the image, the overlay and the true defect name, and is told the verdict is already correct.","t13 mut"))
 s.append(txt(40,y+76,"It is not told which model wrote the trace.","t13 mut"))
 CA,CB=430,556; MA,MB=690,826
-s.append(txt(CA,y+96,"this image","t13 mut")); s.append(txt(MA,y+96,"mean over 100 VisA images","t13 mut"))
+s.append(txt(CA,y+96,"this image","t13 mut")); s.append(txt(MA,y+96,"mean over the 47 shared VisA images","t13 mut"))
 for hx in (CA,MA): s.append(txt(hx,y+112,"KCR","t13 b",fill=C["kcr"]))
 for hx in (CB,MB): s.append(txt(hx,y+112,"IAD-R1","t13 b",fill=C["sft"]))
 def bars(x,v,col,mx,wd):

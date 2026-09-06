@@ -54,3 +54,7 @@ Strict scoring in Tables 6.6, 6.7 and 6.11; the prompt-aligned run noted in §6.
 ## Resolved later the same evening (thesis commit ff0c141)
 
 Appendix C's base column moved to the Table 6.1 baseline file (69.08), the overall SFT gain reads +11.1 pp, and §6.11 / RQ4 report the Welch tests over all fifteen pairs per benchmark with the recomputed t values (15.6 / 6.5 against IAD-R1).
+
+## Later the same evening (thesis commit 324fffe, repo 3308e54 and this commit)
+
+Shared-set explainability judge: all nine rows scored on 90 + 47 identical images, paired differences replace the Welch and z tests, Table 6.13 rebuilt, own-100 table removed from the thesis, Figure 6.8 axis means updated, protocol-provenance paragraph added. Figure 4.1 generator fixed after a Gemini layout review (real rollout group, no overflow).

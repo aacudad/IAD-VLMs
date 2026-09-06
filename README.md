@@ -93,12 +93,14 @@ detected anomalies.
 
 | Model | DS-MVTec /10 | VisA /10 |
 |---|---:|---:|
-| **KCR / Arm-C SFT** | **9.05** | **8.52** |
-| Qwen SFT+GRPO | 9.24 | 8.62 |
-| Qwen3-VL-8B on the Qwen KCR corpus | 9.23 | 8.77 |
-| LLaVA SFT / SFT+GRPO / KCR (corrected) | 9.27 / 9.51 / 9.39 | 8.40 / 8.54 / 8.70 |
-| IAD-R1, asked the same way (prompt-matched) | 6.14 | 7.04 |
-| IAD-R1, under its own prompt | 4.50 | 6.32 |
+| **KCR / Arm-C SFT** | **9.09** | **9.11** |
+| Qwen SFT 6K / SFT+GRPO | 9.17 / 9.33 | 8.70 / 9.23 |
+| Qwen3-VL-8B on the Qwen KCR corpus | 9.41 | 9.53 |
+| LLaVA SFT / SFT+GRPO / KCR (corrected) | 9.36 / 9.47 / 9.61 | 8.57 / 9.43 / 9.34 |
+| IAD-R1, asked the same way (prompt-matched) | 6.13 | 6.96 |
+| IAD-R1, under its own prompt | 4.36 | 6.49 |
+
+These are the shared-set numbers of the thesis (2026-09-06): every row scored on the same 90 DS-MVTec and 47 VisA images that all nine rows detect correctly, so differences are paired (`results/explainability_shared/`). The earlier own-100 protocol (`results/explainability_multi/`, each model on its own correct detections) gave the same ordering and stays on record.
 
 The two IAD-R1 rows answer different questions and both belong here. Its own GRPO prompt
 never asks for reasoning, so about 35 to 40 percent of its answers are a bare "Yes" and
