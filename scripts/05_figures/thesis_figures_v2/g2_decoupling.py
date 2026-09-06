@@ -1,7 +1,6 @@
-import os
 import sys,os,json,re,glob; sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from svgkit import *
-R=(os.environ.get('WORK_DIR','/bulk/aacudad/reasoning_traces')+'/outputs')
+R='/bulk/aacudad/reasoning_traces/outputs'
 ARMS=[("ctrl","CTRL, group z-score",C["grpo"]),("drgrpo","Dr.GRPO, no std",C["sft"]),("g2rpo","G2RPO, rank",C["kcr"])]
 STEPS=[20,40,60,80,100,120]; INIT_DS,INIT_VA=84.52,71.89
 def ba(p):
@@ -20,7 +19,7 @@ def rew(arm):
 W=980; PW,PH=440,470; PY=100; GAPX=20
 H=PY+PH+118
 s=[txt(W/2,42,"Reward rises while accuracy does not","h"),
-   txt(W/2,72,"Three advantage estimators, 120 GRPO steps, all from the same Arm-C checkpoint.","sub mut")]
+   txt(W/2,72,"Three advantage estimators, 120 GRPO steps, all from the same KCR checkpoint.","sub mut")]
 # panel A: probe accuracy
 x0=24
 s.append(panel(x0,PY,PW,PH,C["rule2"],rx=26,sw=2))
@@ -29,7 +28,7 @@ A=Axes(x0+64,PY+74,PW-100,PH-160,0,126,80.5,86)
 s.append(A.frame([81,82,83,84,85,86],STEPS,ylabel="balanced accuracy %",xlabel="GRPO step"))
 s.append(A.hline(INIT_DS,C["mut"],None,dash="4 4"))
 s.append(rect(A.x+4,A.y+2,214,20,fill="#fff",rx=4))
-s.append(txt(A.x+10,A.y+17,f"Arm-C initialisation {INIT_DS:.2f}","t13",fill=C["mut"]))
+s.append(txt(A.x+10,A.y+17,f"KCR initialisation {INIT_DS:.2f}","t13",fill=C["mut"]))
 for arm,lab,col in ARMS:
     pts=[(st,ba(f"{R}/grpo_probe_{arm}/checkpoint-{st}/probe_dsmvtec.json")) for st in STEPS]
     pts=[(a,b) for a,b in pts if b]
