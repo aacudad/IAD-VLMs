@@ -1,0 +1,24 @@
+{
+  "sft_grpo|DS-MVTec": {
+    "j_overall": 9.333,
+    "j_visual_grounding": 1.867,
+    "j_defect_faithfulness": 1.611,
+    "j_evidence_before_conclusion": 2.0,
+    "j_coherence": 1.933,
+    "j_conciseness": 1.922,
+    "loc_met": 0.822,
+    "type_sim": 0.563,
+    "n": 90
+  },
+  "sft_grpo|VisA": {
+    "j_overall": 9.234,
+    "j_visual_grounding": 1.809,
+    "j_defect_faithfulness": 1.596,
+    "j_evidence_before_conclusion": 1.979,
+    "j_coherence": 1.979,
+    "j_conciseness": 1.872,
+    "loc_met": 0.638,
+    "type_sim": 0.544,
+    "n": 47
+  }
+}

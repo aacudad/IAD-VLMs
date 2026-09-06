@@ -1,0 +1,24 @@
+{
+  "sft6k|DS-MVTec": {
+    "j_overall": 9.167,
+    "j_visual_grounding": 1.822,
+    "j_defect_faithfulness": 1.511,
+    "j_evidence_before_conclusion": 1.989,
+    "j_coherence": 1.922,
+    "j_conciseness": 1.922,
+    "loc_met": 0.767,
+    "type_sim": 0.556,
+    "n": 90
+  },
+  "sft6k|VisA": {
+    "j_overall": 8.702,
+    "j_visual_grounding": 1.723,
+    "j_defect_faithfulness": 1.362,
+    "j_evidence_before_conclusion": 2.0,
+    "j_coherence": 1.872,
+    "j_conciseness": 1.745,
+    "loc_met": 0.383,
+    "type_sim": 0.553,
+    "n": 47
+  }
+}

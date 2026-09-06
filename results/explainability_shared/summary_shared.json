@@ -1,0 +1,128 @@
+{
+  "sft6k|DS-MVTec": {
+    "j_overall": 9.17,
+    "loc_met": 0.77,
+    "type_sim": 0.56,
+    "n": 90,
+    "se": 0.16
+  },
+  "sft6k|VisA": {
+    "j_overall": 8.7,
+    "loc_met": 0.38,
+    "type_sim": 0.55,
+    "n": 47,
+    "se": 0.24
+  },
+  "sft_grpo|DS-MVTec": {
+    "j_overall": 9.33,
+    "loc_met": 0.82,
+    "type_sim": 0.56,
+    "n": 90,
+    "se": 0.14
+  },
+  "sft_grpo|VisA": {
+    "j_overall": 9.23,
+    "loc_met": 0.64,
+    "type_sim": 0.54,
+    "n": 47,
+    "se": 0.22
+  },
+  "armC_finalsft|DS-MVTec": {
+    "j_overall": 9.09,
+    "loc_met": 0.78,
+    "type_sim": 0.53,
+    "n": 90,
+    "se": 0.17
+  },
+  "armC_finalsft|VisA": {
+    "j_overall": 9.11,
+    "loc_met": 0.55,
+    "type_sim": 0.56,
+    "n": 47,
+    "se": 0.22
+  },
+  "qwen3_sft|DS-MVTec": {
+    "j_overall": 9.41,
+    "loc_met": 0.82,
+    "type_sim": 0.56,
+    "n": 90,
+    "se": 0.12
+  },
+  "qwen3_sft|VisA": {
+    "j_overall": 9.53,
+    "loc_met": 0.62,
+    "type_sim": 0.54,
+    "n": 47,
+    "se": 0.19
+  },
+  "llava_sft|DS-MVTec": {
+    "j_overall": 9.36,
+    "loc_met": 0.78,
+    "type_sim": 0.58,
+    "n": 90,
+    "se": 0.15
+  },
+  "llava_sft|VisA": {
+    "j_overall": 8.57,
+    "loc_met": 0.49,
+    "type_sim": 0.56,
+    "n": 47,
+    "se": 0.35
+  },
+  "llava_grpo|DS-MVTec": {
+    "j_overall": 9.47,
+    "loc_met": 0.81,
+    "type_sim": 0.55,
+    "n": 90,
+    "se": 0.14
+  },
+  "llava_grpo|VisA": {
+    "j_overall": 9.43,
+    "loc_met": 0.7,
+    "type_sim": 0.53,
+    "n": 47,
+    "se": 0.2
+  },
+  "llava_armC|DS-MVTec": {
+    "j_overall": 9.61,
+    "loc_met": 0.86,
+    "type_sim": 0.56,
+    "n": 90,
+    "se": 0.11
+  },
+  "llava_armC|VisA": {
+    "j_overall": 9.34,
+    "loc_met": 0.6,
+    "type_sim": 0.55,
+    "n": 47,
+    "se": 0.18
+  },
+  "iadr1_trainprompt|DS-MVTec": {
+    "j_overall": 6.13,
+    "loc_met": 0.74,
+    "type_sim": 0.55,
+    "n": 90,
+    "se": 0.26
+  },
+  "iadr1_trainprompt|VisA": {
+    "j_overall": 6.96,
+    "loc_met": 0.68,
+    "type_sim": 0.55,
+    "n": 47,
+    "se": 0.3
+  },
+  "iadr1|DS-MVTec": {
+    "j_overall": 4.36,
+    "loc_met": 0.34,
+    "type_sim": 0.3,
+    "n": 90,
+    "se": 0.39
+  },
+  "iadr1|VisA": {
+    "j_overall": 6.49,
+    "loc_met": 0.62,
+    "type_sim": 0.53,
+    "n": 47,
+    "se": 0.35
+  }
+}

@@ -1,7 +1,6 @@
-import os
 """Figure 4.1: SFT stage next to GRPO stage. House style taken from all_svg (method_overview_v4, anomalythink_generation, rl_correction_pipeline)."""
 import re,html
-ov=open((os.environ.get('WORK_DIR','/bulk/aacudad/reasoning_traces')+'/all_svg/method_overview_v4.svg')).read()
+ov=open('/bulk/aacudad/reasoning_traces/all_svg/method_overview_v4.svg').read()
 syms=re.findall(r'<symbol\b.*?</symbol>',ov,re.S); marks=re.findall(r'<marker\b.*?</marker>',ov,re.S)
 mk=lambda i,c: f'<marker id="{i}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="{c}"/></marker>'
 defs='<defs>'+''.join(syms)+''.join(marks)+mk('arrCoral','#7a8b99')+'</defs>'
@@ -22,7 +21,7 @@ ax,ay,aw,ah=40,30,740,660; R(ax,ay,aw,ah,Gf,Gs,3,40); T(ax+aw/2,ay+46,"1  SFT",2
 # data card
 R(ax+30,ay+95,680,120); A(f'<use href="#db" x="{ax+42}" y="{ay+104}" width="56" height="48"/>'); T(ax+108,ay+124,"AnomalyThink-6K",15,bold=True); T(ax+108,ay+142,"6,000 instances, one C1 image and one gold trace each",12,fill=MUT)
 R(ax+42,ay+160,300,44,"#F5F5F5","#DDDDDD",1,6); T(ax+52,ay+178,"user",11,bold=True,fill=MUT); T(ax+88,ay+178,"Analyze the provided image ...",11,mono=True); T(ax+52,ay+196,"image",11,bold=True,fill=MUT); T(ax+88,ay+196,"one test image, no reference, no mask",11,fill=MUT)
-R(ax+350,ay+160,354,44,"#F3F9EE",Gs,1,6); T(ax+360,ay+178,"assistant, gold",11,bold=True,fill="#0b7a3b"); T(ax+360,ay+196,"<think> six phases </think> <location> <type> <answer>",11,mono=True,fill="#0b7a3b")
+R(ax+350,ay+160,354,44,"#F3F9EE",Gs,1,6); T(ax+360,ay+178,"assistant, gold",11,bold=True,fill="#0b7a3b"); T(ax+360,ay+196,"<think> six phases </think> <location> <type> <answer>",10,mono=True,fill="#0b7a3b")
 AR([(ax+370,ay+215),(ax+370,ay+245)],Gs,"arrGreen")
 # model card
 R(ax+30,ay+250,340,230); A(f'<use href="#qwen" x="{ax+42}" y="{ay+258}" width="34" height="34"/>'); T(ax+86,ay+280,"Qwen2.5-VL-7B",15,bold=True)
@@ -43,10 +42,11 @@ R(bx+30,by+95,330,54); A(f'<use href="#qwen" x="{bx+42}" y="{by+104}" width="36"
 R(bx+380,by+95,330,54); A(f'<use href="#db" x="{bx+392}" y="{by+102}" width="46" height="40"/>'); T(bx+448,by+116,"GRPO split, 4,236 prompts",13,bold=True); T(bx+448,by+136,"one image and the question, 23 products",12,fill=MUT)
 # step 1 rollouts
 badge(bx+45,by+180,1,P); T(bx+64,by+185,"sample G = 4 rollouts from the current policy",15,bold=True)
-ex=[("2.81","format 1  verdict 1  type 0.62  loc 1"),("1.50","format 1  verdict 0  type 0.50  loc 1"),("3.00","format 1  verdict 1  type 1.00  loc 1"),("0.75","format 0  verdict 1  type 0.50  loc 0")]
+# one real group: run-2 policy on Real-IAD button_battery S0050 (AK), first four of its eight rollouts in phase0_full_10k rollouts_raw.jsonl
+ex=[("3.00","format 1  verdict 1  type 1.00  loc 1"),("0.00","format 0  verdict 0  type 0.00  loc 0"),("2.50","format 1  verdict 1  type 0.00  loc 1"),("2.00","format 1  verdict 1  type 0.00  loc 0")]
 for i,(r,d) in enumerate(ex):
     x=bx+30+i*172; R(x,by+198,160,78,"#fff",Ps,1.5,10); A(f'<use href="#robot" x="{x+8}" y="{by+204}" width="42" height="28"/>'); T(x+58,by+216,f"rollout {i+1}",12,bold=True); T(x+58,by+236,f"R = {r}",14,bold=True,fill="#4a3a66")
-    a,b_=d.split("  type "); T(x+10,by+254,a.replace("  "," · "),11,fill=MUT); T(x+10,by+269,"type "+b_.replace("  loc ",", location "),11,fill=MUT)
+    a,b_=d.split("  type "); T(x+10,by+254,a.replace("  "," · "),12,fill=MUT); T(x+10,by+270,"type "+b_.replace("  loc ",", location "),12,fill=MUT)
 # step 2 reward
 badge(bx+45,by+306,2,P); T(bx+64,by+311,"score every rollout against the gold tags",15,bold=True)
 R(bx+30,by+324,680,54,"#fff",Ps,1.5,10); T(bx+370,by+346,"R  =  format (0/1)  +  verdict (0/1)  +  ½ · type (0 to 1)  +  ½ · location (0/1)",13,"middle",True,"#4a3a66"); T(bx+370,by+366,"two unweighted reward functions, four bounded sub-signals, maximum 3.0",12,"middle",fill=MUT)
@@ -61,8 +61,7 @@ for i,lab in enumerate(("vision encoder","projector","language model")): comp(bx
 R(bx+215,by+596,310,56,"#fff",Ps,2.5,12); A(f'<use href="#qwen" x="{bx+228}" y="{by+606}" width="36" height="36"/>'); T(bx+276,by+618,"output:",12,fill=MUT); T(bx+276,by+640,"the SFT + GRPO model",16,bold=True)
 AR([(bx+195,by+572),(bx+195,by+624),(bx+213,by+624)],Ps,"arrPurple",3)
 # bridge 1 -> 2
-AR([(ax+525,ay+548),(ax+745,ay+548),(ax+745,ay+122),(bx+28,by+122)],Gs,"arrGreen",4)
+AR([(ax+525,ay+548),(ax+745,ay+548),(ax+745,ay+122),(bx+20,by+122)],Gs,"arrGreen",4)
 # footnote outside the frames
 T(40,H-40,"The two training stages of the thesis. Stage 1 fits the gold traces by cross-entropy with the vision encoder frozen. Stage 2 starts from that checkpoint, samples groups of four rollouts, scores them, and updates all three blocks.",13)
-T(40,H-18,"Stage 1: 4 epochs, lr 1e-5, effective batch 32, DeepSpeed ZeRO-3 with CPU offload.   Stage 2: 2 epochs over 4,236 prompts, 1,060 steps, G = 4, max 512 completion tokens.",12,fill=MUT)
 A('</svg>'); open('fig_stages.svg','w').write(''.join(s)); print("svg written")

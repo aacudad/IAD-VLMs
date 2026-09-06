@@ -1,0 +1,24 @@
+{
+  "armC_finalsft|DS-MVTec": {
+    "j_overall": 9.089,
+    "j_visual_grounding": 1.767,
+    "j_defect_faithfulness": 1.489,
+    "j_evidence_before_conclusion": 1.978,
+    "j_coherence": 1.967,
+    "j_conciseness": 1.889,
+    "loc_met": 0.778,
+    "type_sim": 0.527,
+    "n": 90
+  },
+  "armC_finalsft|VisA": {
+    "j_overall": 9.106,
+    "j_visual_grounding": 1.787,
+    "j_defect_faithfulness": 1.468,
+    "j_evidence_before_conclusion": 2.0,
+    "j_coherence": 1.936,
+    "j_conciseness": 1.915,
+    "loc_met": 0.553,
+    "type_sim": 0.558,
+    "n": 47
+  }
+}
