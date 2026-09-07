@@ -72,3 +72,11 @@ Generators: `scripts/05_figures/thesis_figures_v2/f8_pairs.py` and `f9_appendix_
 `results/sft_vs_kcr_pairs/`. Frozen-vision GRPO ablation, checkpoint-265 (epoch 1 of 4), strict: DS-MVTec 80.57,
 VisA 67.25 (SFT start 80.16 / 64.78, SFT+GRPO ckpt-530 82.73 / 70.39). Files under
 `results/grpo_qwen25vl_7b_6k_frozenvision_run1/` once the run completes.
+
+## 2026-09-07 and 08 (thesis commits 8b00bcd through 3db679c, repo through this commit)
+
+- Review pass on a ChatGPT review of the thesis: 33 items checked and applied (report in the thesis scratchpad, not shipped here). Substantive corrections shipped: the SFT+GRPO headline files were scored under the GRPO prompt (note in `results/grpo_qwen25vl_7b_6k_frozen_ep3_full_run2/NOTE.md`, train-prompt VisA file added); the LLaVA base "50.00" row is a parser-fallback artefact; z-score advantages are bounded, not exploding; Listing 5.1 was an impossible decomposition; the t-SNE figure was drawn from an early 8,908-string pool (`results/anomaly_type_analysis/final_corpus/`).
+- New results: LLaVA KCR on held-out Real-IAD (84.03), frozen-vision GRPO reference run (Appendix N, `results/grpo_qwen25vl_7b_6k_frozenvision_run1/`), Gemini 3.5 to 3.8 Flash zero-shot references (`results/gemini_flash_family_eval/`), type-reward similarity tables on the reward's own embedding path.
+- Figures: Figure 6.9 and all appendix example figures redrawn in the house style (`scripts/05_figures/thesis_figures_v2/f8_pairs.py`, `f9_appendix_examples.py`), Figure 6.7 as a heat map, Figure H.1 regenerated (`appendix/h0_sft_curves.py`).
+- Hugging Face dataset card rewritten with the thesis splits mapped to files and per-schema configs (`docs/HF_DATASET_CARD.md`).
+- Repository history rewritten before going public: commit trailers removed, an internal handoff note and the `thesis_review/` drafts removed from every commit, the stray `add-interactive-viewers` branch merged into `main` as `docs/interactive/` and deleted. A full-history scan found no credential of any kind.
