@@ -7,8 +7,11 @@ TEXT=re.compile(r'<text\b[^>]*>.*?</text>',re.S)
 def attr(el,k):
     m=re.search(rf'\b{k}="([^"]*)"',el); return m.group(1) if m else None
 report=[]
+import sys
+ONLY=set(sys.argv[1:])
 for f in sorted(glob.glob('fig_*.svg')):
     if f=='fig_flow.svg': continue
+    if ONLY and f[:-4] not in ONLY: continue
     s=open(f).read(); W,H=map(int,re.search(r'viewBox="0 0 (\d+) (\d+)"',s).groups())
     stripped=[]
     def keep(el):

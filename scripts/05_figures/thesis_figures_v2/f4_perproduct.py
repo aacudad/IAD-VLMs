@@ -1,3 +1,4 @@
+# superseded 7 Sep 2026: Figure 6.7 is now the heat map drawn by alt_figs.alt_perproduct (Adnane's pick); this file is kept for the dot-ladder version.
 import json,sys,os
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from svgkit import *

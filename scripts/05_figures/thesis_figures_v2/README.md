@@ -29,3 +29,7 @@ THESIS_FIGURES=/path/to/thesis/figures python thesisify.py   # crops, strips cap
   wrong verdicts plus judge scores of 5 or lower, F.3 from images where the judge scored SFT+GRPO 10/10 and SFT
   answered no. The chosen ids are in `results/sft_vs_kcr_pairs/appendix_examples_selection.json`.
   Both scripts measure text width with Noto Sans (what cairosvg substitutes for Verdana on the render box).
+
+- 7 Sep 2026: Figure 6.7 is now the heat map from `alt_figs.py` (`alt_perproduct`), chosen from eight alternative
+  renderings (`alt_*.svg`, one per Chapter 6 figure); the other seven figures keep their original generators.
+  `thesisify.py` accepts figure names as arguments to install a subset. `f4_perproduct.py` is the retired dot-ladder version.

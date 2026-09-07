@@ -36,7 +36,7 @@ s.append(pan(x0,y1,"(c) Completion length","tokens"))
 Cx=Axes(x0+62,y1+66,PW-96,PH-140,0,1080,145,195)
 s.append(Cx.frame([150,160,170,180,190],[0,265,530,795,1060],ylabel="completion length, tokens",xlabel="training step"))
 s.append(Cx.poly(raw(5),C["mut"],1,op=0.22)); s.append(Cx.poly(smooth(5),C["mut"],2.6))
-s.append(txt(Cx.x+10,Cx.Y(186)+3,"no length collapse","t13 mut"))
+s.append(txt(Cx.x+10,Cx.Y(186)+3,"negligible length collapse","t13 mut"))
 # (d) SFT validation accuracy by epoch
 s.append(pan(x1,y1,"(d) SFT accuracy by epoch","DS-MVTec"))
 Dx=Axes(x1+62,y1+66,PW-96,PH-140,0.6,4.4,75,82)
