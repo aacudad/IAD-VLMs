@@ -16,3 +16,10 @@ in its **native prompt mode** (IAD-R1 = grpoprompt, the rest = trainprompt).
 **Reading:** both base models collapse to roughly chance (50.0 / 56.4) on Real-IAD they have never
 seen, while every fine-tuned model lands at ~79-84. That is the generalisation claim, measured on a
 split none of them trained on. (SFT+GRPO's 80.87 was already in the repo; the rest are new.)
+
+## 2026-09-07
+
+Table L.1 of the thesis now lists four rows on this split: Qwen SFT+GRPO ckpt-530 (80.87, file in
+`results/grpo_qwen25vl_7b_6k_frozen_ep3_full_run2/checkpoint-530/`), Qwen KCR ckpt-376 (79.32, `armC_realiad4k_trainprompt.json`
+here), LLaVA KCR corrected ckpt-376 (84.03, `results/sft_llava_ov_7b_frozen_iad_sft_llava_iter1_C_original/checkpoint-376/`)
+and the released IAD-R1 under its own prompt (79.58, `iadr1_realiad4k_grpoprompt.json` here).

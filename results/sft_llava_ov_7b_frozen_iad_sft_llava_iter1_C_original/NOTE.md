@@ -20,3 +20,10 @@ The first (leaky) build of this corpus is `results/sft_llava_ov_7b_frozen_llava_
 epoch 4). It drew 2,484 of its 6,000 images from the GRPO split and was balanced on the folder name (45.0 %
 anomalous). Thesis Appendix M documents the difference. Every DS-MVTec number on this backbone carries the
 LLaVA-OneVision-Data contamination caveat (`results/contamination_llava_ov_data/`), VisA does not.
+
+## 2026-09-07: held-out Real-IAD
+
+`checkpoint-376/eval_realiad4k_full_trainprompt_vllm.json`: the corrected-corpus KCR checkpoint on the 4,236-image
+held-out Real-IAD split (`traces/.../new_sft_c1_train.json` images, disjoint from SFT and GRPO), vLLM path,
+training prompt. Strict: BA 84.03, accuracy 83.97, precision 93.21, recall 73.46, TNR 94.59, F1 82.16.
+Thesis Appendix L, Table L.1, and one sentence in §6.9. Script: `scripts/04_eval/evaluate_vllm_llava_heldout.py`.
