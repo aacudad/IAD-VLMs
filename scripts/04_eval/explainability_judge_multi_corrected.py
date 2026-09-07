@@ -21,7 +21,7 @@ MMAD_JSON = ROOT / "MMAD_repo/dataset/MMAD/mmad.json"
 MMAD_IMG  = ROOT / "reasoning_traces_gen/data/MMAD"
 OUT = ROOT / "outputs/explainability_multi"; OUT.mkdir(parents=True, exist_ok=True)
 KEY = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")  # Vertex service-account JSON, taken from the environment
-PROJECT, LOCATION, GMODEL = "project-366f417b-7062-4a00-bc8", "global", "gemini-3-flash-preview"
+PROJECT, LOCATION, GMODEL = os.environ.get("VERTEX_PROJECT", "your-gcp-project"), "global", "gemini-3-flash-preview"
 
 # model -> {benchmark: eval-json (relative to ROOT)}
 RUNS = {
