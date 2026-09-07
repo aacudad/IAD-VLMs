@@ -70,7 +70,7 @@ def card(o,x,y,cw,rec,status,cells,mode_label,ql=4,fixed_h=None):
     q=sents[ki] if sents else ''
     lines=wrap_words([q],cw-24)[:ql]
     if len(wrap_words([q],cw-24))>ql: lines[-1]=lines[-1][:-1]+[('…',0)]
-    tl=wrap_words([tags_line(rec)],cw-24)[:2]
+    tl=wrap_words([tags_line(rec)],cw-24)
     h=IMG+2+26+18*len(tl)+8+18*len(lines)+14
     if fixed_h: h=fixed_h-18
     h+=18
