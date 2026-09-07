@@ -1,0 +1,947 @@
+<title>Explainability Evaluation — 6 Models, 2 Backbones</title>
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#f4f5f8; --surface:#ffffff; --surface-2:#eef0f4; --surface-3:#e6e9ef;
+    --ink:#12151c; --ink-2:#525b6b; --ink-muted:#848da0; --hairline:#dde1e8;
+    --armc:#2a78d6; --iadr1:#eb6834; --iadr1-adj:#f2ab84;
+    --sftgrpo:#1f9e6d; --qwen3sft:#8656c7; --qwen25base:#8f97a8; --qwen3base:#a8968f;
+    --armc-wash: rgba(42,120,214,.10); --iadr1-wash: rgba(235,104,52,.10);
+    --good-wash: rgba(31,158,109,.10);
+    --shadow: 0 1px 2px rgba(18,21,28,.04), 0 8px 24px -12px rgba(18,21,28,.10);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:where(:not([data-theme="light"])){
+      color-scheme: dark;
+      --bg:#0b0d12; --surface:#12151d; --surface-2:#181c26; --surface-3:#1f2430;
+      --ink:#eef0f4; --ink-2:#a6aec0; --ink-muted:#6b7385; --hairline:#242938;
+      --armc:#3987e5; --iadr1:#d95926; --iadr1-adj:#8a5636;
+      --sftgrpo:#2bb87f; --qwen3sft:#9b6fd6; --qwen25base:#7d8598; --qwen3base:#98867e;
+      --armc-wash: rgba(57,135,229,.14); --iadr1-wash: rgba(217,89,38,.14);
+      --good-wash: rgba(43,184,127,.14);
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:#0b0d12; --surface:#12151d; --surface-2:#181c26; --surface-3:#1f2430;
+    --ink:#eef0f4; --ink-2:#a6aec0; --ink-muted:#6b7385; --hairline:#242938;
+    --armc:#3987e5; --iadr1:#d95926; --iadr1-adj:#8a5636;
+    --sftgrpo:#2bb87f; --qwen3sft:#9b6fd6; --qwen25base:#7d8598; --qwen3base:#98867e;
+    --armc-wash: rgba(57,135,229,.14); --iadr1-wash: rgba(217,89,38,.14);
+    --good-wash: rgba(43,184,127,.14);
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{ font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
+  .mono{ font-family:ui-monospace,"Cascadia Code","SF Mono","Roboto Mono",Consolas,monospace; }
+  .tnum{ font-variant-numeric: tabular-nums; }
+
+  header.mast{
+    position:sticky; top:0; z-index:10;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom:1px solid var(--hairline);
+    padding:14px 28px;
+  }
+  .mast-inner{ max-width:1120px; margin:0 auto; display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .eyebrow{
+    font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-muted);
+    font-weight:600;
+  }
+  .mast .updated{ margin-left:auto; font-size:11px; color:var(--ink-muted); }
+
+  main{ max-width:1120px; margin:0 auto; padding:0 28px 96px; }
+  .col{ max-width:660px; }
+
+  section{ padding-top:56px; }
+  section:first-of-type{ padding-top:40px; }
+
+  h2.serif{
+    font-size:26px; font-weight:500; line-height:1.25; margin:0 0 6px;
+    text-wrap:balance;
+  }
+  .section-dek{ color:var(--ink-2); font-size:14.5px; line-height:1.6; margin:0 0 28px; max-width:680px; }
+  .lede{ font-size:16.5px; line-height:1.7; color:var(--ink-2); max-width:680px; }
+  .lede b{ color:var(--ink); font-weight:600; }
+
+  code{
+    font-family:ui-monospace,"Cascadia Code","SF Mono","Roboto Mono",Consolas,monospace;
+    font-size:.88em; background:var(--surface-2); padding:1px 6px; border-radius:4px; color:var(--ink-2);
+  }
+
+  /* ---- methodology strip ---- */
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:0; margin-top:28px; border-top:1px solid var(--hairline);
+    border-bottom:1px solid var(--hairline);
+  }
+  .meta-item{
+    flex:1 1 160px; padding:14px 18px 14px 0; border-right:1px solid var(--hairline);
+  }
+  .meta-item:last-child{ border-right:none; }
+  .meta-item .k{ font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-muted); margin-bottom:4px; }
+  .meta-item .v{ font-size:14px; color:var(--ink); font-weight:500; }
+
+  /* ---- model legend (7 series) ---- */
+  .model-legend{ display:flex; flex-wrap:wrap; gap:8px 18px; margin:0 0 20px; }
+  .model-legend .grp{ display:flex; align-items:center; gap:14px; padding-right:16px; border-right:1px solid var(--hairline); }
+  .model-legend .grp:last-child{ border-right:none; }
+  .legend-item{ display:flex; align-items:center; gap:7px; font-size:12px; color:var(--ink-2); white-space:nowrap; }
+  .legend-item .sw{ width:10px; height:10px; border-radius:3px; flex:none; }
+  .grp-tag{ font-size:9.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-muted); font-weight:700; }
+
+  /* ---- KPI row ---- */
+  .kpi-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .kpi-card{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:14px;
+    padding:22px 24px; box-shadow:var(--shadow);
+  }
+  .kpi-bench{ font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-muted); font-weight:600; margin-bottom:14px; }
+  .kpi-scores{ display:flex; align-items:flex-end; gap:22px; flex-wrap:wrap; }
+  .kpi-block .label{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-2); margin-bottom:4px; }
+  .kpi-block .swatch{ width:9px; height:9px; border-radius:2.5px; display:inline-block; }
+  .kpi-block .val{ font-size:36px; font-weight:600; line-height:1; letter-spacing:-.01em; }
+  .kpi-block .range{ font-size:11px; color:var(--ink-muted); margin-top:4px; }
+  .kpi-delta{ margin-left:auto; text-align:right; align-self:center; }
+  .kpi-delta .dv{ font-size:22px; font-weight:600; color:var(--armc); }
+  .kpi-delta .dl{ font-size:10.5px; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.05em; max-width:120px; }
+
+  /* ---- panel grid for small multiples ---- */
+  .panel-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:760px){ .panel-grid{ grid-template-columns:1fr; } .kpi-grid{ grid-template-columns:1fr; } }
+  .panel{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:14px;
+    padding:20px 22px 18px; box-shadow:var(--shadow);
+  }
+  .panel-title{ font-size:13px; font-weight:600; margin-bottom:2px; }
+  .panel-sub{ font-size:11.5px; color:var(--ink-muted); margin-bottom:16px; }
+
+  /* ---- grouped bar chart (built with divs) ---- */
+  .gbar-row{ margin-bottom:16px; position:relative; }
+  .gbar-row:last-child{ margin-bottom:0; }
+  .gbar-label{ font-size:12px; color:var(--ink-2); margin-bottom:6px; display:flex; justify-content:space-between; }
+  .gbar-label .max{ color:var(--ink-muted); font-size:10.5px; }
+  .gbar-track{ display:flex; flex-direction:column; gap:3px; }
+  .gbar{
+    height:12px; border-radius:0 3px 3px 0; position:relative; cursor:pointer;
+    transition:filter .12s ease, opacity .12s ease;
+  }
+  .gbar:hover, .gbar:focus-visible{ filter:brightness(1.1); outline:none; }
+  .gbar .tip-val{
+    position:absolute; right:-4px; top:50%; transform:translate(100%,-50%);
+    font-size:11px; color:var(--ink-2); white-space:nowrap; font-variant-numeric:tabular-nums;
+  }
+
+  /* tooltip */
+  #tt{
+    position:fixed; pointer-events:none; z-index:50; background:var(--ink); color:var(--bg);
+    font-size:12px; padding:7px 10px; border-radius:8px; box-shadow:var(--shadow);
+    opacity:0; transform:translateY(4px); transition:opacity .1s ease, transform .1s ease;
+    max-width:260px;
+  }
+  #tt.show{ opacity:1; transform:translateY(0); }
+  #tt .tt-cat{ font-weight:600; margin-bottom:3px; }
+  #tt .tt-row{ display:flex; align-items:center; gap:6px; }
+  #tt .tt-key{ width:8px; height:8px; border-radius:2px; flex:none; }
+  #tt .tt-num{ margin-left:auto; font-variant-numeric:tabular-nums; font-weight:600; }
+
+  /* ---- mini distribution panels ---- */
+  .dist-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  @media (max-width:900px){ .dist-grid{ grid-template-columns:repeat(2,1fr); } }
+  .dist-card{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:12px;
+    padding:14px 14px 12px; box-shadow:var(--shadow);
+  }
+  .dist-card .dname{ font-size:11.5px; font-weight:600; margin-bottom:2px; display:flex; align-items:center; gap:6px; }
+  .dist-card .dname .sw{ width:8px; height:8px; border-radius:2px; flex:none; }
+  .dist-card .dn{ font-size:10px; color:var(--ink-muted); margin-bottom:10px; }
+  .dist-bars{ display:flex; align-items:flex-end; gap:4px; height:56px; }
+  .dist-bars .b{ flex:1; border-radius:2px 2px 0 0; cursor:pointer; }
+  .dist-x{ display:flex; gap:4px; margin-top:4px; }
+  .dist-x span{ flex:1; font-size:8px; color:var(--ink-muted); text-align:center; }
+
+  /* ---- pipeline strips (2 backbones + external) ---- */
+  .lineage{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:14px;
+    padding:22px 24px; box-shadow:var(--shadow); margin-bottom:16px;
+  }
+  .lineage-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .lineage-head .name{ font-size:13.5px; font-weight:600; }
+  .lineage-head .tag{
+    font-size:10px; letter-spacing:.04em; border-radius:20px; padding:3px 10px; display:inline-block;
+    background:var(--surface-2); color:var(--ink-muted);
+  }
+  .lineage-row{ display:flex; align-items:stretch; gap:2px; overflow-x:auto; }
+  .stage{ flex:1 1 0; min-width:168px; padding:0 14px; position:relative; }
+  .stage:first-child{ padding-left:0; }
+  .stage:not(:first-child)::before{
+    content:"→"; position:absolute; left:-4px; top:8px; color:var(--ink-muted); font-size:14px;
+  }
+  .stage-name{ font-size:12.5px; font-weight:600; margin-bottom:10px; }
+  .stage-metrics{ display:flex; flex-direction:column; gap:6px; }
+  .sm-row{ display:flex; justify-content:space-between; align-items:baseline; font-size:11.5px; }
+  .sm-row .k{ color:var(--ink-muted); }
+  .sm-row .v{ font-weight:600; font-variant-numeric:tabular-nums; }
+  .sm-row.hi .v{ color:var(--armc); }
+  @media (max-width:640px){ .lineage-row{ flex-direction:column; } .stage{ padding:10px 0; } .stage:not(:first-child)::before{ content:"↓"; left:0; top:-4px; } }
+
+  /* ---- fairness callout ---- */
+  .fair-panel{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:14px;
+    padding:22px 24px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:24px;
+  }
+  .fair-row + .fair-row{ padding-top:24px; border-top:1px solid var(--hairline); }
+  .fair-label{ display:flex; align-items:baseline; gap:10px; font-size:13px; color:var(--ink-2); margin-bottom:14px; flex-wrap:wrap; }
+  .fair-tag{
+    font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; font-weight:700;
+    color:var(--ink); background:var(--surface-2); border-radius:5px; padding:2px 8px; flex:none;
+  }
+  .fair-bars{ display:flex; flex-direction:column; gap:10px; }
+  .fair-bar-item{ display:flex; align-items:center; gap:14px; }
+  .fair-bar-track{ flex:1; height:16px; background:var(--surface-2); border-radius:4px; overflow:hidden; }
+  .fair-bar-fill{ height:100%; border-radius:0 4px 4px 0; }
+  .fair-bar-cap{
+    flex:none; width:250px; font-size:13px; font-weight:600; font-variant-numeric:tabular-nums;
+    display:flex; align-items:baseline; gap:8px;
+  }
+  .fair-bar-note{ font-size:11px; font-weight:400; color:var(--ink-muted); }
+  .fair-verdict{ margin-top:14px; font-size:13px; color:var(--ink-2); }
+  .fair-verdict b{ color:var(--ink); }
+  .resolved-badge{
+    display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700;
+    letter-spacing:.04em; text-transform:uppercase; color:var(--sftgrpo); background:var(--good-wash);
+    border-radius:20px; padding:4px 10px 4px 8px; margin-bottom:14px;
+  }
+  .resolved-badge::before{ content:"✓"; }
+
+  /* ---- generalisation strip ---- */
+  .gen-panel{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:14px;
+    padding:22px 24px; box-shadow:var(--shadow);
+  }
+  .gen-rows{ display:flex; flex-direction:column; gap:12px; }
+  .gen-row{ display:flex; align-items:center; gap:14px; }
+  .gen-row .glabel{ flex:0 0 190px; font-size:12.5px; color:var(--ink-2); display:flex; align-items:center; gap:7px; }
+  .gen-row .glabel .sw{ width:9px; height:9px; border-radius:2.5px; flex:none; }
+  .gen-track{ flex:1; height:20px; background:var(--surface-2); border-radius:5px; overflow:hidden; position:relative; }
+  .gen-fill{ height:100%; border-radius:0 5px 5px 0; }
+  .gen-val{ flex:0 0 56px; text-align:right; font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .gen-chance{ position:absolute; top:0; bottom:0; width:1px; background:var(--ink-muted); opacity:.4; }
+
+  /* ---- MMAD MCQ callout + table ---- */
+  .mcq-callout{
+    background:var(--iadr1-wash); border:1px solid var(--hairline); border-left:3px solid var(--iadr1);
+    border-radius:10px; padding:16px 20px; margin:20px 0 24px;
+  }
+  .mcq-callout-title{ font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--iadr1); margin-bottom:8px; }
+  .mcq-callout p{ font-size:13.5px; line-height:1.6; color:var(--ink-2); margin:0; max-width:none; }
+  .mcq-callout code{ font-size:.86em; }
+  .mcq-table-wrap{
+    overflow-x:auto; background:var(--surface); border:1px solid var(--hairline); border-radius:14px;
+    box-shadow:var(--shadow);
+  }
+  table.mcq-table{ width:100%; border-collapse:collapse; font-size:13px; white-space:nowrap; }
+  .mcq-table th, .mcq-table td{ padding:10px 16px; text-align:right; border-bottom:1px solid var(--hairline); }
+  .mcq-table th:first-child, .mcq-table td:first-child{ text-align:left; }
+  .mcq-table th:nth-child(2), .mcq-table td:nth-child(2){ text-align:left; color:var(--ink-muted); font-size:11.5px; }
+  .mcq-table thead th{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-muted);
+    font-weight:600; text-align:right;
+  }
+  .mcq-table tbody tr:last-child td{ border-bottom:none; }
+  .mcq-table td.val{ font-variant-numeric:tabular-nums; font-weight:600; position:relative; }
+  .mcq-table tr.model-armc td.val{ color:var(--armc); }
+  .mcq-table tr.model-sft_grpo td.val{ color:var(--sftgrpo); }
+  .mcq-table tr.model-qwen3_base td.val{ color:var(--qwen3sft); }
+  .mcq-table tr.group-start td{ border-top:2px solid var(--hairline); }
+
+  /* ---- exhibit ---- */
+  .exhibit{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:16px;
+    padding:26px; box-shadow:var(--shadow); display:grid; grid-template-columns:180px 1fr; gap:26px;
+  }
+  @media (max-width:700px){ .exhibit{ grid-template-columns:1fr; } }
+  .exhibit img{ width:100%; border-radius:10px; border:1px solid var(--hairline); }
+  .exhibit-meta{ margin-top:12px; font-size:11.5px; color:var(--ink-muted); line-height:1.6; }
+  .exhibit-meta .gt{ color:var(--ink-2); font-weight:600; }
+  .verdict-cols{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:560px){ .verdict-cols{ grid-template-columns:1fr; } }
+  .vcard{ border-top:3px solid; padding-top:12px; }
+  .vcard .vname{ font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .vcard .score{ font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .vcard .trace{
+    font-size:11.5px; line-height:1.55; color:var(--ink-2); background:var(--surface-2);
+    border-radius:8px; padding:10px 12px; margin-bottom:10px; max-height:170px; overflow:auto;
+  }
+  .vcard .judge{ font-size:12px; color:var(--ink-2); line-height:1.55; }
+  .vcard .judge b{ color:var(--ink); font-weight:600; }
+
+  /* ---- caveats ---- */
+  .caveats{
+    font-size:12.5px; color:var(--ink-muted); line-height:1.7; border-top:1px solid var(--hairline);
+    padding-top:22px; margin-top:64px; max-width:680px;
+  }
+  .caveats li{ margin-bottom:6px; }
+  .src{ font-size:11px; color:var(--ink-muted); margin-top:18px; }
+</style>
+
+<div id="tt"></div>
+
+<header class="mast">
+  <div class="mast-inner">
+    <span class="eyebrow">Explainability / Faithfulness Evaluation</span>
+    <span class="updated">Extended to 6 models 2026-07-23 · MMAD Discrimination re-scored in native format 2026-07-26</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <h2 class="serif">Whose reasoning can you trust?</h2>
+  <p class="lede">Detection accuracy alone can't separate these models — several land within a few points
+    of each other. This asks a different question: on the images where a model <b>correctly</b> flags the
+    defect, is its <b>explanation</b> actually grounded in what's visible? A blind Gemini‑3‑Flash judge
+    scored <b>1,300 reasoning traces</b> across <b>six checkpoints on two backbones</b> (Qwen2.5‑VL‑7B and
+    Qwen3‑VL‑8B) plus the external <b>IAD‑R1</b> baseline — shown under both its native and a prompt‑matched
+    setting — on five faithfulness axes.</p>
+
+  <div class="meta-row">
+    <div class="meta-item">
+      <div class="k">Judge</div>
+      <div class="v">Gemini‑3‑Flash, median of 3 samples</div>
+    </div>
+    <div class="meta-item">
+      <div class="k">Matched set</div>
+      <div class="v">Each model's own correct detections</div>
+    </div>
+    <div class="meta-item">
+      <div class="k">Sample</div>
+      <div class="v">100 / model / benchmark, product‑diverse</div>
+    </div>
+    <div class="meta-item">
+      <div class="k">Models</div>
+      <div class="v">7 rows: 2 backbones × base/SFT + IAD‑R1 ×2 prompts</div>
+    </div>
+  </div>
+
+  <div class="model-legend" style="margin-top:24px;" id="global-legend"></div>
+</section>
+
+<section>
+  <h2 class="serif">The headline gap, now a fair one</h2>
+  <p class="section-dek">Mean reasoning-quality score, summed across all five judged axes (0–10 scale).
+    IAD‑R1 shown here under its <b class="lede" style="color:var(--ink)">prompt-matched</b> setting — see
+    “resolved fairness” below for why that's the number to quote.</p>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-bench">DS‑MVTec &middot; n=100</div>
+      <div class="kpi-scores">
+        <div class="kpi-block">
+          <div class="label"><span class="swatch" style="background:var(--armc)"></span>Arm‑C SFT (headline)</div>
+          <div class="val tnum">9.05</div>
+          <div class="range">this project's 3 checkpoints span 9.05–9.24</div>
+        </div>
+        <div class="kpi-block">
+          <div class="label"><span class="swatch" style="background:var(--iadr1-adj)"></span>IAD‑R1, matched</div>
+          <div class="val tnum">6.14</div>
+          <div class="range">native prompt: 4.50 (see below)</div>
+        </div>
+        <div class="kpi-delta">
+          <div class="dv">+2.91</div>
+          <div class="dl">pts higher, fair comparison</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-bench">VisA &middot; n=100</div>
+      <div class="kpi-scores">
+        <div class="kpi-block">
+          <div class="label"><span class="swatch" style="background:var(--armc)"></span>Arm‑C SFT (headline)</div>
+          <div class="val tnum">8.52</div>
+          <div class="range">this project's 3 checkpoints span 8.52–8.77</div>
+        </div>
+        <div class="kpi-block">
+          <div class="label"><span class="swatch" style="background:var(--iadr1-adj)"></span>IAD‑R1, matched</div>
+          <div class="val tnum">7.04</div>
+          <div class="range">native prompt: 6.32 (see below)</div>
+        </div>
+        <div class="kpi-delta">
+          <div class="dv">+1.48</div>
+          <div class="dl">pts higher, fair comparison</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="serif">Where these sit in the pipeline</h2>
+  <p class="section-dek">Every stage below is now explainability-judged (grey = detects but isn't trained
+    for it; blue/green/purple = this project's own checkpoints). Each stage shows in‑benchmark accuracy,
+    accuracy on the <b class="lede" style="color:var(--ink)">held‑out Real‑IAD split</b> (n=4,236, never
+    trained on), and the explainability score.</p>
+
+  <div class="lineage">
+    <div class="lineage-head">
+      <span class="name">Qwen2.5‑VL‑7B lineage</span>
+      <span class="tag">the thesis headline backbone</span>
+    </div>
+    <div class="lineage-row" id="lineage-q25"></div>
+  </div>
+
+  <div class="lineage">
+    <div class="lineage-head">
+      <span class="name">Qwen3‑VL‑8B lineage</span>
+      <span class="tag">secondary backbone probe — not a controlled ablation</span>
+    </div>
+    <div class="lineage-row" id="lineage-q3"></div>
+    <p class="section-dek" style="margin:14px 0 0;max-width:none;">Same Arm‑C SFT recipe, a newer/larger
+      backbone. It scores higher everywhere, but Qwen3‑VL‑8B is a different architecture generation
+      <i>and</i> size from Qwen2.5‑VL‑7B — the gain conflates both, so this is evidence the recipe
+      transfers, not a 7B→8B scaling result.</p>
+  </div>
+
+  <div class="lineage">
+    <div class="lineage-head">
+      <span class="name">IAD‑R1 (external reference)</span>
+      <span class="tag">not part of this project's training line</span>
+    </div>
+    <div class="lineage-row" id="lineage-iadr1"></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="serif">Does it generalise? Held‑out Real‑IAD</h2>
+  <p class="section-dek">Balanced accuracy on 4,236 Real‑IAD images that were never in any model's SFT,
+    rollout, or GRPO pool — the closest thing here to an out-of-distribution test. Each model in its own
+    native prompt mode.</p>
+  <div class="gen-panel">
+    <div class="gen-rows" id="gen-rows"></div>
+    <p class="section-dek" style="margin:16px 0 0;max-width:none;">Both base models collapse toward the
+      50% chance line (marked); every fine‑tuned checkpoint — regardless of recipe or backbone — lands in
+      a tight 79–84% band. That clustering, on data none of them trained on, is the generalisation claim.</p>
+  </div>
+</section>
+
+<section>
+  <h2 class="serif">A standard-protocol check: MMAD Discrimination, fixed</h2>
+  <p class="section-dek">MMAD (the benchmark DS-MVTec/VisA come from) defines its own multiple-choice
+    protocol across five defect-relevant subtasks. A first pass at scoring these (2026-07-24) asked
+    every model "answer with the letter of the correct option only" — a format Arm-C and SFT+GRPO were
+    never trained on (both are fine-tuned on a fixed
+    <code>&lt;answer&gt;Yes/No&lt;/answer&gt;</code> schema). Confirmed by hand: Arm-C completed a full,
+    sensible <code>&lt;think&gt;</code> trace and then answered in its own trained schema regardless of
+    the letter format asked for — on <b>15.0%</b> of its answers overall, scored as wrong. That
+    conflated "doesn't know" with "won't use this format." See the concrete cases in
+    <a href="mmad_format_fix.html"><b>the format-mismatch gallery</b></a>.</p>
+
+  <div class="resolved-badge">Re-scored in each model's native answer format</div>
+  <p class="section-dek">Two proxy fixes were tried and rejected: per-option yes/no verification (Arm-C
+    ignored the specific option asked and just re-ran its own open-ended diagnosis every time, always
+    answering "Yes") and embedding-similarity matching against its free-form output. Neither reflects a
+    real trained capability for Classification/Localization/Description/Analysis, so those four
+    subtasks are <b class="lede" style="color:var(--ink)">dropped entirely</b> — not patched, not
+    proxied. <b class="lede" style="color:var(--ink)">Discrimination</b> (is there a defect?) is
+    different: it's genuinely binary, so it scores cleanly in each model's own native format with no
+    proxy needed — Arm-C/SFT+GRPO via their real <code>&lt;answer&gt;Yes/No&lt;/answer&gt;</code>
+    trainprompt output (reusing their existing full-benchmark eval, zero new inference), base
+    Qwen2.5-VL/Qwen3-VL via the lettered MCQ they already comply with 100% of the time (general
+    zero-shot models have no fixed schema to violate). All four scored on the same matched 200-image
+    sample per benchmark (100 anomalous + 100 normal).</p>
+
+  <div class="model-legend" id="mcq-legend"></div>
+  <div class="panel-grid" id="mcq-chart-grid"></div>
+
+  <p class="section-dek" style="margin:26px 0 12px;">Same numbers, exact values (95% Wilson CI on
+    TPR/TNR, n=100 per class per benchmark):</p>
+  <div class="mcq-table-wrap">
+    <table class="mcq-table">
+      <thead>
+        <tr>
+          <th>Model</th><th>Answer format</th>
+          <th>DS-MVTec BA</th><th>DS-MVTec TPR</th><th>DS-MVTec TNR</th>
+          <th>VisA BA</th><th>VisA TPR</th><th>VisA TNR</th>
+        </tr>
+      </thead>
+      <tbody id="mcq-tbody"></tbody>
+    </table>
+  </div>
+  <p class="section-dek" style="margin-top:14px;max-width:none;">Full 1670/2141-item benchmark BA
+    (project checkpoints only, native format, max statistical power): Arm-C 82.80 / 72.07, SFT+GRPO
+    82.73 / 70.39 — matches the 200-item matched sample within noise, confirming the sample isn't an
+    outlier.
+    <b class="lede" style="color:var(--ink)">Reading it: once Arm-C is measured in the format it
+    actually knows, it's competitive, not "the weakest model on every subtask."</b> DS-MVTec: Arm-C and
+    SFT+GRPO tie at 82.5 BA, between the two base models (78.0 / 86.0). VisA: SFT+GRPO leads (74.5),
+    Arm-C is second (72.5) — both project checkpoints beat Qwen3-VL base (67.5) and roughly match
+    Qwen2.5-VL base (71.5). The original protocol's finding that Arm-C trailed both base models on VisA
+    was substantially a format-compliance artifact, not a capability gap.</p>
+
+  <p class="section-dek" style="margin:26px 0 12px;">Per-product accuracy, same matched sample:</p>
+  <div class="panel-grid" id="mcq-product-grid"></div>
+</section>
+
+<section>
+  <h2 class="serif">Five reasoning axes</h2>
+  <p class="section-dek">Each axis scored 0–2 by the judge (0 = absent, 2 = fully present).</p>
+  <div class="panel-grid" id="axes-grid"></div>
+</section>
+
+<section>
+  <h2 class="serif">Mechanical accuracy</h2>
+  <p class="section-dek">Scored separately from the judge, not part of the reasoning-quality sum: does the
+    predicted defect <b class="lede" style="color:var(--ink)">location</b> land in the true 3×3 grid cell,
+    and how closely does the predicted <b class="lede" style="color:var(--ink)">type</b> embed against the
+    ground-truth label (Nomic similarity)?</p>
+  <div class="panel-grid" id="mech-grid"></div>
+</section>
+
+<section>
+  <h2 class="serif">This isn't just a mean shift</h2>
+  <p class="section-dek">Distribution of the overall reasoning score (0–10) across all matched traces, one
+    small panel per model. The trained checkpoints (blue/green/purple) pile up hard at 8–10; the two base
+    models (grey) barely register above the axis; IAD‑R1's native‑prompt DS‑MVTec panel is the odd one
+    out — flat and heavy at 0–2.</p>
+  <div class="dist-grid" id="dist-grid-ds"></div>
+  <p class="section-dek" style="margin:26px 0 12px;">VisA</p>
+  <div class="dist-grid" id="dist-grid-visa"></div>
+</section>
+
+<section>
+  <h2 class="serif">Resolved: is this comparison fair to IAD‑R1?</h2>
+  <div class="resolved-badge">Re-judged with a fresh Gemini pass</div>
+  <p class="section-dek">An earlier pass of this eval flagged that IAD‑R1's DS‑MVTec traces were often the
+    single word <code>Yes</code> — scored 0 correctly, but arguably "didn't explain" rather than "explained
+    worse." That's now been re-run under IAD‑R1's other prompt mode, where it always produces a trace.
+    Both numbers are shown below.</p>
+  <div class="fair-panel">
+    <div class="fair-row">
+      <div class="fair-label">
+        <span class="fair-tag">DS‑MVTec</span>
+        <span>23 of 100 IAD‑R1 native‑prompt traces score exactly 0 — no reasoning to grade</span>
+      </div>
+      <div class="fair-bars">
+        <div class="fair-bar-item">
+          <div class="fair-bar-track"><div class="fair-bar-fill" style="width:45%;background:var(--iadr1)"></div></div>
+          <div class="fair-bar-cap">4.50 <span class="fair-bar-note">native prompt (old headline number)</span></div>
+        </div>
+        <div class="fair-bar-item">
+          <div class="fair-bar-track"><div class="fair-bar-fill" style="width:61.4%;background:var(--iadr1-adj)"></div></div>
+          <div class="fair-bar-cap">6.14 <span class="fair-bar-note">prompt-matched, re-judged (n=100, 0 bare)</span></div>
+        </div>
+        <div class="fair-bar-item">
+          <div class="fair-bar-track"><div class="fair-bar-fill" style="width:90.5%;background:var(--armc)"></div></div>
+          <div class="fair-bar-cap">9.05 <span class="fair-bar-note">Arm‑C SFT, for reference</span></div>
+        </div>
+      </div>
+      <div class="fair-verdict">Resolved gap: <b>+2.91</b> pts &mdash; real, and now measured on a clean,
+        fully-explained set rather than estimated by exclusion.</div>
+    </div>
+    <div class="fair-row">
+      <div class="fair-label">
+        <span class="fair-tag">VisA</span>
+        <span>1 of 100 IAD‑R1 native‑prompt traces score 0 &mdash; already close to a clean comparison</span>
+      </div>
+      <div class="fair-bars">
+        <div class="fair-bar-item">
+          <div class="fair-bar-track"><div class="fair-bar-fill" style="width:63.2%;background:var(--iadr1)"></div></div>
+          <div class="fair-bar-cap">6.32 <span class="fair-bar-note">native prompt</span></div>
+        </div>
+        <div class="fair-bar-item">
+          <div class="fair-bar-track"><div class="fair-bar-fill" style="width:70.4%;background:var(--iadr1-adj)"></div></div>
+          <div class="fair-bar-cap">7.04 <span class="fair-bar-note">prompt-matched, re-judged</span></div>
+        </div>
+        <div class="fair-bar-item">
+          <div class="fair-bar-track"><div class="fair-bar-fill" style="width:85.2%;background:var(--armc)"></div></div>
+          <div class="fair-bar-cap">8.52 <span class="fair-bar-note">Arm‑C SFT, for reference</span></div>
+        </div>
+      </div>
+      <div class="fair-verdict">Gap narrows slightly: <b>+1.48</b> pts (was +2.27 under native prompt).</div>
+    </div>
+  </div>
+  <p class="section-dek" style="margin-top:16px;">Either way, Arm‑C's reasoning is judged higher on both
+    benchmarks under the fairest available comparison. Quoting only the native‑prompt number (4.50)
+    understates IAD‑R1 &mdash; the prompt‑matched number (6.14/7.04) is now the one to cite.</p>
+</section>
+
+<section>
+  <h2 class="serif">A matched example</h2>
+  <p class="section-dek">Same image, both models correctly say "yes, defective." IAD‑R1 shown here under
+    its <b class="lede" style="color:var(--ink)">native</b> prompt &mdash; the bare-answer case the
+    resolved-fairness section above accounts for.</p>
+  <div class="exhibit">
+    <div>
+      <img src="data:image/jpeg;base64,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" alt="DS-MVTec pill with faulty imprint defect">
+      <div class="exhibit-meta">
+        <div><span class="gt">DS‑MVTec / pill</span></div>
+        <div>GT defect: faulty imprint</div>
+        <div class="mono" style="margin-top:6px;font-size:10.5px">image/faulty_imprint/017.png</div>
+      </div>
+    </div>
+    <div class="verdict-cols">
+      <div class="vcard" style="border-color:var(--armc)">
+        <div class="vname">Arm‑C SFT <span class="score tnum" style="color:var(--armc)">10 / 10</span></div>
+        <div class="trace mono">&lt;think&gt;I am inspecting an oval-shaped white pill with embossed lettering on its surface. The overall shape appears regular, but I notice significant damage to the right side of the pill. There is a large, irregular area where the material has been chipped away, revealing a rougher internal texture compared to the smooth outer surface. This missing section contains several embossed characters that are now flattened and indistinct. The left side of the pill shows some minor surface pitting, which is typical for this material, but the extensive loss of volume on the right side represents a major structural failure in the tablet's integrity. Based on these observations, the part is rejected.&lt;/think&gt;&lt;location&gt;center-right&lt;/location&gt;&lt;type&gt;Missing Parts&lt;/type&gt;&lt;answer&gt;Yes&lt;/answer&gt;</div>
+        <div class="judge"><b>Judge:</b> &ldquo;The model accurately identifies the damaged area on the right side of the pill where the imprint is distorted, correctly noting the &lsquo;rougher internal texture&rsquo; and &lsquo;flattened&rsquo; characters&hellip; the model's description of &lsquo;Missing Parts&rsquo; is visually accurate for what is shown in the red region.&rdquo;</div>
+      </div>
+      <div class="vcard" style="border-color:var(--iadr1)">
+        <div class="vname">IAD‑R1, native prompt <span class="score tnum" style="color:var(--iadr1)">0 / 10</span></div>
+        <div class="trace mono">Yes</div>
+        <div class="judge"><b>Judge:</b> &ldquo;The model provided only a single word &lsquo;Yes&rsquo; and no reasoning trace to evaluate against the visual evidence or logical axes.&rdquo;</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="caveats">
+  <div style="font-weight:600;color:var(--ink-2);margin-bottom:8px;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;">Read before citing</div>
+  <ul>
+    <li>Reference-guided plausibility, not mechanistic faithfulness — no input-perturbation flip test.</li>
+    <li>Judge family overlaps the trace generator for Gemini-sourced traces (both Gemini) — median-of-3 and blinding to authorship mitigate but don't eliminate this.</li>
+    <li>base Qwen2.5‑VL has no VisA traces on disk, so it's DS‑MVTec only (shown as n/a, never as 0).</li>
+    <li>Qwen3‑VL‑8B rows are a secondary backbone probe, not a controlled ablation — see the pipeline section above.</li>
+    <li>Type-similarity ground truth covers 94.8% of DS‑MVTec / 99.2% of VisA anomalies (MMAD MCQ; subfolder name otherwise).</li>
+  </ul>
+  <div class="src">Source: <code>results/explainability_multi/raw_results.json</code>,
+    <code>summary.json</code>, <code>README.md</code>; held-out figures from
+    <code>results/heldout_realiad_eval/README.md</code> — 2026‑07‑23. MMAD Discrimination:
+    <code>results/mmad_5subtask_eval/discrimination_report.json</code>,
+    <code>format_mismatch_examples.json</code>, <code>README.md</code> — 2026‑07‑26.</div>
+</div>
+
+</main>
+
+<script>
+const ttEl = document.getElementById('tt');
+function showTip(e, catLabel, rows){
+  ttEl.innerHTML = '<div class="tt-cat"></div>';
+  ttEl.querySelector('.tt-cat').textContent = catLabel;
+  rows.forEach(r=>{
+    const row = document.createElement('div'); row.className='tt-row';
+    const key = document.createElement('span'); key.className='tt-key'; key.style.background=r.color;
+    const label = document.createElement('span'); label.textContent = r.label;
+    const num = document.createElement('span'); num.className='tt-num'; num.textContent = r.value;
+    row.appendChild(key); row.appendChild(label); row.appendChild(num);
+    ttEl.appendChild(row);
+  });
+  ttEl.classList.add('show');
+  moveTip(e);
+}
+function moveTip(e){
+  const pad = 14;
+  let x = e.clientX + pad, y = e.clientY + pad;
+  const r = ttEl.getBoundingClientRect();
+  if (x + r.width > window.innerWidth - 8) x = e.clientX - r.width - pad;
+  if (y + r.height > window.innerHeight - 8) y = e.clientY - r.height - pad;
+  ttEl.style.left = x + 'px'; ttEl.style.top = y + 'px';
+}
+function hideTip(){ ttEl.classList.remove('show'); }
+
+// ---- the 7-row model registry, single source of truth for order/color/label ----
+const MODELS = [
+  {id:'qwen25_base', label:'Qwen2.5-VL base',      color:'var(--qwen25base)', group:'Base (untrained)'},
+  {id:'qwen3_base',  label:'Qwen3-VL base',         color:'var(--qwen3base)',  group:'Base (untrained)'},
+  {id:'iadr1',       label:'IAD-R1 (native)',       color:'var(--iadr1)',      group:'External baseline'},
+  {id:'iadr1_matched',label:'IAD-R1 (matched)',     color:'var(--iadr1-adj)',  group:'External baseline'},
+  {id:'armC',        label:'Arm-C SFT',             color:'var(--armc)',       group:'This project'},
+  {id:'sft_grpo',    label:'SFT+GRPO',              color:'var(--sftgrpo)',    group:'This project'},
+  {id:'qwen3_sft',   label:'Qwen3-VL SFT',          color:'var(--qwen3sft)',   group:'This project'},
+];
+function resolveColor(c){
+  return getComputedStyle(document.documentElement).getPropertyValue(c.replace('var(','').replace(')','')).trim() || c;
+}
+
+// ---- global legend ----
+const legendEl = document.getElementById('global-legend');
+['Base (untrained)','External baseline','This project'].forEach(grp=>{
+  const g = document.createElement('div'); g.className = 'grp';
+  const tag = document.createElement('span'); tag.className = 'grp-tag'; tag.textContent = grp;
+  g.appendChild(tag);
+  MODELS.filter(m=>m.group===grp).forEach(m=>{
+    const item = document.createElement('span'); item.className = 'legend-item';
+    item.innerHTML = '<span class="sw" style="background:'+m.color+'"></span>'+m.label;
+    g.appendChild(item);
+  });
+  legendEl.appendChild(g);
+});
+
+function panel(title, sub){
+  const p = document.createElement('div'); p.className = 'panel';
+  const t = document.createElement('div'); t.className = 'panel-title'; t.textContent = title;
+  const s = document.createElement('div'); s.className = 'panel-sub'; s.textContent = sub;
+  p.appendChild(t); p.appendChild(s);
+  return p;
+}
+
+// ---- generic N-series grouped bar chart ----
+function buildGroupedBar(container, axisRows, opts){
+  // axisRows: [{label, values:{modelId: val|null}}]
+  const max = opts.max;
+  const fmt = opts.fmt || (v=>v.toFixed(2));
+  axisRows.forEach(row=>{
+    const wrap = document.createElement('div'); wrap.className = 'gbar-row';
+    const lab = document.createElement('div'); lab.className = 'gbar-label';
+    const labText = document.createElement('span'); labText.textContent = row.label;
+    const maxText = document.createElement('span'); maxText.className='max'; maxText.textContent = 'max ' + max;
+    lab.appendChild(labText); lab.appendChild(maxText);
+    const track = document.createElement('div'); track.className = 'gbar-track';
+
+    MODELS.forEach(m=>{
+      const val = row.values[m.id];
+      if (val === null || val === undefined) return;
+      const bar = document.createElement('div');
+      bar.className = 'gbar';
+      bar.style.background = m.color;
+      bar.style.width = Math.max(2, (val/max*100)) + '%';
+      bar.tabIndex = 0;
+      const rowsForTip = [{label:m.label, value: fmt(val), color:m.color}];
+      bar.addEventListener('pointermove', e=>showTip(e, row.label, rowsForTip));
+      bar.addEventListener('pointerleave', hideTip);
+      bar.addEventListener('focus', e=>showTip(e, row.label, rowsForTip));
+      bar.addEventListener('blur', hideTip);
+      track.appendChild(bar);
+    });
+    wrap.appendChild(lab); wrap.appendChild(track);
+    container.appendChild(wrap);
+  });
+}
+
+// ---- axes data (5 axes, 0-2 each) ----
+const axesData = {
+  'DS-MVTec': [
+    {label:'Visual grounding',          values:{qwen25_base:1.71, qwen3_base:0.20, iadr1:0.85, iadr1_matched:1.16, armC:1.76, sft_grpo:1.81, qwen3_sft:1.84}},
+    {label:'Defect faithfulness',       values:{qwen25_base:1.46, qwen3_base:0.18, iadr1:0.68, iadr1_matched:0.81, armC:1.48, sft_grpo:1.58, qwen3_sft:1.54}},
+    {label:'Evidence before conclusion',values:{qwen25_base:1.12, qwen3_base:0.16, iadr1:1.05, iadr1_matched:1.60, armC:1.99, sft_grpo:1.98, qwen3_sft:1.99}},
+    {label:'Coherence',                 values:{qwen25_base:1.90, qwen3_base:0.20, iadr1:1.01, iadr1_matched:1.58, armC:1.91, sft_grpo:1.93, qwen3_sft:1.93}},
+    {label:'Conciseness',               values:{qwen25_base:1.84, qwen3_base:1.05, iadr1:0.91, iadr1_matched:0.99, armC:1.91, sft_grpo:1.94, qwen3_sft:1.93}},
+  ],
+  'VisA': [
+    {label:'Visual grounding',          values:{qwen25_base:null, qwen3_base:0.02, iadr1:1.21, iadr1_matched:1.45, armC:1.63, sft_grpo:1.67, qwen3_sft:1.70}},
+    {label:'Defect faithfulness',       values:{qwen25_base:null, qwen3_base:0.02, iadr1:0.92, iadr1_matched:1.07, armC:1.19, sft_grpo:1.32, qwen3_sft:1.35}},
+    {label:'Evidence before conclusion',values:{qwen25_base:null, qwen3_base:0.02, iadr1:1.60, iadr1_matched:1.76, armC:1.97, sft_grpo:1.98, qwen3_sft:1.96}},
+    {label:'Coherence',                 values:{qwen25_base:null, qwen3_base:0.02, iadr1:1.59, iadr1_matched:1.76, armC:1.86, sft_grpo:1.88, qwen3_sft:1.93}},
+    {label:'Conciseness',               values:{qwen25_base:null, qwen3_base:0.86, iadr1:1.00, iadr1_matched:1.00, armC:1.87, sft_grpo:1.77, qwen3_sft:1.83}},
+  ],
+};
+const axesGrid = document.getElementById('axes-grid');
+Object.entries(axesData).forEach(([bench, rows])=>{
+  const p = panel(bench, '5 axes, 0–2 scale each' + (bench==='VisA' ? ' · Qwen2.5 base n/a (no traces)' : ''));
+  buildGroupedBar(p, rows, {max:2, fmt:v=>v.toFixed(2)});
+  axesGrid.appendChild(p);
+});
+
+// ---- mechanical accuracy data ----
+const mechData = {
+  'DS-MVTec': [
+    {label:'Location match rate', values:{qwen25_base:0.0, qwen3_base:0.0, iadr1:0.44, iadr1_matched:0.71, armC:0.77, sft_grpo:0.72, qwen3_sft:0.74}},
+    {label:'Type similarity',     values:{qwen25_base:0.0, qwen3_base:0.0, iadr1:0.337, iadr1_matched:0.538, armC:0.57, sft_grpo:0.547, qwen3_sft:0.553}},
+  ],
+  'VisA': [
+    {label:'Location match rate', values:{qwen25_base:null, qwen3_base:0.0, iadr1:0.63, iadr1_matched:0.63, armC:0.55, sft_grpo:0.63, qwen3_sft:0.62}},
+    {label:'Type similarity',     values:{qwen25_base:null, qwen3_base:0.0, iadr1:0.529, iadr1_matched:0.531, armC:0.559, sft_grpo:0.537, qwen3_sft:0.551}},
+  ],
+};
+const mechGrid = document.getElementById('mech-grid');
+Object.entries(mechData).forEach(([bench, rows])=>{
+  const p = panel(bench, '0–1 scale');
+  buildGroupedBar(p, rows, {max:1, fmt:v=>(v*100).toFixed(1)+'%'});
+  mechGrid.appendChild(p);
+});
+
+// ---- distribution mini-panels (per model, 5 buckets) ----
+const distData = {
+  'DS-MVTec': {
+    qwen25_base:  [0,3,7,17,73],
+    qwen3_base:   [48,42,0,0,10],
+    iadr1:        [23,23,12,12,30],
+    iadr1_matched:[0,17,28,20,35],
+    armC:         [0,1,4,13,82],
+    sft_grpo:     [0,0,4,10,86],
+    qwen3_sft:    [0,0,4,10,86],
+  },
+  'VisA': {
+    qwen3_base:   [59,40,0,0,1],
+    iadr1:        [1,16,24,18,41],
+    iadr1_matched:[0,8,17,22,53],
+    armC:         [0,2,6,19,73],
+    sft_grpo:     [0,1,10,13,76],
+    qwen3_sft:    [0,2,3,18,77],
+  },
+};
+const buckets = ['0–2','2–4','4–6','6–8','8–10'];
+function buildDistGrid(container, benchData){
+  MODELS.forEach(m=>{
+    const counts = benchData[m.id];
+    if (!counts) return;
+    const card = document.createElement('div'); card.className = 'dist-card';
+    const name = document.createElement('div'); name.className = 'dname';
+    name.innerHTML = '<span class="sw" style="background:'+m.color+'"></span>'+m.label;
+    const n = document.createElement('div'); n.className = 'dn'; n.textContent = 'n=' + counts.reduce((a,b)=>a+b,0);
+    const bars = document.createElement('div'); bars.className = 'dist-bars';
+    const maxC = Math.max(...counts, 1);
+    counts.forEach((c,i)=>{
+      const b = document.createElement('div'); b.className = 'b';
+      b.style.height = (c/maxC*100) + '%';
+      b.style.background = m.color;
+      b.style.opacity = 0.55 + 0.45*(i/4);
+      b.tabIndex = 0;
+      const rowsForTip = [{label:buckets[i], value: c+' traces', color:m.color}];
+      b.addEventListener('pointermove', e=>showTip(e, m.label, rowsForTip));
+      b.addEventListener('pointerleave', hideTip);
+      bars.appendChild(b);
+    });
+    const x = document.createElement('div'); x.className = 'dist-x';
+    buckets.forEach(bk=>{ const s=document.createElement('span'); s.textContent=bk; x.appendChild(s); });
+    card.appendChild(name); card.appendChild(n); card.appendChild(bars); card.appendChild(x);
+    container.appendChild(card);
+  });
+}
+buildDistGrid(document.getElementById('dist-grid-ds'), distData['DS-MVTec']);
+buildDistGrid(document.getElementById('dist-grid-visa'), distData['VisA']);
+
+// ---- lineage strips ----
+function stage(name, ba, realiad, expl){
+  const s = document.createElement('div'); s.className = 'stage';
+  const nm = document.createElement('div'); nm.className = 'stage-name'; nm.textContent = name;
+  const metrics = document.createElement('div'); metrics.className = 'stage-metrics';
+  const rows = [
+    ['DS / VisA BA', ba],
+    ['Real-IAD BA (held-out)', realiad],
+    ['Explainability /10', expl],
+  ];
+  rows.forEach(([k,v])=>{
+    const r = document.createElement('div'); r.className = 'sm-row';
+    const kk = document.createElement('span'); kk.className='k'; kk.textContent = k;
+    const vv = document.createElement('span'); vv.className='v tnum'; vv.textContent = v;
+    r.appendChild(kk); r.appendChild(vv);
+    metrics.appendChild(r);
+  });
+  s.appendChild(nm); s.appendChild(metrics);
+  return s;
+}
+const lq25 = document.getElementById('lineage-q25');
+lq25.appendChild(stage('Base Qwen2.5-VL-7B', '69.01 / 53.79', '50.00', '8.03 / n/a'));
+lq25.appendChild(stage('Arm-C SFT (headline)', '82.80 / 72.07', '79.32', '9.05 / 8.52'));
+lq25.appendChild(stage('SFT+GRPO run-2', '82.73 / 70.39', '80.87', '9.24 / 8.62'));
+
+const lq3 = document.getElementById('lineage-q3');
+lq3.appendChild(stage('Base Qwen3-VL-8B', '78.68 / 64.45', '56.38', '1.79 / 0.94'));
+lq3.appendChild(stage('Arm-C recipe SFT (ckpt-376)', '85.82 / 76.52', '83.81', '9.23 / 8.77'));
+
+const liad = document.getElementById('lineage-iadr1');
+liad.appendChild(stage('IAD-R1 (our harness)', '81.92 / 71.34', '79.58', '4.50 / 6.32 native · 6.14 / 7.04 matched'));
+
+// ---- generalisation bars ----
+const genData = [
+  {label:'Qwen2.5-VL base',  val:50.00, color:'var(--qwen25base)'},
+  {label:'Qwen3-VL base',    val:56.38, color:'var(--qwen3base)'},
+  {label:'IAD-R1',           val:79.58, color:'var(--iadr1)'},
+  {label:'Arm-C SFT',        val:79.32, color:'var(--armc)'},
+  {label:'SFT+GRPO',         val:80.87, color:'var(--sftgrpo)'},
+  {label:'Qwen3-VL SFT',     val:83.81, color:'var(--qwen3sft)'},
+];
+const genRows = document.getElementById('gen-rows');
+genData.forEach(d=>{
+  const row = document.createElement('div'); row.className = 'gen-row';
+  const lab = document.createElement('div'); lab.className = 'glabel';
+  lab.innerHTML = '<span class="sw" style="background:'+d.color+'"></span>'+d.label;
+  const track = document.createElement('div'); track.className = 'gen-track';
+  const chance = document.createElement('div'); chance.className = 'gen-chance'; chance.style.left = '50%';
+  const fill = document.createElement('div'); fill.className = 'gen-fill';
+  fill.style.width = d.val + '%'; fill.style.background = d.color;
+  track.appendChild(fill); track.appendChild(chance);
+  const val = document.createElement('div'); val.className = 'gen-val tnum'; val.textContent = d.val.toFixed(2);
+  row.appendChild(lab); row.appendChild(track); row.appendChild(val);
+  genRows.appendChild(row);
+});
+
+// ---- MMAD Discrimination, native-format re-eval (results/mmad_5subtask_eval/discrimination_report.json) ----
+const mcqData = [
+  {id:'base_qwen25', label:'Qwen2.5-VL base', format:'lettered MCQ (zero-shot native)',
+    'DS-MVTec':{BA:78.0, TPR:81.0, TPR_lo:72.2, TPR_hi:87.5, TNR:75.0, TNR_lo:65.7, TNR_hi:82.5},
+    'VisA':     {BA:71.5, TPR:59.0, TPR_lo:49.2, TPR_hi:68.1, TNR:84.0, TNR_lo:75.6, TNR_hi:89.9}},
+  {id:'armc', label:'Arm-C SFT', format:'native <answer>Yes/No</answer> (trainprompt)',
+    'DS-MVTec':{BA:82.5, TPR:83.0, TPR_lo:74.5, TPR_hi:89.1, TNR:82.0, TNR_lo:73.3, TNR_hi:88.3},
+    'VisA':     {BA:72.5, TPR:57.0, TPR_lo:47.2, TPR_hi:66.3, TNR:88.0, TNR_lo:80.2, TNR_hi:93.0}},
+  {id:'sft_grpo', label:'SFT+GRPO', format:'native <answer>Yes/No</answer> (trainprompt)',
+    'DS-MVTec':{BA:82.5, TPR:84.0, TPR_lo:75.6, TPR_hi:89.9, TNR:81.0, TNR_lo:72.2, TNR_hi:87.5},
+    'VisA':     {BA:74.5, TPR:67.0, TPR_lo:57.3, TPR_hi:75.4, TNR:82.0, TNR_lo:73.3, TNR_hi:88.3}},
+  {id:'qwen3_base', label:'Qwen3-VL base', format:'lettered MCQ (zero-shot native)',
+    'DS-MVTec':{BA:86.0, TPR:83.0, TPR_lo:74.5, TPR_hi:89.1, TNR:89.0, TNR_lo:81.4, TNR_hi:93.7},
+    'VisA':     {BA:67.5, TPR:48.0, TPR_lo:38.5, TPR_hi:57.7, TNR:87.0, TNR_lo:79.0, TNR_hi:92.2}},
+];
+const productData = {
+  'DS-MVTec': {
+    base_qwen25: {bottle:85.7,cable:85.7,capsule:78.6,carpet:78.6,grid:85.7,hazelnut:92.9,leather:100.0,metal_nut:85.7,pill:75.0,screw:64.3,tile:61.5,toothbrush:53.8,transistor:50.0,wood:100.0,zipper:66.7},
+    armc:        {bottle:100.0,cable:71.4,capsule:64.3,carpet:92.9,grid:92.9,hazelnut:92.9,leather:85.7,metal_nut:92.9,pill:66.7,screw:71.4,tile:92.3,toothbrush:92.3,transistor:58.3,wood:91.7,zipper:66.7},
+    sft_grpo:    {bottle:78.6,cable:71.4,capsule:64.3,carpet:92.9,grid:85.7,hazelnut:92.9,leather:100.0,metal_nut:85.7,pill:83.3,screw:64.3,tile:92.3,toothbrush:76.9,transistor:75.0,wood:100.0,zipper:75.0},
+    qwen3_base:  {bottle:85.7,cable:57.1,capsule:85.7,carpet:92.9,grid:85.7,hazelnut:92.9,leather:100.0,metal_nut:78.6,pill:91.7,screw:85.7,tile:100.0,toothbrush:61.5,transistor:83.3,wood:100.0,zipper:91.7},
+  },
+  'VisA': {
+    base_qwen25: {candle:72.2,capsules:44.4,cashew:72.2,chewinggum:88.9,fryum:75.0,macaroni1:81.2,macaroni2:62.5,pcb1:43.8,pcb2:87.5,pcb3:56.2,pcb4:87.5,pipe_fryum:87.5},
+    armc:        {candle:61.1,capsules:44.4,cashew:72.2,chewinggum:100.0,fryum:81.2,macaroni1:75.0,macaroni2:62.5,pcb1:62.5,pcb2:75.0,pcb3:50.0,pcb4:87.5,pipe_fryum:100.0},
+    sft_grpo:    {candle:94.4,capsules:55.6,cashew:72.2,chewinggum:100.0,fryum:81.2,macaroni1:75.0,macaroni2:50.0,pcb1:56.2,pcb2:68.8,pcb3:62.5,pcb4:81.2,pipe_fryum:93.8},
+    qwen3_base:  {candle:55.6,capsules:38.9,cashew:55.6,chewinggum:94.4,fryum:81.2,macaroni1:75.0,macaroni2:68.8,pcb1:56.2,pcb2:56.2,pcb3:50.0,pcb4:93.8,pipe_fryum:87.5},
+  },
+};
+
+// map this section's model ids onto the page's global MODELS registry (id/color/label source of truth)
+const MCQ_ID_MAP = {base_qwen25:'qwen25_base', armc:'armC', sft_grpo:'sft_grpo', qwen3_base:'qwen3_base'};
+const mcqLegendIds = Object.values(MCQ_ID_MAP);
+const mcqLegend = document.getElementById('mcq-legend');
+const mcqGrp = document.createElement('div'); mcqGrp.className = 'grp';
+MODELS.filter(m=>mcqLegendIds.includes(m.id)).forEach(m=>{
+  const item = document.createElement('span'); item.className = 'legend-item';
+  item.innerHTML = '<span class="sw" style="background:'+m.color+'"></span>'+m.label;
+  mcqGrp.appendChild(item);
+});
+mcqLegend.appendChild(mcqGrp);
+
+const mcqChartGrid = document.getElementById('mcq-chart-grid');
+['DS-MVTec','VisA'].forEach(bench=>{
+  const axisRows = ['BA','TPR','TNR'].map(k=>{
+    const values = {};
+    mcqData.forEach(m=>{ values[MCQ_ID_MAP[m.id]] = m[bench][k]; });
+    return {label: k==='BA' ? 'Balanced accuracy' : (k==='TPR' ? 'TPR (sensitivity)' : 'TNR (specificity)'), values};
+  });
+  const p = panel(bench, '4 models, matched 200-image sample, each in its native answer format');
+  buildGroupedBar(p, axisRows, {max:100, fmt:v=>v.toFixed(1)+'%'});
+  mcqChartGrid.appendChild(p);
+});
+
+const mcqTbody = document.getElementById('mcq-tbody');
+mcqData.forEach(m=>{
+  const tr = document.createElement('tr'); tr.className = 'model-' + m.id;
+  const tdModel = document.createElement('td'); tdModel.textContent = m.label;
+  const tdFmt = document.createElement('td'); tdFmt.textContent = m.format;
+  tr.appendChild(tdModel); tr.appendChild(tdFmt);
+  ['DS-MVTec','VisA'].forEach(b=>{
+    const sb = m[b];
+    [sb.BA.toFixed(1)+'%',
+     sb.TPR.toFixed(1)+'% ['+sb.TPR_lo.toFixed(1)+'–'+sb.TPR_hi.toFixed(1)+']',
+     sb.TNR.toFixed(1)+'% ['+sb.TNR_lo.toFixed(1)+'–'+sb.TNR_hi.toFixed(1)+']'].forEach(txt=>{
+      const td = document.createElement('td'); td.className='val tnum'; td.textContent = txt;
+      tr.appendChild(td);
+    });
+  });
+  mcqTbody.appendChild(tr);
+});
+
+const mcqProductGrid = document.getElementById('mcq-product-grid');
+Object.entries(productData).forEach(([bench, byModel])=>{
+  const products = Object.keys(byModel.base_qwen25);
+  const axisRows = products.map(prod=>{
+    const values = {};
+    Object.entries(MCQ_ID_MAP).forEach(([localId, globalId])=>{ values[globalId] = byModel[localId][prod]; });
+    return {label: prod, values};
+  });
+  const p = panel(bench, 'accuracy per product, matched sample');
+  buildGroupedBar(p, axisRows, {max:100, fmt:v=>v.toFixed(0)+'%'});
+  mcqProductGrid.appendChild(p);
+});
+</script>

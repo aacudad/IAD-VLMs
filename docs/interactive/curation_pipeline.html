@@ -1,0 +1,347 @@
+<title>Curating the STaR Rollout Corpus</title>
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#f4f5f8; --surface:#ffffff; --surface-2:#eef0f4; --surface-3:#e6e9ef;
+    --ink:#12151c; --ink-2:#525b6b; --ink-muted:#848da0; --hairline:#dde1e8;
+    --good:#0ca30c; --warn:#fab219; --serious:#ec835a;
+    --good-wash: rgba(12,163,12,.10); --warn-wash: rgba(250,178,25,.14); --serious-wash: rgba(236,131,90,.12);
+    --shadow: 0 1px 2px rgba(18,21,28,.04), 0 8px 24px -12px rgba(18,21,28,.10);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:where(:not([data-theme="light"])){
+      color-scheme: dark;
+      --bg:#0b0d12; --surface:#12151d; --surface-2:#181c26; --surface-3:#1f2430;
+      --ink:#eef0f4; --ink-2:#a6aec0; --ink-muted:#6b7385; --hairline:#242938;
+      --good:#0ca30c; --warn:#fab219; --serious:#ec835a;
+      --good-wash: rgba(12,163,12,.16); --warn-wash: rgba(250,178,25,.16); --serious-wash: rgba(236,131,90,.16);
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:#0b0d12; --surface:#12151d; --surface-2:#181c26; --surface-3:#1f2430;
+    --ink:#eef0f4; --ink-2:#a6aec0; --ink-muted:#6b7385; --hairline:#242938;
+    --good:#0ca30c; --warn:#fab219; --serious:#ec835a;
+    --good-wash: rgba(12,163,12,.16); --warn-wash: rgba(250,178,25,.16); --serious-wash: rgba(236,131,90,.16);
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{ font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
+  .mono{ font-family:ui-monospace,"Cascadia Code","SF Mono","Roboto Mono",Consolas,monospace; }
+  .tnum{ font-variant-numeric: tabular-nums; }
+
+  header.mast{
+    position:sticky; top:0; z-index:10;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom:1px solid var(--hairline);
+    padding:14px 28px;
+  }
+  .mast-inner{ max-width:1080px; margin:0 auto; }
+  .eyebrow{
+    font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-muted);
+    font-weight:600;
+  }
+
+  main{ max-width:1080px; margin:0 auto; padding:0 28px 96px; }
+  section{ padding-top:56px; }
+  section:first-of-type{ padding-top:40px; }
+  h2.serif{ font-size:26px; font-weight:500; line-height:1.25; margin:0 0 6px; text-wrap:balance; }
+  .section-dek{ color:var(--ink-2); font-size:14.5px; line-height:1.6; margin:0 0 26px; max-width:660px; }
+  .lede{ font-size:16.5px; line-height:1.7; color:var(--ink-2); max-width:660px; }
+  .lede b{ color:var(--ink); font-weight:600; }
+  code{
+    font-family:ui-monospace,"Cascadia Code","SF Mono","Roboto Mono",Consolas,monospace;
+    font-size:.88em; background:var(--surface-2); padding:1px 6px; border-radius:4px; color:var(--ink-2);
+  }
+
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:0; margin-top:28px; border-top:1px solid var(--hairline);
+    border-bottom:1px solid var(--hairline);
+  }
+  .meta-item{ flex:1 1 160px; padding:14px 18px 14px 0; border-right:1px solid var(--hairline); }
+  .meta-item:last-child{ border-right:none; }
+  .meta-item .k{ font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-muted); margin-bottom:4px; }
+  .meta-item .v{ font-size:14px; color:var(--ink); font-weight:500; }
+
+  /* ---- pipeline steps ---- */
+  .steps{ display:flex; align-items:stretch; gap:0; overflow-x:auto; padding-bottom:4px; }
+  .step{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:14px;
+    padding:16px 16px 14px; box-shadow:var(--shadow); flex:1 1 0; min-width:168px;
+  }
+  .step-n{ font-size:10px; letter-spacing:.06em; color:var(--ink-muted); text-transform:uppercase; margin-bottom:8px; }
+  .step-script{ font-size:11.5px; margin-bottom:8px; color:var(--ink); word-break:break-word; }
+  .step-desc{ font-size:12px; line-height:1.55; color:var(--ink-2); }
+  .step-arrow{ flex:none; display:flex; align-items:center; justify-content:center; width:28px; color:var(--ink-muted); font-size:16px; }
+
+  /* ---- outcome bar ---- */
+  .outcome-panel{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:14px;
+    padding:24px 26px; box-shadow:var(--shadow);
+  }
+  .outcome-total{ font-size:12px; color:var(--ink-muted); margin-bottom:16px; }
+  .outcome-bar{ display:flex; height:40px; border-radius:8px; overflow:hidden; }
+  .outcome-seg{ display:flex; align-items:center; justify-content:center; position:relative; cursor:pointer; }
+  .outcome-seg.good{ background:var(--good); }
+  .outcome-seg.warn{ background:var(--warn); }
+  .outcome-seg.serious{ background:var(--serious); }
+  .outcome-seg + .outcome-seg{ margin-left:2px; }
+  .outcome-seg-label{ font-size:12px; font-weight:700; color:#0b0b0b; white-space:nowrap; }
+  .outcome-legend{ display:flex; gap:26px; margin-top:18px; flex-wrap:wrap; }
+  .outcome-legend-item{ display:flex; align-items:flex-start; gap:9px; }
+  .outcome-legend-item .dot{ width:11px; height:11px; border-radius:3px; margin-top:3px; flex:none; }
+  .outcome-legend-item .dot.good{ background:var(--good); }
+  .outcome-legend-item .dot.warn{ background:var(--warn); }
+  .outcome-legend-item .dot.serious{ background:var(--serious); }
+  .outcome-legend-text .n{ font-size:15px; font-weight:600; }
+  .outcome-legend-text .l{ font-size:12px; color:var(--ink-2); line-height:1.5; max-width:220px; }
+  .outcome-footnote{ font-size:11.5px; color:var(--ink-muted); margin-top:18px; line-height:1.6; border-top:1px solid var(--hairline); padding-top:14px; }
+
+  .validate-callout{
+    margin-top:16px; background:var(--good-wash); border:1px solid color-mix(in srgb, var(--good) 30%, transparent);
+    border-radius:10px; padding:12px 16px; font-size:12.5px; color:var(--ink-2); line-height:1.55;
+  }
+  .validate-callout b{ color:var(--ink); }
+
+  /* ---- editing philosophy cards ---- */
+  .phil-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:720px){ .phil-grid{ grid-template-columns:1fr; } }
+  .phil-card{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:14px;
+    padding:22px 24px; box-shadow:var(--shadow); border-top:3px solid;
+  }
+  .phil-card.warn{ border-top-color:var(--warn); }
+  .phil-card.serious{ border-top-color:var(--serious); }
+  .phil-name{ font-size:15px; font-weight:600; margin-bottom:2px; }
+  .phil-when{ font-size:12px; color:var(--ink-muted); margin-bottom:14px; }
+  .phil-rule{ font-size:13px; color:var(--ink-2); line-height:1.6; margin-bottom:14px; }
+  .phil-examples{ font-size:11.5px; }
+  .phil-examples .eg-label{ font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-muted); margin-bottom:6px; }
+  .eg-row{ display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:11.5px; line-height:1.5; }
+  .eg-before{ color:var(--ink-muted); text-decoration:line-through; }
+  .eg-arrow{ color:var(--ink-muted); flex:none; }
+  .eg-after{ color:var(--ink); }
+
+  .caveats{
+    font-size:12.5px; color:var(--ink-muted); line-height:1.7; border-top:1px solid var(--hairline);
+    padding-top:22px; margin-top:64px; max-width:660px;
+  }
+  .caveats li{ margin-bottom:6px; }
+  .src{ font-size:11px; color:var(--ink-muted); margin-top:18px; }
+
+  #tt{
+    position:fixed; pointer-events:none; z-index:50; background:var(--ink); color:var(--bg);
+    font-size:12px; padding:7px 10px; border-radius:8px; box-shadow:var(--shadow);
+    opacity:0; transform:translateY(4px); transition:opacity .1s ease, transform .1s ease; max-width:240px;
+  }
+  #tt.show{ opacity:1; transform:translateY(0); }
+</style>
+
+<div id="tt"></div>
+
+<header class="mast">
+  <div class="mast-inner">
+    <span class="eyebrow">Trace Curation / Self-Training Pipeline</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <h2 class="serif">Teaching the model to fix its own mistakes</h2>
+  <p class="lede">The headline RL model (SFT+GRPO run‑2) is rolled out on 4,236 held‑out images it
+    never trained on. A local reward scores each attempt; a Gemini judge then re‑checks the ones
+    that look fine; anything wrong or borderline gets <b>corrected</b> or <b>rewritten</b> by
+    Gemini before it's fed back into the next training round. This is the self‑distillation loop
+    behind iteration‑2 / Variety‑STaR.</p>
+
+  <div class="meta-row">
+    <div class="meta-item"><div class="k">Rolled‑out model</div><div class="v">SFT+GRPO run‑2, checkpoint‑530</div></div>
+    <div class="meta-item"><div class="k">Pool</div><div class="v">4,236 held‑out items, k=8 rollouts each</div></div>
+    <div class="meta-item"><div class="k">Judge / editor</div><div class="v">Gemini‑3‑Flash, Vertex AI</div></div>
+    <div class="meta-item"><div class="k">Completed</div><div class="v">2026‑06‑17 · 8h47m, single GPU</div></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="serif">The pipeline</h2>
+  <p class="section-dek">Six stages, run end to end by <code>run_pipeline_heldout4k.sh</code> — identical
+    thresholds and prompts to the 10,236‑item in‑distribution run.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">Stage A</div>
+      <div class="step-script mono">phase0_rollout_kscoring.py</div>
+      <div class="step-desc">k=8 rollouts/item from run‑2 ckpt‑530 (T=0.7). Each scored locally with accuracy + consistency reward.</div>
+    </div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step">
+      <div class="step-n">Stage B</div>
+      <div class="step-script mono">phase0_bucket.py</div>
+      <div class="step-desc">Thresholds (yes=1.5 / no=1.0 / weak_yes=1.8) sort each item into good / needs&#8209;correction / needs&#8209;rewrite.</div>
+    </div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step">
+      <div class="step-n">Stage C</div>
+      <div class="step-script mono">phase1a_gemini_judge.py</div>
+      <div class="step-desc">Gemini faithfulness judge re‑checks the "good" bucket (keep_threshold=2) — some get downgraded to needs&#8209;rewrite.</div>
+    </div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step">
+      <div class="step-n">Stage E</div>
+      <div class="step-script mono">phase1b_gemini_correct.py<br>--mode correct</div>
+      <div class="step-desc">Minimal‑change fix of wrong‑conclusion traces, reference‑guided (image + GT type/location/mask).</div>
+    </div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step">
+      <div class="step-n">Stage F</div>
+      <div class="step-script mono">phase1b_gemini_correct.py<br>--mode rewrite</div>
+      <div class="step-desc">Full rewrite of marginal/hallucinated traces, same reference‑guided inputs.</div>
+    </div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step">
+      <div class="step-n">Result</div>
+      <div class="step-script mono">heldout_4236_disjoint.json</div>
+      <div class="step-desc">Curated, training‑disjoint pool fed into the next SFT round (iteration‑2 / Variety‑STaR).</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="serif">What happened to the 4,236 rollouts</h2>
+  <p class="section-dek">Each item's chosen rollout ends up in exactly one of three states.</p>
+  <div class="outcome-panel">
+    <div class="outcome-total">4,236 held‑out items</div>
+    <div class="outcome-bar" id="outcome-bar"></div>
+    <div class="outcome-legend" id="outcome-legend"></div>
+    <div class="outcome-footnote">
+      The source (<code>docs/heldout_4k_rollout.md</code>) reports these as ≈4,236 in total and
+      notes needs‑rewrite is a "local + judge union" — a small number of items move from the
+      initial good bucket (3,673) into needs‑rewrite after Gemini's faithfulness pass (which is
+      why "good, faithfulness‑confirmed" separately reads 3,589 / 84.7%). Shown here as the
+      source's own final disposition, not independently re‑partitioned.
+    </div>
+    <div class="validate-callout">
+      <b>This matches the in‑distribution training pool.</b> The 10,236‑item pool used for the
+      original SFT+GRPO training buckets the same way — 8,872 good, 86.7% — meaning the model's
+      rollout quality on held‑out, never‑seen images is statistically indistinguishable from its
+      quality on images it trained on.
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 class="serif">How the teacher decides: fix vs. rewrite</h2>
+  <p class="section-dek">Two different Gemini system prompts, chosen by which bucket an item lands
+    in. Both are reference‑guided (image + GT mask + GT type/location) and both default to the
+    smallest edit that works — full rewrite is the fallback, not the default.</p>
+  <div class="phil-grid">
+    <div class="phil-card warn">
+      <div class="phil-name">Correct</div>
+      <div class="phil-when">for needs_correction &mdash; the trace's conclusion is wrong</div>
+      <div class="phil-rule">Treat the failed attempt as the baseline. Keep every sentence that's
+        factually correct about the image, even though the conclusion is wrong. Edit only what
+        must change to reach the right answer &mdash; flip the conclusion, fix one contradicting
+        claim, or add one or two sentences describing a missed defect at the GT location. The
+        &lt;think&gt; block may not grow more than 30% versus the original.</div>
+      <div class="phil-examples">
+        <div class="eg-label">What changes</div>
+        <div class="eg-row"><span class="eg-before">"no contamination visible"</span><span class="eg-arrow">&rarr;</span><span class="eg-after">flip the one sentence that contradicts the visible mark</span></div>
+        <div class="eg-row"><span class="eg-before">missed defect</span><span class="eg-arrow">&rarr;</span><span class="eg-after">add 1&ndash;2 sentences at the GT location, same prose style</span></div>
+      </div>
+    </div>
+    <div class="phil-card serious">
+      <div class="phil-name">Rewrite</div>
+      <div class="phil-when">for needs_rewrite &mdash; conclusion is right, grounding is weak</div>
+      <div class="phil-rule">The trace already reaches the correct answer. Make surgical edits by
+        default: keep nearly all of the original prose, and only touch the specific words that
+        are vague or speculative. Escalate to a full rewrite only if the input is fundamentally
+        broken &mdash; wrong camera view, invented components, hallucinated geometry. The output
+        &lt;think&gt; block may not be longer than the input.</div>
+      <div class="phil-examples">
+        <div class="eg-label">What changes (real edit examples from the prompt)</div>
+        <div class="eg-row"><span class="eg-before">"the red mark"</span><span class="eg-arrow">&rarr;</span><span class="eg-after">"the bright red smudge" (only if visible)</span></div>
+        <div class="eg-row"><span class="eg-before">"I see a deep scratch"</span><span class="eg-arrow">&rarr;</span><span class="eg-after">"I see a fine scratch" (only if depth was wrong)</span></div>
+        <div class="eg-row"><span class="eg-before">"this could mean a manufacturing issue"</span><span class="eg-arrow">&rarr;</span><span class="eg-after">deleted (speculation, not observation)</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="caveats">
+  <div style="font-weight:600;color:var(--ink-2);margin-bottom:8px;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;">What this page can't show</div>
+  <ul>
+    <li>Per‑item before/after trace pairs for specific images aren't available &mdash; the intermediate
+      files (<code>rollouts_raw.jsonl</code>, <code>needs_correction.json</code>,
+      <code>gemini_corrected.jsonl</code>, <code>gemini_rewritten.jsonl</code>) live only in
+      <code>Training/heldout_4k_rollout/</code> on the original cluster and were never committed to
+      this repo &mdash; only the final curated <code>heldout_4236_disjoint.json</code> was.</li>
+    <li>Everything above (pipeline stages, outcome counts, editing rules) is sourced directly from
+      <code>docs/heldout_4k_rollout.md</code> and the actual system prompts in
+      <code>scripts/03_rollout_star/phase1b_gemini_correct.py</code> &mdash; nothing here is a
+      simulated or illustrative example.</li>
+  </ul>
+  <div class="src">Source: <code>docs/heldout_4k_rollout.md</code>,
+    <code>scripts/03_rollout_star/{phase0_bucket,phase1a_gemini_judge,phase1b_gemini_correct}.py</code>
+    &mdash; completed 2026‑06‑17.</div>
+</div>
+
+</main>
+
+<script>
+const ttEl = document.getElementById('tt');
+function showTip(e, label, value){
+  ttEl.innerHTML = '';
+  const v = document.createElement('div'); v.style.fontWeight='700'; v.textContent = value;
+  const l = document.createElement('div'); l.style.opacity='.8'; l.style.marginTop='2px'; l.textContent = label;
+  ttEl.appendChild(v); ttEl.appendChild(l);
+  ttEl.classList.add('show'); moveTip(e);
+}
+function moveTip(e){
+  const pad = 14; let x = e.clientX + pad, y = e.clientY + pad;
+  const r = ttEl.getBoundingClientRect();
+  if (x + r.width > window.innerWidth - 8) x = e.clientX - r.width - pad;
+  if (y + r.height > window.innerHeight - 8) y = e.clientY - r.height - pad;
+  ttEl.style.left = x + 'px'; ttEl.style.top = y + 'px';
+}
+function hideTip(){ ttEl.classList.remove('show'); }
+
+const outcomes = [
+  {key:'good', label:'Good — kept as-is', n:3673, pct:86.7, note:'No Gemini edit needed; the rollout was already correct and well-grounded.'},
+  {key:'warn', label:'Corrected', n:563, pct:13.3, note:'Wrong conclusion — Gemini applied a minimal-scope fix (100% of this bucket).'},
+  {key:'serious', label:'Rewritten', n:704, pct:16.6, note:'Right answer but weak grounding (or too broken to fix surgically) — Gemini rewrote it (100% of this bucket).'},
+];
+const bar = document.getElementById('outcome-bar');
+const legend = document.getElementById('outcome-legend');
+const totalPct = outcomes.reduce((s,o)=>s+o.pct,0);
+outcomes.forEach(o=>{
+  const seg = document.createElement('div');
+  seg.className = 'outcome-seg ' + o.key;
+  seg.style.width = (o.pct/totalPct*100) + '%';
+  seg.tabIndex = 0;
+  if (o.pct/totalPct > 0.12) {
+    const lab = document.createElement('span'); lab.className='outcome-seg-label'; lab.textContent = o.pct + '%';
+    seg.appendChild(lab);
+  }
+  seg.addEventListener('pointermove', e=>showTip(e, o.label, o.n.toLocaleString() + ' items (' + o.pct + '%)'));
+  seg.addEventListener('pointerleave', hideTip);
+  seg.addEventListener('focus', e=>showTip(e, o.label, o.n.toLocaleString() + ' items (' + o.pct + '%)'));
+  seg.addEventListener('blur', hideTip);
+  bar.appendChild(seg);
+
+  const item = document.createElement('div'); item.className = 'outcome-legend-item';
+  const dot = document.createElement('div'); dot.className = 'dot ' + o.key;
+  const text = document.createElement('div'); text.className = 'outcome-legend-text';
+  const nEl = document.createElement('div'); nEl.className='n tnum'; nEl.textContent = o.n.toLocaleString() + ' · ' + o.pct + '%';
+  const lEl = document.createElement('div'); lEl.className='l'; lEl.textContent = o.label + ' — ' + o.note;
+  text.appendChild(nEl); text.appendChild(lEl);
+  item.appendChild(dot); item.appendChild(text);
+  legend.appendChild(item);
+});
+</script>
