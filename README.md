@@ -33,7 +33,30 @@ KL term and no rollout budget at training time.
 
 ---
 
-## 0. What changed on 2026-09-06
+## 0. What changed on 2026-09-07 and 08
+
+A line-by-line review pass on the thesis (33 items, all applied) and the repository brought level with it; the
+itemised list is the last section of [`docs/CHANGELOG_2026-09-06.md`](docs/CHANGELOG_2026-09-06.md). The points that
+change how the numbers should be read:
+
+- **The SFT+GRPO headline files were scored under the GRPO training prompt**, not the supervised train prompt, despite
+  their file names. Under the train prompt the same checkpoint scores 80.74 / 70.50 (HF) or 81.83 / 70.79 (vLLM). The
+  thesis keeps 82.73 / 70.39 and states the prompt everywhere it is used; the files and the log evidence are in
+  [`results/grpo_qwen25vl_7b_6k_frozen_ep3_full_run2/NOTE.md`](results/grpo_qwen25vl_7b_6k_frozen_ep3_full_run2/NOTE.md).
+- **New references**: Gemini 3.5 to 3.8 Flash zero-shot under the same harness
+  ([`results/gemini_flash_family_eval/`](results/gemini_flash_family_eval/)), LLaVA KCR on held-out Real-IAD (84.03,
+  [`results/heldout_realiad_eval/README.md`](results/heldout_realiad_eval/README.md)), and a frozen-vision GRPO reference
+  run ([`results/grpo_qwen25vl_7b_6k_frozenvision_run1/`](results/grpo_qwen25vl_7b_6k_frozenvision_run1/), thesis Appendix N).
+- **Type reward**: similarity tables computed on the reward's own embedding path, and the t-SNE inputs for the final
+  corpus ([`results/anomaly_type_analysis/final_corpus/`](results/anomaly_type_analysis/final_corpus/)). The old
+  8,908-string file is superseded.
+- **Figures**: Figure 6.9 and every appendix example figure redrawn by `f8_pairs.py` and `f9_appendix_examples.py`,
+  Figure 6.7 as a heat map, Appendix H.1 regenerated (`scripts/05_figures/thesis_figures_v2/`).
+- **Dataset card** on Hugging Face rewritten with the thesis splits mapped to files
+  ([`docs/HF_DATASET_CARD.md`](docs/HF_DATASET_CARD.md)); interactive viewers under [`docs/interactive/`](docs/interactive/).
+- History rewritten before going public (see the changelog); a full-history credential scan found nothing.
+
+## 0b. What changed on 2026-09-06
 
 The thesis was verified number by number against this workspace and the repository was brought level with it.
 The full report is [`docs/verification/NUMBER_VERIFICATION_REPORT.md`](docs/verification/NUMBER_VERIFICATION_REPORT.md)
@@ -58,8 +81,8 @@ checkpoint we ever evaluated is in [`results/eval_ba_inventory.txt`](results/eva
 | Base | Qwen2.5-VL-7B (zero-shot) | 69.08 | 53.79 | — | [`results/baseline_named/`](results/baseline_named/) (the thesis file; an earlier run in `results/qwen25vl_baseline_eval/` scores 69.01) |
 | Control | Labels-only, same 6K images, ckpt-188 | 77.86 | 68.64 | — | [`results/sft_qwen25vl_7b_6k_noreason/checkpoint-188/`](results/sft_qwen25vl_7b_6k_noreason/checkpoint-188/) |
 | SFT | 7B-frozen-6K, ckpt-564 | 80.16 | 64.78 | — | [`results/sft_qwen25vl_7b_zeroshot_6k_frozen/checkpoint-564/`](results/sft_qwen25vl_7b_zeroshot_6k_frozen/checkpoint-564/) |
-| **KCR SFT (headline)** | 7B KCR / Arm-C, ckpt-376 | **82.80** | **72.07** | — | [`results/sft_qwen25vl_7b_abc_C_full_patched/checkpoint-376/`](results/sft_qwen25vl_7b_abc_C_full_patched/checkpoint-376/) |
-| GRPO (headline RL) | 7B GRPO Run-2, ckpt-530 | 82.73 | 70.39 | **80.87** | [`results/grpo_qwen25vl_7b_6k_frozen_ep3_full_run2/checkpoint-530/`](results/grpo_qwen25vl_7b_6k_frozen_ep3_full_run2/checkpoint-530/) |
+| **KCR SFT (headline)** | 7B KCR / Arm-C, ckpt-376 | **82.80** | **72.07** | 79.32 | [`results/sft_qwen25vl_7b_abc_C_full_patched/checkpoint-376/`](results/sft_qwen25vl_7b_abc_C_full_patched/checkpoint-376/) |
+| GRPO (headline RL) | 7B GRPO Run-2, ckpt-530, scored under the GRPO prompt (train prompt: 80.74 / 70.50) | 82.73 | 70.39 | **80.87** | [`results/grpo_qwen25vl_7b_6k_frozen_ep3_full_run2/checkpoint-530/`](results/grpo_qwen25vl_7b_6k_frozen_ep3_full_run2/checkpoint-530/) |
 | Reference | IAD-R1 (recanonicalized) | 81.92 | 71.34 | — | [`results/iad_r1_qwen_recanon/`](results/iad_r1_qwen_recanon/) |
 
 #### Cross-architecture, LLaVA-OneVision-7B-SI
@@ -82,6 +105,30 @@ is the hardest place to argue that our result is a Qwen artefact.
 |---|---|---:|---:|---|
 | Base | Qwen3-VL-8B-Instruct zero-shot | 78.68 | 64.45 | [`results/qwen3vl_8b_baseline_eval/`](results/qwen3vl_8b_baseline_eval/) |
 | **KCR SFT** | Qwen KCR corpus, ckpt-376 | **85.82** | **76.45** | [`results/sft_qwen3vl_8b_armC/checkpoint-376/`](results/sft_qwen3vl_8b_armC/checkpoint-376/) |
+
+#### Proprietary zero-shot references, same harness and prompt
+
+| Model (release) | Thinking | DS-MVTec BA | VisA BA | Source |
+|---|---|---:|---:|---|
+| Gemini 2.5 Flash (Apr 2025), the trace teacher | none | 81.52 | 75.18 | [`results/gemini_25flash_eval/`](results/gemini_25flash_eval/) |
+| GPT-5-mini | low effort | 77.10 | 68.23 | [`results/gpt5mini_eval/`](results/gpt5mini_eval/) |
+| Gemini 3.5 Flash (May 2026) | low | 89.28 | 76.44 | [`results/gemini_flash_family_eval/`](results/gemini_flash_family_eval/) |
+| Gemini 3.6 Flash (Jul 2026) | low | 90.60 | 82.01 | same |
+| Gemini 3.7 Flash (Aug 2026) | low | 89.32 | 81.04 | same |
+| Gemini 3.8 Flash (Sep 2026) | low | 89.52 | 79.66 | same |
+
+Strict scoring, unparsed answers counted wrong. The June run of `gemini-3-flash-preview` (93.09 / 80.25) is kept in
+[`results/gemini3flash_eval/`](results/gemini3flash_eval/) and is not in the thesis; see
+[`docs/contamination_gemini3.md`](docs/contamination_gemini3.md).
+
+#### Held-out Real-IAD (4,236 images never used for training)
+
+| Model | BA | Source |
+|---|---:|---|
+| Qwen SFT+GRPO ckpt-530 | 80.87 | `results/grpo_qwen25vl_7b_6k_frozen_ep3_full_run2/checkpoint-530/` |
+| Qwen KCR ckpt-376 | 79.32 | `results/heldout_realiad_eval/armC_realiad4k_trainprompt.json` |
+| LLaVA KCR corrected ckpt-376 (vLLM) | **84.03** | `results/sft_llava_ov_7b_frozen_iad_sft_llava_iter1_C_original/checkpoint-376/` |
+| IAD-R1 released, own prompt | 79.58 | `results/heldout_realiad_eval/iadr1_realiad4k_grpoprompt.json` |
 
 #### Explanation quality (the point of the whole project)
 
@@ -238,13 +285,14 @@ repository_tu_delft_vlms/
 │   ├── teacher_ablation_abc/ # Arm A + Arm B teacher-distillation datasets (Qwen), and the 10K polish set
 │   ├── iter2/                # The Qwen KCR corpus. sft_iter2_train.json (6,000) is Arm C,
 │   │                         #   the file behind the 82.80 / 72.07 headline model
-│   └── variety_star_6k/      # In-progress Real-IAD Variety STaR corpus
+│   └── variety_star_6k/      # Real-IAD Variety STaR corpus, future work in the thesis (F5), not a thesis result
 ├── results/        # Eval JSONs + trainer_state.json per run, plus the BA tooling
 │   ├── eval_ba_inventory.txt # Every (BA, n, path) we computed, the source of truth
 │   ├── compute_ba.py         # Recompute BA from any eval JSON
 │   ├── explainability_multi/ # 5-axis explanation-quality judge output + figures
 │   └── <run>/checkpoint-X/eval_<bench>_full_<mode>.json
-├── docs/           # pipeline_overview (PDF/TeX); data_card.md, model_card.md, prompt_modes.md
+├── docs/           # pipeline_overview (PDF/TeX); data_card.md, model_card.md, prompt_modes.md,
+│                     #   HF_DATASET_CARD.md, CHANGELOG_2026-09-06.md, verification/, trace_viewers/, interactive/
 └── env/            # Conda / environment capture (see Quickstart)
 ```
 
@@ -270,7 +318,10 @@ the same `results/<run>/checkpoint-X/eval_<bench>_full_<mode>.json` layout, and 
 | [`results/thesis_figure_data/`](results/thesis_figure_data/) | Data behind every Chapter 6 figure, the localisation table and the type-transfer table |
 | [`results/contamination_llava_ov_data/`](results/contamination_llava_ov_data/) | The 1,999-of-186,060 MVTec-AD count in LLaVA-OneVision-Data |
 | [`results/sft_vs_kcr_pairs/`](results/sft_vs_kcr_pairs/) | Index of the 65 SFT-no / KCR-yes pairs behind Figure 6.9 and Appendix F.5 |
-| [`results/grpo_qwen25vl_7b_6k_frozenvision_run1/`](results/grpo_qwen25vl_7b_6k_frozenvision_run1/) | GRPO with a frozen vision tower, in progress |
+| [`results/gemini_flash_family_eval/`](results/gemini_flash_family_eval/) | Gemini 3.5 to 3.8 Flash zero-shot references, thesis Table 6.14 |
+| [`results/heldout_realiad_eval/`](results/heldout_realiad_eval/) | Held-out Real-IAD rows of thesis Appendix L (Qwen KCR, IAD-R1, base rows) |
+| [`results/anomaly_type_analysis/final_corpus/`](results/anomaly_type_analysis/final_corpus/) | Type-string similarity tables on the reward's embedding path, t-SNE inputs (thesis Table 5.1, Figure 5.2) |
+| [`results/grpo_qwen25vl_7b_6k_frozenvision_run1/`](results/grpo_qwen25vl_7b_6k_frozenvision_run1/) | GRPO with the vision tower and projector frozen, complete, thesis Appendix N |
 | [`results/qwen3vl_8b_baseline_eval/`](results/qwen3vl_8b_baseline_eval/) | Qwen3-VL-8B base row |
 | [`results/sft_qwen3vl_8b_armC/`](results/sft_qwen3vl_8b_armC/) | Qwen3-VL-8B on the Qwen KCR corpus, 4 epochs |
 | [`results/sft_qwen25vl_7b_6k_noreason/`](results/sft_qwen25vl_7b_6k_noreason/) | Labels-only control, 4 epochs |
@@ -324,9 +375,9 @@ The **6K SFT split is a strict subset** of the 14,472, and both have the same me
 length (~141 words). So the empirical "**6K SFT beats 15K SFT**" result is a
 **data-count / composition effect at fixed compute** — not a length, verbosity, or
 quality-filtering effect. See [`docs/data_card.md`](docs/data_card.md) for the full
-breakdown (products per split, generation settings, QC rules) and the *in-progress*
+breakdown (products per split, generation settings, QC rules) and the
 **Variety STaR** corpus (rollout Arm-C ckpt-376 → Gemini judge → correct/rewrite → SFT on a
-6K stratified variety set), which is currently a thesis placeholder only.
+6K stratified variety set), which the thesis lists as future work (F5) and does not report on.
 
 ### The KCR corpora
 
