@@ -39,7 +39,7 @@ def main():
     ap.add_argument("--gpu-mem-util", type=float, default=0.85)
     args = ap.parse_args()
 
-    os.environ.setdefault("HF_HOME", "/bulk/aacudad/reasoning_traces/hf_cache")
+    os.environ.setdefault("HF_HOME", os.path.join(os.environ.get("WORK_DIR", "."), "hf_cache"))
     os.environ["EVAL_MAX_IMAGE_PIXELS"] = "262144"
 
     here = os.path.dirname(os.path.abspath(__file__))
