@@ -4,7 +4,7 @@
 
 This file is a complete provenance ledger for **every number that appears in the thesis**. Each entry records the value as printed, where it appears, what it describes, the source it traces to (eval JSON / on-disk computation / training-args dump / citation), its verification status, and — when the printed value is wrong — the correct value.
 
-> **Authority note (revised 2026-09-06).** Every number in the thesis was rechecked against the files on disk on 2026-09-06 (`docs/verification/NUMBER_VERIFICATION_REPORT.md`). Where this ledger and the thesis now disagree, the **thesis and the 2026-09-06 entry below are authoritative**, and the older entries are history. Two known cases: the Qwen2.5-VL-7B baseline is 69.08 / 53.79 from `results/baseline_named/7b_base_*.json` (the thesis file), not 69.01 / 53.80 from the earlier `results/qwen25vl_baseline_eval/` run; and the post-GRPO refinement pool is 3,557 kept + 2,443 patched (thesis §6.7), not "3,770 patched". Older wording in this note: All balanced-accuracy (BA) numbers, GRPO hyperparameters, and corpus counts were recomputed/inspected directly from on-disk artefacts in this session. Any thesis values of `G=2`, `beta=0.04`, `eta=5e-6`, "13K samples", or "6,500+6,500" are **old/wrong** and have been corrected to the actuals.
+> **Authority note (revised 2026-09-06).** Every number in the thesis was rechecked against the files on disk on 2026-09-06 (`docs/verification/NUMBER_VERIFICATION_REPORT.md`). Where this ledger and the thesis now disagree, the **thesis and the 2026-09-06 entry below are authoritative**, and the older entries are history. Two known cases: the Qwen2.5-VL-7B baseline is 69.08 / 53.79 from `results/baseline_named/7b_base_*.json` (the thesis file), not 69.01 / 53.80 from the earlier `results/qwen25vl_baseline_eval/` run; and the post-GRPO refinement pool is 3,557 kept + 2,443 patched (thesis §6.7), not "3,770 patched". Older wording in this note: All balanced-accuracy (BA) numbers, GRPO hyperparameters, and corpus counts were recomputed/inspected directly from on-disk artefacts. Any thesis values of `G=2`, `beta=0.04`, `eta=5e-6`, "13K samples", or "6,500+6,500" are **old/wrong** and have been corrected to the actuals.
 
 ---
 
@@ -340,7 +340,7 @@ Thesis says "≈170 tokens, std ≈28, range 160–270" → correct **≈165 tok
 
 
 ### 2026-06-13 — §1.4 batch applied (7 data-backed swaps + contrib-4 scope fix)
-Each value recomputed from disk this session; applied to the thesis and zip re-synced.
+Each value recomputed from disk and applied to the thesis.
 
 | Item | Location(s) | was → now | Source |
 |---|---|---|---|

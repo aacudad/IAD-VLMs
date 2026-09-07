@@ -16,7 +16,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` in progress · `[-]` decided "leave as
       - [x] Reframed all grid-count claims to **6 configurations** (unfrozen at 15K only): intro contrib 2 ("16-cell ablation grid" removed), Ch4 §design ("32 cells" → "6 configs / 24 epoch-cells" + IAD-R1 justification), 06_results L41 ("16 SFT cells" → "6 configurations"), Ch6 frozen>unfrozen paragraph appended with the omission rationale. Zip re-synced, structure validated. (2026-06-13)
 - [ ] **G2. Prompt-mode finding** (not yet in UNVERIFIED.md): add the entry, and choose framing — lead same-mode +0.58, or keep +2.57 with cross-mode caveat.
 
-## §1 — already FIXED (verified this session; kept as record)
+## §1 — already FIXED (verified against the result files, kept as record)
 - [x] §1.1 Baseline 3B DS 55.80 → 56.14 (+ all baseline cells exact)
 - [x] §1.2 tab:sft-summary cross-contaminated cells corrected from true checkpoints
 - [x] §1.2b tab:sft-summary 15K rows **reselected to true best-DS epoch** (3B-F-15K→ep1 69.56; 7B-F-15K→ep4 72.60; 7B-U-15K→ep3 72.08), caption states criterion, dependent prose (VisA frozen-gap, 7B>3B range) reconciled, documented in NUMBER_PROVENANCE.md revision log (2026-06-13). [verified: all 15K runs have full DS+VisA, 4 epochs]

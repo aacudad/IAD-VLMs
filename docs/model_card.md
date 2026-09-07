@@ -84,7 +84,7 @@ referred to as **"AnomalyThink-15K"**, ~15K). They are partitioned into **3 disj
 | GRPO | 4,236 (2,118 anomaly + 2,118 normal) | RL training (23 products) |
 | Held-out RealIAD | 4,236 | OOD evaluation only (23 products) |
 
-Key facts (verified this session):
+Key facts (verified against the result files):
 
 - The **6K SFT split is a 100% subset** of the ~14,472-trace union. Both the 6K and the full 15K corpora have the
   **same mean trace length (~141 words)**.

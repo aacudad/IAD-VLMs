@@ -171,7 +171,7 @@ our images alone does a lot of the work, and the reasoning supervision adds the 
 Details in [`results/sft_qwen25vl_7b_6k_noreason/NOTE.md`](results/sft_qwen25vl_7b_6k_noreason/NOTE.md).
 
 > The thesis text contained several transcription and table-construction errors that
-> were **corrected this session** against the raw JSONs. If a number in the thesis PDF
+> were **corrected** against the raw JSONs. If a number in the thesis PDF
 > disagrees with a number here, **the data in `results/` is authoritative**. Every
 > known mismatch is logged in [`UNVERIFIED.md`](UNVERIFIED.md) and
 > [`NUMBER_PROVENANCE.md`](NUMBER_PROVENANCE.md).

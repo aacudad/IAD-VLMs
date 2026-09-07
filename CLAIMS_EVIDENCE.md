@@ -19,7 +19,7 @@ All balanced-accuracy (BA) figures in this repo are recomputable from the shippe
 BA = 0.5 * ( TP/(TP+FN) + TN/(TN+FP) )    # from the JSON "metrics" block {tp,tn,fp,fn}
 ```
 
-Use [`results/compute_ba.py`](results/compute_ba.py) on any `results/<run>/checkpoint-X/eval_<bench>_full_<mode>.json`. A full pre-computed listing lives in [`results/eval_ba_inventory.txt`](results/eval_ba_inventory.txt). Spot-checks done this session (all exact):
+Use [`results/compute_ba.py`](results/compute_ba.py) on any `results/<run>/checkpoint-X/eval_<bench>_full_<mode>.json`. A full pre-computed listing lives in [`results/eval_ba_inventory.txt`](results/eval_ba_inventory.txt). Spot-checks (all exact):
 
 | Model | File | BA |
 |---|---|---|

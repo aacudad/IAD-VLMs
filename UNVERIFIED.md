@@ -256,7 +256,7 @@ sourced, or removed.
 - **AdamW (0.9, 0.95), weight decay 0.01** (tab:grpo-hp) — see §1.4 (actual 0.999 / 0.0).
 - **"~30 s/rollout"** (L146) — train.log shows 83.85 s/step for G=4 → ~21 s/rollout gen portion; same order, not exact.
 - **"~600 MB Nomic footprint", "<50 ms/step embedding overhead", "~700 lines of Python"** (L154/L156) —
-  impl/code claims, not measured or counted this session.
+  impl/code claims, not measured or counted.
 - **"~73% verdict-correct at start"** (L163) — interpretive (0.875/1.2 ≈ 0.73), consistent.
 - **"completion length stable 163–174 tokens"** (L166) — central tendency holds, but full range is
   153–186 (extremes exceed the stated band).
