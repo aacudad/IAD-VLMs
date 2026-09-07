@@ -35,7 +35,7 @@ s.append(panel(x1,PY,PW,PH,C["rule2"],rx=26,sw=2))
 s.append(txt(x1+18,PY+36,"Why","t18 b"))
 box=[("Kept items",  "3,557 of the model's own rollouts", "near-zero loss, almost no gradient", C["kcr_f"], C["kcr"]),
      ("Patched items","2,443 teacher-written traces",     "94.8 % anomalous, high loss",        C["sft_f"], "#8a5b00"),
-     ("Net effect",  "the corpus is balanced 50/50",      "the gradient is about 95 % anomalous",C["base_f"],C["bad"])]
+     ("Net effect",  "the corpus is balanced 50/50",      "the gradient is likely about 95 % anomalous",C["base_f"],C["bad"])]
 by=PY+66
 for t,a,b,fil,col in box:
     s.append(rect(x1+22,by,PW-44,96,fill=fil,rx=10))
