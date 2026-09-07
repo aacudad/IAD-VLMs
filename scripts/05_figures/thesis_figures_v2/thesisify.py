@@ -2,7 +2,7 @@ import os
 """Strip in-canvas title/subtitle/footer prose from the house-style SVGs and crop the viewBox.
 Writes thesis/<name>.svg + .pdf + .png, installs the PDF into ol_thesis/figures, and lists what was stripped."""
 import re,glob,os,subprocess
-os.makedirs('thesis',exist_ok=True); CAIRO=os.environ.get('CAIROSVG','cairosvg'); OUT=os.environ.get('THESIS_FIGURES','/bulk/aacudad/ol_thesis/figures')
+os.makedirs('thesis',exist_ok=True); CAIRO=os.environ.get('CAIROSVG','cairosvg'); OUT=os.environ.get('THESIS_FIGURES','thesis')
 TEXT=re.compile(r'<text\b[^>]*>.*?</text>',re.S)
 def attr(el,k):
     m=re.search(rf'\b{k}="([^"]*)"',el); return m.group(1) if m else None
