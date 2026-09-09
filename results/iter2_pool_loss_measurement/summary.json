@@ -1,0 +1,34 @@
+{
+ "kept": {
+  "n_items": 3557,
+  "n_anomalous": 653,
+  "assistant_tokens": 533068,
+  "mean_ce_per_token": 0.4396461494104241,
+  "mean_ce_per_item": 0.4402542308471429,
+  "share_of_total_summed_ce": 0.3632557059344271
+ },
+ "corrected": {
+  "n_items": 812,
+  "n_anomalous": 717,
+  "assistant_tokens": 130037,
+  "mean_ce_per_token": 1.4695021024853558,
+  "mean_ce_per_item": 1.485932115006623,
+  "share_of_total_summed_ce": 0.2961854442629551
+ },
+ "rewritten": {
+  "n_items": 1631,
+  "n_anomalous": 1630,
+  "assistant_tokens": 257240,
+  "mean_ce_per_token": 0.8541361657799199,
+  "mean_ce_per_item": 0.8587752146124474,
+  "share_of_total_summed_ce": 0.3405588498026178
+ },
+ "patched": {
+  "n_items": 2443,
+  "n_anomalous": 2347,
+  "assistant_tokens": 387277,
+  "mean_ce_per_token": 1.0607591780201633,
+  "mean_ce_per_item": 1.0672285110185344,
+  "share_of_total_summed_ce": 0.6367442940655729
+ }
+}

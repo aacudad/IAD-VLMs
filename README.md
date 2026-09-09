@@ -12,6 +12,19 @@ human-readable inspection reasoning. All headline numbers in this README were
 [`results/eval_ba_inventory.txt`](results/eval_ba_inventory.txt) and the provenance
 docs linked below.
 
+### 10 Sep 2026
+
+- `results/iter2_pool_loss_measurement/`: per-item cross-entropy of SFT+GRPO ckpt-530 on the 6,000-item pool of the
+  post-GRPO refinement run (kept 0.44 nats/token, corrected 1.47, rewritten 0.85; anomalous items give 67 % of the loss).
+  Script `scripts/03_rollout_star/measure_iter2_pool_loss.py`. Thesis Figure 6.4, section 6.7 and Appendix H.
+- `results/strict_ba.py`: balanced accuracy with every unparsed answer counted wrong (the thesis policy). `compute_ba.py`
+  reads the harness counts, which leave unparsed items out; the two differ only where a file has unparsed answers.
+- `configs/sft/sft_qwen25vl_7b_6k_unfrozen_lr1e-5.yaml` and `scripts/01_sft/run_sft_qwen25vl_7b_6k_unfrozen_lr1e-5.sh`:
+  the 6K SFT with the vision encoder unfrozen at the frozen recipe's learning rate, run 10 Sep 2026 to close the
+  learning-rate confound of Table 4.2. Results are added when the run finishes.
+- `scripts/05_figures/thesis_figures_v2/f11_tsne_reward_path.py`: Figure 5.2, the type strings through the reward's own
+  embedding path (search_query prefix, masked pooling), corpus strings plus illustrative variants.
+
 ### The method: Keep-Correct-Revise (KCR)
 
 **KCR** is the corpus-curation loop that produces every headline model here. Roll out
