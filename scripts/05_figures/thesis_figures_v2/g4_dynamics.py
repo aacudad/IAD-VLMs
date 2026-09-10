@@ -16,7 +16,7 @@ def pan(px,py,title,sub=None):
     return "".join(o)
 # (a) total reward and its two components
 x0,y0=24,PY
-s.append(pan(x0,y0,"(a) Reward","max 3.0"))
+s.append(pan(x0,y0,"(a) Reward","dashed line: max 3.0"))
 A=Axes(x0+62,y0+66,PW-96,PH-140,0,1080,0.4,3.05)
 s.append(A.frame([0.5,1.0,1.5,2.0,2.5,3.0],[0,265,530,795,1060],yfmt=lambda v:f"{v:.1f}",ylabel="reward",xlabel="training step"))
 s.append(A.hline(3.0,C["bad"],None,dash="4 4"))
@@ -47,11 +47,10 @@ s.append(circ(Dx.X(best[0]),Dx.Y(best[1]),10,"none",stroke=C["kcr"],sw=2.5))
 s.append(rect(Dx.X(best[0])-26,Dx.Y(best[1])-32,52,18,fill="#fff",rx=3))
 s.append(txt(Dx.X(best[0]),Dx.Y(best[1])-19,f"{best[1]:.2f}","t13 b c",fill=C["kcr"]))
 s.append(txt(Dx.x+8,Dx.Y(75.6)+3,"selected checkpoint, epoch 3","t13 mut"))
-s.append(rect(x0+PW-146,y0+82,132,66,fill="#fff",stroke=C["rule"],sw=1,rx=6))
-for li,(lab,col) in enumerate((("total",C["kcr"]),("accuracy",C["grpo"]),("format",C["sft"]))):
-    lyy=y0+100+li*20
-    s.append(line(x0+PW-136,lyy-5,x0+PW-114,lyy-5,col,3))
-    s.append(txt(x0+PW-106,lyy,lab,"t13"))
+# legend for (a) as a header row under the panel title, outside the plot area
+lx=x0+PW-18-301; lyy=y0+52
+for lab,col,wd,dash in (("total",C["kcr"],34,None),("accuracy",C["grpo"],56,None),("format",C["sft"],44,None)):
+    s.append(line(lx,lyy-5,lx+22,lyy-5,col,3 if not dash else 1.5,dash=dash)); s.append(txt(lx+27,lyy,lab,"t13")); lx+=22+27+wd+10
 s.append(txt(24,H-70,"Faint lines are the raw per-step values, solid lines a 25-step trailing mean.","t13 mut"))
 s.append(txt(24,H-48,"The reward saturates near 2.1 while the KL stays bounded, which is the standard healthy profile.","t13 mut"))
 s.append(txt(24,H-26,"Training past epoch 1 of GRPO costs 0.70 points on DS-MVTec, which is why ckpt-530 is the reported checkpoint.","t13 mut"))
