@@ -78,7 +78,8 @@ measured with Noto Sans at the class pixel sizes because that is what cairosvg r
 | 6.5 iter-2 | `figures/fig_iter2.pdf` | `g3_iter2.py` | eval files |
 | 6.6 operating points | `figures/fig_operating.pdf` | `f3_operating.py` | eval files |
 | 6.7 per-product heat map | `figures/fig_perproduct.pdf` | `alt_figs.py` (`alt_perproduct`) | per-product tables |
-| 6.8 explainability | `figures/fig_explain.pdf` | `f5_explain.py` | `results/explainability_shared/` |
+| 6.8 per-product bars, base against KCR | `figures/perproduct_bars_base_vs_kcr.pdf` | `f12_perproduct_bars.py Base` (also `SFT`, `SFT+GRPO`) | the eval files of Tables 6.2 and 6.8, strict per-product BA |
+| 6.9 explainability | `figures/fig_explain.pdf` | `f5_explain.py` | `results/explainability_shared/` |
 | 6.9 two SFT vs KCR pairs | `figures/pairs_cashew.pdf`, `pairs_screw.pdf` | `f8_pairs.py` | `results/sft_vs_kcr_pairs/` |
 | 6.10 gallery | `figures/fig_gallery.pdf` | `f6_gallery.py` | `prep_gallery.py` output |
 | 6.11 dynamics | `figures/fig_dynamics.pdf` | `g4_dynamics.py` | trainer states |
