@@ -21,7 +21,9 @@ docs linked below.
   reads the harness counts, which leave unparsed items out; the two differ only where a file has unparsed answers.
 - `configs/sft/sft_qwen25vl_7b_6k_unfrozen_lr1e-5.yaml` and `scripts/01_sft/run_sft_qwen25vl_7b_6k_unfrozen_lr1e-5.sh`:
   the 6K SFT with the vision encoder unfrozen at the frozen recipe's learning rate, run 10 Sep 2026 to close the
-  learning-rate confound of Table 4.2. Results are added when the run finishes.
+  learning-rate confound of Table 4.2. Result in `results/sft_qwen25vl_7b_6k_unfrozen_lr1e-5/` (strict BA, DS-MVTec / VisA):
+  epoch 1 75.97 / 60.13, epoch 2 70.80 / 65.45, epoch 3 75.46 / 65.12, epoch 4 73.94 / 64.17, against 80.16 / 64.78 frozen.
+  Freezing wins at both learning rates. Thesis Table 6.3 last row, sections 4.4, 6.3, 7.1.
 - `scripts/05_figures/thesis_figures_v2/f11_tsne_reward_path.py`: Figure 5.2, the type strings through the reward's own
   embedding path (search_query prefix, masked pooling), corpus strings plus illustrative variants.
 

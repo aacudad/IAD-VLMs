@@ -1,0 +1,59 @@
+[2026-09-10 00:21:11] progress= last= errors=0 ckpts=0
+[2026-09-10 00:31:11] progress=10/752 [05:44<6:43:32 last={'loss': '2.176', 'grad_norm': '9.295', 'learning_rate': '4.5e-06', 'epoch': '0.05333'} errors=0 ckpts=0
+[2026-09-10 00:41:12] progress=28/752 [15:23<6:29:42 last={'loss': '1.477', 'grad_norm': '10.32', 'learning_rate': '9.5e-06', 'epoch': '0.1067'} errors=0 ckpts=0
+[2026-09-10 00:51:12] progress=47/752 [25:39<6:09:41 last={'loss': '1.187', 'grad_norm': '9.277', 'learning_rate': '9.983e-06', 'epoch': '0.2133'} errors=0 ckpts=0
+[2026-09-10 01:01:12] progress=66/752 [35:38<6:02:14 last={'loss': '1.117', 'grad_norm': '8.412', 'learning_rate': '9.93e-06', 'epoch': '0.32'} errors=0 ckpts=0
+[2026-09-10 01:11:12] progress=85/752 [45:40<5:51:45 last={'loss': '1.097', 'grad_norm': '5.35', 'learning_rate': '9.841e-06', 'epoch': '0.4267'} errors=0 ckpts=0
+[2026-09-10 01:21:12] progress=104/752 [55:40<5:40:41 last={'loss': '1.067', 'grad_norm': '6.834', 'learning_rate': '9.715e-06', 'epoch': '0.5333'} errors=0 ckpts=0
+[2026-09-10 01:31:12] progress=123/752 [1:05:38<5:29:55 last={'loss': '1.043', 'grad_norm': '5.122', 'learning_rate': '9.555e-06', 'epoch': '0.64'} errors=0 ckpts=0
+[2026-09-10 01:41:12] progress=142/752 [1:15:35<5:21:19 last={'loss': '1.039', 'grad_norm': '10.58', 'learning_rate': '9.362e-06', 'epoch': '0.7467'} errors=0 ckpts=0
+[2026-09-10 01:51:12] progress=161/752 [1:25:34<5:10:15 last={'loss': '1.022', 'grad_norm': '6.147', 'learning_rate': '9.136e-06', 'epoch': '0.8533'} errors=0 ckpts=0
+[2026-09-10 02:01:12] progress=180/752 [1:35:34<5:01:41 last={'loss': '1.012', 'grad_norm': '6.25', 'learning_rate': '8.88e-06', 'epoch': '0.96'} errors=0 ckpts=0
+[2026-09-10 02:11:13] progress=1/1 [02:42<00:00 last={'loss': '1.012', 'grad_norm': '6.25', 'learning_rate': '8.88e-06', 'epoch': '0.96'} errors=0 ckpts=1
+[2026-09-10 02:21:13] progress=1/1 [02:42<00:00 last={'loss': '1.012', 'grad_norm': '6.25', 'learning_rate': '8.88e-06', 'epoch': '0.96'} errors=0 ckpts=1
+[2026-09-10 02:31:14] progress=204/752 [2:05:26<5:02:28 last={'loss': '0.8667', 'grad_norm': '15.49', 'learning_rate': '8.596e-06', 'epoch': '1.064'} errors=0 ckpts=1
+[2026-09-10 02:41:14] progress=223/752 [2:15:31<4:40:04 last={'loss': '0.8568', 'grad_norm': '9.508', 'learning_rate': '8.285e-06', 'epoch': '1.171'} errors=0 ckpts=1
+[2026-09-10 02:51:14] progress=242/752 [2:25:34<4:28:05 last={'loss': '0.8836', 'grad_norm': '6.554', 'learning_rate': '7.949e-06', 'epoch': '1.277'} errors=0 ckpts=1
+[2026-09-10 03:01:14] progress=260/752 [2:35:28<4:26:08 last={'loss': '0.8652', 'grad_norm': '6.159', 'learning_rate': '7.592e-06', 'epoch': '1.384'} errors=0 ckpts=1
+[2026-09-10 03:11:14] progress=278/752 [2:45:28<4:23:55 last={'loss': '0.8601', 'grad_norm': '5.315', 'learning_rate': '7.407e-06', 'epoch': '1.437'} errors=0 ckpts=1
+[2026-09-10 03:21:14] progress=297/752 [2:55:56<4:03:38 last={'loss': '0.851', 'grad_norm': '5.192', 'learning_rate': '7.022e-06', 'epoch': '1.544'} errors=0 ckpts=1
+[2026-09-10 03:31:14] progress=315/752 [3:05:30<3:50:50 last={'loss': '0.8674', 'grad_norm': '7.886', 'learning_rate': '6.622e-06', 'epoch': '1.651'} errors=0 ckpts=1
+[2026-09-10 03:41:14] progress=334/752 [3:15:33<3:43:01 last={'loss': '0.8518', 'grad_norm': '4.383', 'learning_rate': '6.211e-06', 'epoch': '1.757'} errors=0 ckpts=1
+[2026-09-10 03:51:14] progress=353/752 [3:25:36<3:30:41 last={'loss': '0.8582', 'grad_norm': '9.763', 'learning_rate': '5.791e-06', 'epoch': '1.864'} errors=0 ckpts=1
+[2026-09-10 04:01:15] progress=372/752 [3:35:34<3:19:19 last={'loss': '0.8435', 'grad_norm': '5.186', 'learning_rate': '5.364e-06', 'epoch': '1.971'} errors=0 ckpts=1
+[2026-09-10 04:11:15] progress=1/1 [02:42<00:00 last={'loss': '0.8435', 'grad_norm': '5.186', 'learning_rate': '5.364e-06', 'epoch': '1.971'} errors=0 ckpts=2
+[2026-09-10 04:21:15] progress=378/752 [3:55:58<25:55:24 last={'loss': '0.8435', 'grad_norm': '5.186', 'learning_rate': '5.364e-06', 'epoch': '1.971'} errors=0 ckpts=2
+[2026-09-10 04:31:15] progress=397/752 [4:05:46<3:04:55 last={'loss': '0.6319', 'grad_norm': '3.983', 'learning_rate': '4.936e-06', 'epoch': '2.075'} errors=0 ckpts=2
+[2026-09-10 04:41:15] progress=416/752 [4:15:33<2:52:49 last={'loss': '0.6369', 'grad_norm': '3.423', 'learning_rate': '4.507e-06', 'epoch': '2.181'} errors=0 ckpts=2
+[2026-09-10 04:51:16] progress=436/752 [4:25:51<2:42:00 last={'loss': '0.6305', 'grad_norm': '5.819', 'learning_rate': '4.082e-06', 'epoch': '2.288'} errors=0 ckpts=2
+[2026-09-10 05:01:16] progress=455/752 [4:35:39<2:33:48 last={'loss': '0.6341', 'grad_norm': '4.482', 'learning_rate': '3.664e-06', 'epoch': '2.395'} errors=0 ckpts=2
+[2026-09-10 05:11:16] progress=474/752 [4:45:31<2:22:59 last={'loss': '0.6448', 'grad_norm': '8.242', 'learning_rate': '3.256e-06', 'epoch': '2.501'} errors=0 ckpts=2
+[2026-09-10 05:21:16] progress=494/752 [4:55:47<2:12:22 last={'loss': '0.6274', 'grad_norm': '23.73', 'learning_rate': '2.861e-06', 'epoch': '2.608'} errors=0 ckpts=2
+[2026-09-10 05:31:16] progress=513/752 [5:05:33<2:02:49 last={'loss': '0.6317', 'grad_norm': '4.419', 'learning_rate': '2.481e-06', 'epoch': '2.715'} errors=0 ckpts=2
+[2026-09-10 05:41:16] progress=533/752 [5:15:49<1:52:24 last={'loss': '0.6321', 'grad_norm': '6.171', 'learning_rate': '2.12e-06', 'epoch': '2.821'} errors=0 ckpts=2
+[2026-09-10 05:51:16] progress=552/752 [5:25:35<1:42:46 last={'loss': '0.6236', 'grad_norm': '8.455', 'learning_rate': '1.781e-06', 'epoch': '2.928'} errors=0 ckpts=2
+[2026-09-10 06:01:16] progress=1/1 [02:40<00:00 last={'loss': '0.6342', 'grad_norm': '4.037', 'learning_rate': '1.619e-06', 'epoch': '2.981'} errors=0 ckpts=3
+[2026-09-10 06:11:17] progress=1/1 [02:40<00:00 last={'loss': '0.6342', 'grad_norm': '4.037', 'learning_rate': '1.619e-06', 'epoch': '2.981'} errors=0 ckpts=3
+[2026-09-10 06:21:17] progress=577/752 [5:55:41<1:43:25 last={'loss': '0.5328', 'grad_norm': '9.639', 'learning_rate': '1.464e-06', 'epoch': '3.032'} errors=0 ckpts=3
+[2026-09-10 06:31:17] progress=596/752 [6:05:39<1:24:40 last={'loss': '0.4405', 'grad_norm': '23.03', 'learning_rate': '1.174e-06', 'epoch': '3.139'} errors=0 ckpts=3
+[2026-09-10 06:41:17] progress=615/752 [6:15:31<1:10:59 last={'loss': '0.4281', 'grad_norm': '3.889', 'learning_rate': '9.125e-07', 'epoch': '3.245'} errors=0 ckpts=3
+[2026-09-10 06:51:18] progress=635/752 [6:25:51<1:00:13 last={'loss': '0.4413', 'grad_norm': '4.192', 'learning_rate': '6.806e-07', 'epoch': '3.352'} errors=0 ckpts=3
+[2026-09-10 07:01:18] progress=654/752 [6:35:39<50:34 last={'loss': '0.4317', 'grad_norm': '6.481', 'learning_rate': '4.806e-07', 'epoch': '3.459'} errors=0 ckpts=3
+[2026-09-10 07:11:18] progress=673/752 [6:45:32<40:57 last={'loss': '0.4244', 'grad_norm': '4.585', 'learning_rate': '3.139e-07', 'epoch': '3.565'} errors=0 ckpts=3
+[2026-09-10 07:21:18] progress=693/752 [6:55:51<30:23 last={'loss': '0.4342', 'grad_norm': '4.857', 'learning_rate': '1.817e-07', 'epoch': '3.672'} errors=0 ckpts=3
+[2026-09-10 07:31:18] progress=712/752 [7:05:41<20:41 last={'loss': '0.4299', 'grad_norm': '3.276', 'learning_rate': '8.49e-08', 'epoch': '3.779'} errors=0 ckpts=3
+[2026-09-10 07:41:18] progress=731/752 [7:15:46<11:38 last={'loss': '0.4285', 'grad_norm': '7.93', 'learning_rate': '2.434e-08', 'epoch': '3.885'} errors=0 ckpts=3
+[2026-09-10 07:51:18] progress=750/752 [7:25:38<01:02 last={'loss': '0.4402', 'grad_norm': '6.772', 'learning_rate': '4.144e-10', 'epoch': '3.992'} errors=0 ckpts=3
+[2026-09-10 08:01:19] progress=1/1 [02:41<00:00 last={'loss': '0.4402', 'grad_norm': '6.772', 'learning_rate': '4.144e-10', 'epoch': '3.992'} errors=0 ckpts=4
+[2026-09-10 08:11:19] progress=0/1 [00:00< last={'loss': '0.4402', 'grad_norm': '6.772', 'learning_rate': '4.144e-10', 'epoch': '3.992'} errors=0 ckpts=4
+[08:21:19] SFT complete, evaluating
+[10:17:26] checkpoint-752: DS BA=73.94  VisA BA=64.17
+[10:17:28] checkpoint-564: DS BA=75.46  VisA BA=65.12
+[12:09:18] checkpoint-188: DS BA=75.97  VisA BA=60.13
+[12:11:30] checkpoint-376: DS BA=70.80  VisA BA=65.45
+=== unfrozen lr1e-5 6K, all epochs ===
+  checkpoint-188: DS BA=75.97  VisA BA=60.13
+  checkpoint-376: DS BA=70.80  VisA BA=65.45
+  checkpoint-564: DS BA=75.46  VisA BA=65.12
+  checkpoint-752: DS BA=73.94  VisA BA=64.17
+[12:11:31] watcher done
