@@ -328,6 +328,7 @@ the same `results/<run>/checkpoint-X/eval_<bench>_full_<mode>.json` layout, and 
 | [`results/grpo_llava_ov_from_ep1_ep2/`](results/grpo_llava_ov_from_ep1_ep2/) | LLaVA SFT+GRPO restart, ckpt-530 (87.86 / 71.89) |
 | [`results/gemini_25flash_eval/`](results/gemini_25flash_eval/), [`results/gpt5mini_eval/`](results/gpt5mini_eval/) | Proprietary zero-shot references (81.52 / 75.18 and 77.10 / 68.23) |
 | [`results/grpo_probe_ctrl/`](results/grpo_probe_ctrl/), `grpo_probe_drgrpo/`, `grpo_probe_g2rpo/` | Advantage-estimator probe from Arm-C, 400-sample probe JSONs per 20 steps |
+| [`results/grpo_qwen25vl_7b_g2rpo_v2_full/`](results/grpo_qwen25vl_7b_g2rpo_v2_full/) | G2RPO from the SFT checkpoint, 2 epochs, evals at every half epoch on both benchmarks (GRPO prompt, strict): 79.68/68.13, 80.68/69.40, 81.87/69.75, 80.41/70.25. Thesis Table 6.6 row (ckpt-795). Weights not kept. An earlier DS-only run reached 81.94 at ckpt-530. |
 | [`results/grpo_sftprompt_kl0.1_sys_3ep/`](results/grpo_sftprompt_kl0.1_sys_3ep/) | Prompt-aligned GRPO on Arm-C, beta 0.1, all 15 checkpoints (inconclusive, thesis §6.8) |
 | [`results/sft_filtered6kcc_from_base/`](results/sft_filtered6kcc_from_base/) | Retrain on verifier-passing 6K traces (79.60 / 65.99) |
 | [`results/thesis_figure_data/`](results/thesis_figure_data/) | Data behind every Chapter 6 figure, the localisation table and the type-transfer table |
