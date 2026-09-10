@@ -69,7 +69,8 @@ measured with Noto Sans at the class pixel sizes because that is what cairosvg r
 | Thesis figure | Installed file | Generator | Data |
 |---|---|---|---|
 | 3.4 anomalous trace example | `figures/trace_example_woodstick.pdf` | `f10_trace_example.py woodstick_0028_NG_ZW` | `Training/datasets_small_new_v4/combined_6k_train.json` (6K SFT split), Real-IAD masks |
-| 5.2 t-SNE of type strings | `figures/tsne_anomaly_types.png` | `results/anomaly_type_analysis/final_corpus/embed_tsne_search_document.py` | `results/anomaly_type_analysis/final_corpus/` (NOTE.md explains the two embedding paths) |
+| 3.5 normal trace example | `figures/trace_example_transistor1.pdf` | `f10_trace_example.py transistor1_0234_OK` (normal mode) | same 6K split |
+| 5.2 t-SNE of type strings | `figures/tsne_anomaly_types.png` | `f11_tsne_reward_path.py` (reward path, 85 strings; the old search_document figure is kept as `tsne_anomaly_types_v1_search_document.png`) | `results/anomaly_type_analysis/final_corpus/types_final_anom.json` |
 | 6.1 ladder | `figures/fig_ladder.pdf` | `f1_ladder.py` | `figdata.json` |
 | 6.2 arms | `figures/fig_arms.pdf` | `f2_arms.py` | `figdata.json` |
 | 6.3 SFT curves | `figures/fig_sft.pdf` | `g1_sft.py` | trainer states |
