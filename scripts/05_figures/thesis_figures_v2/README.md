@@ -29,6 +29,8 @@ THESIS_FIGURES=/path/to/thesis/figures python thesisify.py   # crops, strips cap
   wrong verdicts plus judge scores of 5 or lower, F.3 from images where the judge scored SFT+GRPO 10/10 and SFT
   answered no. The chosen ids are in `results/sft_vs_kcr_pairs/appendix_examples_selection.json`.
   Both scripts measure text width with Noto Sans (what cairosvg substitutes for Verdana on the render box).
+- `f13_limitations.py` draws Figure 7.1 (three false alarms and three misses of KCR) with the Appendix F.2 card.
+- The mask marker of every gallery figure is one circle per separated mask region (20 % of diagonal rule), see docs/FIGURE_SOURCES.md.
 - `f12_perproduct_bars.py <Base|SFT|SFT+GRPO>` draws the per-product standing bars of that stage against KCR on both
   benchmarks (Figure 6.8 uses `Base`), strict BA from the same eval files as the tables.
 - `f10_trace_example.py` draws Figures 3.4 and 3.5, one anomalous and one normal training trace from the 6K SFT split beside

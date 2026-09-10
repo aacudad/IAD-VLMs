@@ -27,7 +27,7 @@ h=trace_card([],x1,24,cwid,f"AnomalyThink trace, {product}",C['sft'],C['sft_f'],
 H=24+max(h,IMG+88)+24; o=[head(W,H),DEFS]
 f8_pairs.image_panel(o,24,24,IMG,rec,cells,[])
 o.append(txt(24,24+IMG+22,f"{product}, Real-IAD C1 view","t13 b")); o.append(txt(24,24+IMG+40,"ground truth: normal" if normal else "ground truth: defective","t13 b"))
-if not normal: o.append(txt(24,24+IMG+58,"shaded cell: mask cells (>5 % of the mask)","t13 mut")); o.append(txt(24,24+IMG+76,"arrow: the defect (mask centroid)","t13 mut"))
+if not normal: o.append(txt(24,24+IMG+58,"shaded cell: mask cells (>5 % of the mask)","t13 mut")); o.append(txt(24,24+IMG+76,"red circle: the mask region, arrow to it","t13 mut"))
 else: o.append(txt(24,24+IMG+58,"no mask, no location or type tag","t13 mut"))
 trace_card(o,x1,24,cwid,f"AnomalyThink trace, {product}",C['sft'],C['sft_f'],(f"<answer> {ans}" if normal else f"<answer> {ans}, <type> {typ}, <location> {loc}"),sents,ki,"tint",hl_fill="#c9ecd5",fixed_h=max(h,IMG+88))
 o.append(foot()); name=f'trace_example_{product}'; open(name+'.svg','w').write(''.join(o))

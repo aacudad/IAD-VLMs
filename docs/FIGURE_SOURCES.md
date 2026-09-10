@@ -79,6 +79,7 @@ measured with Noto Sans at the class pixel sizes because that is what cairosvg r
 | 6.6 operating points | `figures/fig_operating.pdf` | `f3_operating.py` | eval files |
 | 6.7 per-product heat map | `figures/fig_perproduct.pdf` | `alt_figs.py` (`alt_perproduct`) | per-product tables |
 | 6.8 per-product bars, base against KCR | `figures/perproduct_bars_base_vs_kcr.pdf` | `f12_perproduct_bars.py Base` (also `SFT`, `SFT+GRPO`) | the eval files of Tables 6.2 and 6.8, strict per-product BA |
+| 7.1 bidirectional failures | `figures/fig_limitations.pdf` | `f13_limitations.py` (six KCR cases, ids in the script) | KCR eval file, Appendix F.2 card |
 | 6.9 explainability | `figures/fig_explain.pdf` | `f5_explain.py` | `results/explainability_shared/` |
 | 6.9 two SFT vs KCR pairs | `figures/pairs_cashew.pdf`, `pairs_screw.pdf` | `f8_pairs.py` | `results/sft_vs_kcr_pairs/` |
 | 6.10 gallery | `figures/fig_gallery.pdf` | `f6_gallery.py` | `prep_gallery.py` output |
@@ -87,6 +88,10 @@ measured with Noto Sans at the class pixel sizes because that is what cairosvg r
 | App. F.1 to F.4, G.1 to G.5 | `figures/app_f*.pdf`, `app_g*.pdf` | `f9_appendix_examples.py` | `results/sft_vs_kcr_pairs/appendix_examples_selection.json` |
 | App. F.5 21 pairs | `figures/pairs_svg/pair_*.pdf` | `f8_pairs.py` with `ALL_PAIRS=1` | `results/sft_vs_kcr_pairs/index_selected21.json` |
 | App. H curves | `figures/curve_*.png` | `appendix/h0_sft_curves.py`, `h1_grpo_curves.py` | trainer states |
+
+## Mask marker rule (10/11 Sep 2026)
+
+Every mask-bearing figure (3.4, 6.9, 7.1, F.1 to F.5, G.1 to G.5) draws the marker in `f8_pairs.image_panel`: connected components of the mask, merged into clusters when centroids lie within 20 % of the image diagonal (the Single / Multi-Close / Spread rule of `analyze_mask_spread.py`), one red circle per cluster enclosing its pixels (radius floor 14 px, cap 45 % of the panel), arrow to the largest cluster. Before 11 Sep the circle was a fixed 14 px marker at the centroid.
 
 ## Prompt versions, so the appendix and the corpus are not confused again
 

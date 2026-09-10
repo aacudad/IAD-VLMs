@@ -14,7 +14,7 @@ def _font(px):
 PX={13:15,15:17,16:19}
 WSCALE=float(os.environ.get('WSCALE','1.0'))
 def tw(s,px=13): return _font(PX.get(px,px)).getlength(s)*WSCALE
-W_=os.environ.get('WORK_DIR',os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','..','..')))
+W_=os.environ.get('WORK_DIR','.')
 SFT=f'{W_}/outputs/sft_qwen25vl_7b_zeroshot_6k_frozen/checkpoint-564/eval_%s_full_trainprompt.json'
 KCR=f'{W_}/outputs/sft_qwen25vl_7b_abc_C_full_patched/checkpoint-376/eval_%s_full_trainprompt.json'
 CELLS={"top-left":(0,0),"top-center":(1,0),"top-right":(2,0),"middle-left":(0,1),"center":(1,1),"middle-right":(2,1),"bottom-left":(0,2),"bottom-center":(1,2),"bottom-right":(2,2)}
@@ -63,6 +63,24 @@ def trace_card(out,x,y,w,name,col,fill,tags,sents,ki,mode="tint",lh=18,px=13,tit
             elif mode=="bar": out.append(rect(x+4,by-lh+4,4,lh,fill=col))
         out.append(txt(x+pad,by,s,f"t{px}"))
     return h
+
+def mask_components(m,maxside=256):
+    """connected components (8-neighbour) of a binary mask, computed on a downsampled copy, coordinates mapped back to full size"""
+    mh,mw=m.shape; f=max(1,int(np.ceil(max(mh,mw)/maxside)))
+    small=m[::f,::f]; h,w=small.shape; lab=np.zeros((h,w),dtype=np.int32); comps=[]; cur=0
+    sy,sx=np.nonzero(small)
+    for y0,x0 in zip(sy,sx):
+        if lab[y0,x0]: continue
+        cur+=1; stack=[(y0,x0)]; lab[y0,x0]=cur; pts=[]
+        while stack:
+            yy,xx=stack.pop(); pts.append((yy,xx))
+            for dy in (-1,0,1):
+                for dx in (-1,0,1):
+                    ny,nx=yy+dy,xx+dx
+                    if 0<=ny<h and 0<=nx<w and small[ny,nx] and not lab[ny,nx]: lab[ny,nx]=cur; stack.append((ny,nx))
+        ys=np.array([p[0] for p in pts])*f; xs=np.array([p[1] for p in pts])*f
+        comps.append({'xs':xs,'ys':ys,'cx':xs.mean(),'cy':ys.mean(),'n':len(pts)})
+    return comps
 def image_panel(out,x,y,size,rec,gt_cells,kcr_cells):
     im=Image.open(rec['absolute_path']).convert('RGB'); W0,H0=im.size; side=min(W0,H0)
     im=im.crop(((W0-side)//2,(H0-side)//2,(W0-side)//2+side,(H0-side)//2+side)); uri,(w,h)=b64(im)
@@ -77,12 +95,32 @@ def image_panel(out,x,y,size,rec,gt_cells,kcr_cells):
     if mp:
         m=np.array(Image.open(mp).convert('L'))>0; mh,mw=m.shape; ys,xs=np.nonzero(m)
         if len(xs):
-            cxm=(xs.mean()-(W0-side)//2)/side*size+x; cym=(ys.mean()-(H0-side)//2)/side*size+y
-            # arrow starts from the nearest image corner region, ends 6px short of the centroid
-            sx=x+size*0.18 if cxm>x+size/2 else x+size*0.82; sy=y+size*0.18 if cym>y+size/2 else y+size*0.82
-            dx,dy=cxm-sx,cym-sy; L=(dx*dx+dy*dy)**0.5; ex,ey=cxm-dx/L*10,cym-dy/L*10
-            out.append(f'<line x1="{sx:.1f}" y1="{sy:.1f}" x2="{ex:.1f}" y2="{ey:.1f}" stroke="#d9363e" stroke-width="4" marker-end="url(#arr)"/>')
-            out.append(circ(cxm,cym,14,"none","#d9363e",3))
+            # connected components on a downsampled mask, clustered by the Real-IAD mask-spread rule:
+            # components whose centroids lie within 20 % of the image diagonal belong to one cluster (Single / Multi-Close),
+            # farther apart they are Spread and each cluster gets its own circle
+            comps=mask_components(m); diag=(mw*mw+mh*mh)**0.5
+            clusters=[[c] for c in comps]
+            merged=True
+            while merged:
+                merged=False
+                for i in range(len(clusters)):
+                    for j in range(i+1,len(clusters)):
+                        if any(((a['cx']-b['cx'])**2+(a['cy']-b['cy'])**2)**0.5<=0.2*diag for a in clusters[i] for b in clusters[j]):
+                            clusters[i]+=clusters[j]; del clusters[j]; merged=True; break
+                    if merged: break
+            clusters.sort(key=lambda cl:-sum(c['n'] for c in cl))
+            for k,cl in enumerate(clusters):
+                px=np.concatenate([c['xs'] for c in cl]); py=np.concatenate([c['ys'] for c in cl])
+                cxm=(px.mean()-(W0-side)//2)/side*size+x; cym=(py.mean()-(H0-side)//2)/side*size+y
+                rad=float(np.sqrt(((px-px.mean())**2+(py-py.mean())**2).max()))/side*size+6
+                rad=max(14.0,min(rad,size*0.45))
+                if k==0:
+                    sx=x+size*0.18 if cxm>x+size/2 else x+size*0.82; sy=y+size*0.18 if cym>y+size/2 else y+size*0.82
+                    dx,dy=cxm-sx,cym-sy; L=(dx*dx+dy*dy)**0.5
+                    if L>rad+24: ex,ey=cxm-dx/L*(rad+6),cym-dy/L*(rad+6)
+                    else: ex,ey=cxm-dx/L*10,cym-dy/L*10
+                    out.append(f'<line x1="{sx:.1f}" y1="{sy:.1f}" x2="{ex:.1f}" y2="{ey:.1f}" stroke="#d9363e" stroke-width="4" marker-end="url(#arr)"/>')
+                out.append(circ(cxm,cym,rad,"none","#d9363e",3))
     out.append(rect(x,y,size,size,fill="none",stroke=C["rule2"],sw=1.5,rx=6))
 DEFS='<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#d9363e"/></marker></defs>'
 def variant_A(e,s,k,out_name,mode="tint"):
@@ -117,7 +155,7 @@ def variant_B(e,s,k,out_name):
         for j,ln in enumerate(wrap_words([quote],sw_-28)[:3]): o.append(txt(sx+14,yy+48+j*18,' '.join(w for w,_ in ln),"t13"))
     o+=body; o.append(foot()); open(out_name,'w').write(''.join(o))
 if __name__=='__main__':
-    idx=json.load(open(os.environ.get('PAIRS_INDEX',os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','..','results','sft_vs_kcr_pairs','index_selected21.json'))))
+    idx=json.load(open(f'{W_}/defense_prep_20260901/sft_vs_kcr_selected/index.json'))
     ALL=os.environ.get('ALL_PAIRS')=='1'
     for e in idx:
         if not ALL and e['i'] not in (1,3): continue
