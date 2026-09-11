@@ -1,9 +1,11 @@
-# MMAD leakage side-experiment (11 Sep 2026)
+# MMAD reasoning traces and the leakage test (11 Sep 2026)
 
-How much does a Qwen2.5-VL-7B gain on the MMAD benchmark when part of MMAD is in its training
-set? Published systems do this (OmniAD v1: one MMAD example per category in SFT and GRPO;
-AnomalyR1: 600 images from the four MMAD source datasets). This folder measures it. It is a side
-experiment, not part of the thesis, and no thesis model saw an MMAD image in training.
+This folder generates one thesis-recipe reasoning trace per MMAD image (8,293 traces, published as
+the AnomalyThink-MMAD dataset) and uses them for one question: how much does a Qwen2.5-VL-7B gain
+on the MMAD benchmark when part of MMAD is in its training set? Published systems do this (OmniAD v1:
+one MMAD example per category in SFT and GRPO; AnomalyR1: 600 images from the four MMAD source
+datasets). It is a side experiment, not part of the thesis, no thesis model saw an MMAD image in
+training, and the checkpoints fine-tuned here are deliberately not released.
 
 Full write-up with all tables: [`RESULTS.md`](RESULTS.md). Dataset: <https://huggingface.co/datasets/aacudad/AnomalyThink-MMAD>.
 
@@ -24,9 +26,9 @@ in `compat/` outside the run directory (the trainer's `save_total_limit` counts 
 
 ## Data and results in this repo
 
-- `traces/mmad_leakage/`: the 8,293 traces (`traces_8293.jsonl` with hints and provenance),
+- `traces/mmad/`: the 8,293 traces (`traces_8293.jsonl` with hints and provenance),
   ShareGPT files of every split, `split_keys.json`. Image paths are `MMAD/<mmad.json key>`.
-- `results/mmad_leakage/`: per-checkpoint eval JSONs of both runs on the four held-out subsets,
+- `results/mmad/`: per-checkpoint eval JSONs of both runs on the four held-out subsets,
   the train-key evaluations, the thesis KCR model on the same keys, and the two split files.
 
 ## Headline (strict BA on unseen images of the same products)

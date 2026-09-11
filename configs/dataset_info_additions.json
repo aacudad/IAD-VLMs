@@ -168,7 +168,7 @@
     }
   },
   "mmad_sft_train1600": {
-    "file_name": "${WORK_DIR}/repository_tu_delft_vlms/traces/mmad_leakage/run1_unbalanced_train_1600.json",
+    "file_name": "${WORK_DIR}/repository_tu_delft_vlms/traces/mmad/run1_unbalanced_train_1600.json",
     "formatting": "sharegpt",
     "columns": {
       "messages": "messages",
@@ -183,7 +183,7 @@
     "note": "image paths are relative MMAD/<key>; prepend your data root (traces/rewrite_image_paths.py)"
   },
   "mmad_sft_train1600_bal": {
-    "file_name": "${WORK_DIR}/repository_tu_delft_vlms/traces/mmad_leakage/run2_balanced_train_1600.json",
+    "file_name": "${WORK_DIR}/repository_tu_delft_vlms/traces/mmad/run2_balanced_train_1600.json",
     "formatting": "sharegpt",
     "columns": {
       "messages": "messages",
@@ -198,7 +198,7 @@
     "note": "image paths are relative MMAD/<key>; prepend your data root (traces/rewrite_image_paths.py)"
   },
   "mmad_sft_train_cat": {
-    "file_name": "${WORK_DIR}/repository_tu_delft_vlms/traces/mmad_leakage/one_per_product_and_defect_144.json",
+    "file_name": "${WORK_DIR}/repository_tu_delft_vlms/traces/mmad/one_per_product_and_defect_144.json",
     "formatting": "sharegpt",
     "columns": {
       "messages": "messages",
@@ -213,7 +213,7 @@
     "note": "image paths are relative MMAD/<key>; prepend your data root (traces/rewrite_image_paths.py)"
   },
   "mmad_sft_train_prod": {
-    "file_name": "${WORK_DIR}/repository_tu_delft_vlms/traces/mmad_leakage/one_per_product_39.json",
+    "file_name": "${WORK_DIR}/repository_tu_delft_vlms/traces/mmad/one_per_product_39.json",
     "formatting": "sharegpt",
     "columns": {
       "messages": "messages",

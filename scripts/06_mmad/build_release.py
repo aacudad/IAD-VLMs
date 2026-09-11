@@ -1,7 +1,7 @@
 """
 Build the release package of the MMAD leakage experiment:
   1. hf_staging/anomalythink_mmad/   -> Hugging Face dataset (traces only, relative MMAD/... paths)
-  2. repository_tu_delft_vlms/       -> scripts/06_mmad_leakage, traces/mmad_leakage, results/mmad_leakage
+  2. repository_tu_delft_vlms/       -> scripts/06_mmad, traces/mmad, results/mmad
 
 Image paths are normalised to "MMAD/<dataset>/<product>/..." relative to a data root, the same
 convention as the AnomalyThink dataset's "Real-IAD/images/..." paths. No image is shipped.
@@ -89,9 +89,9 @@ def main():
     print("HF staging:", sum(p.stat().st_size for p in HF.rglob("*") if p.is_file()) // 2**20, "MiB")
 
     # ---------------- repo ----------------
-    sdir = REPO / "scripts" / "06_mmad_leakage"
-    tdir = REPO / "traces" / "mmad_leakage"
-    rdir = REPO / "results" / "mmad_leakage"
+    sdir = REPO / "scripts" / "06_mmad"
+    tdir = REPO / "traces" / "mmad"
+    rdir = REPO / "results" / "mmad"
     for d in (sdir, tdir, rdir):
         d.mkdir(parents=True, exist_ok=True)
     for name in ["generate_mmad_traces_v4.py", "compile_split.py", "compile_split_bal.py", "eval_heldout_vllm.py",

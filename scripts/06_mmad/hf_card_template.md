@@ -33,22 +33,21 @@ configs:
   data_files: traces_8293.jsonl
 ---
 
-# AnomalyThink-MMAD: reasoning traces on the MMAD benchmark, for a leakage experiment
+# AnomalyThink-MMAD: reasoning traces for the MMAD benchmark
 
 **{{DATASET_ID}}** holds one structured reasoning trace for 8,293 of the 8,366 images of the
 **MMAD** benchmark (DS-MVTec, VisA, GoodsAD, MVTec-LOCO), written with the same teacher recipe as
 the [AnomalyThink](https://huggingface.co/datasets/aacudad/AnomalyThink) corpus of the MSc thesis
 *Reasoning-Enhanced Vision-Language Models for Explainable Industrial Anomaly Detection* (TU Delft, 2026).
+Each trace is a single-image inspection: a `<think>` block, and for anomalies a `<location>` on a 3x3 grid
+and a `<type>`, then a yes/no `<answer>`. The MMAD annotations (mask, defect type, location, appearance,
+effect) were given to the teacher, so the traces are grounded in the benchmark's own ground truth.
 
-**Why it exists.** Several published VLM anomaly detectors put MMAD images into their training
-data (OmniAD v1: "one example per category from MMAD" for both SFT and GRPO; AnomalyR1: 600 images
-from the four MMAD source datasets) and then report MMAD scores. This dataset makes that practice
-measurable. Training a Qwen2.5-VL-7B on 1,600 of these traces and testing on the other 6,693
-images of the same products gives the tables in `RESULTS.md`. It is a side experiment, not part
-of the thesis, and no MMAD image was used to train any thesis model.
-
-**This is not a benchmark and not a recommended training set.** Anyone who trains on it and
-reports MMAD numbers is doing exactly what the experiment quantifies.
+**Read this before training on it.** MMAD is an evaluation benchmark. A model fine-tuned on any part of
+this corpus and then scored on MMAD has seen the benchmark's products, cameras and defect vocabulary,
+and its MMAD numbers are not comparable with models that have not. We used the corpus to measure
+exactly that effect (section *Leakage test* below). No thesis model was trained on any MMAD image,
+and the checkpoints fine-tuned on this corpus are deliberately not released.
 
 ## Important: images are NOT included
 Every example references an MMAD image by relative path (`MMAD/DS-MVTec/bottle/image/broken_large/000.png`),
@@ -83,7 +82,15 @@ resolve. This dataset inherits MMAD's non-commercial licence.
 | `RESULTS.md` | | the experiment: recipe, epoch tables, sensitivity/specificity, memorisation checks |
 | `system_prompt_inspector_v2.txt` | | the exact system prompt the teacher was given (the user prompt is built in the generator) |
 
-## Headline of the experiment (strict balanced accuracy on unseen images of the same products)
+## Leakage test: what training on part of MMAD buys
+Several published VLM anomaly detectors put MMAD images into their training data (OmniAD v1: "one
+example per category from MMAD" for both SFT and GRPO; AnomalyR1: 600 images from the four MMAD
+source datasets) and report MMAD scores. To measure the effect we fine-tuned Qwen2.5-VL-7B with the
+thesis SFT recipe on 1,600 of these traces (two splits: MMAD's own label ratio, and 800/800) and
+scored the other 6,693 images of the same products with the thesis harness (strict balanced
+accuracy, unparsed = wrong, zero-shot, single image). Full tables in `RESULTS.md`.
+
+Strict balanced accuracy on unseen images of the same products:
 | Subset | Qwen2.5-VL-7B base | 1,600 MMAD traces, balanced, best epoch | thesis SFT on 6,000 Real-IAD traces (no MMAD) |
 |---|---|---|---|
 | DS-MVTec | 69.7 | 79.2 | 80.2 |
@@ -95,14 +102,14 @@ Scoring the same checkpoint on its own training images gives only 1 to 2 points 
 held-out images, so the gain is familiarity with the benchmark's products, not memorisation.
 
 ## Reproduce the traces and the experiment
-Code and the exact prompt are in the GitHub repository, folder `scripts/06_mmad_leakage`:
-- generator: <https://github.com/aacudad/IAD-VLMs/blob/main/scripts/06_mmad_leakage/generate_mmad_traces_v4.py>
+Code and the exact prompt are in the GitHub repository, folder `scripts/06_mmad`:
+- generator: <https://github.com/aacudad/IAD-VLMs/blob/main/scripts/06_mmad/generate_mmad_traces_v4.py>
   (the user prompt, the three-image input and the hint lines are built inside `format_anomaly_prompt`)
 - system prompt, the exact file the run used, also shipped here as `system_prompt_inspector_v2.txt`:
-  <https://github.com/aacudad/IAD-VLMs/blob/main/scripts/06_mmad_leakage/inspector_prompt_test_v2_mmad_run.txt>
+  <https://github.com/aacudad/IAD-VLMs/blob/main/scripts/06_mmad/inspector_prompt_test_v2_mmad_run.txt>
 - split, SFT recipe, evaluation and scoring: `compile_split.py`, `compile_split_bal.py`, `sft_mmad_train1600*.yaml`,
   `eval_heldout_vllm.py`, `score_heldout.py` in the same folder, write-up in `RESULTS.md`
-- per-checkpoint evaluation files: <https://github.com/aacudad/IAD-VLMs/tree/main/results/mmad_leakage>
+- per-checkpoint evaluation files: <https://github.com/aacudad/IAD-VLMs/tree/main/results/mmad>
 
 ```
 export WORK_DIR=/path/to/your/clone   # MMAD under $WORK_DIR/reasoning_traces_gen/data/MMAD
@@ -111,4 +118,4 @@ python compile_split.py && python compile_split_bal.py
 ```
 
 ## Citation
-Cite the thesis and MMAD. Code: <https://github.com/aacudad/IAD-VLMs> (`scripts/06_mmad_leakage`).
+Cite the thesis and MMAD. Code: <https://github.com/aacudad/IAD-VLMs> (`scripts/06_mmad`).

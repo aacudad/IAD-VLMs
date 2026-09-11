@@ -14,13 +14,13 @@ docs linked below.
 
 ### 11 Sep 2026
 
-- `scripts/06_mmad_leakage/`, `traces/mmad_leakage/`, `results/mmad_leakage/`: the MMAD leakage side-experiment.
+- `scripts/06_mmad/`, `traces/mmad/`, `results/mmad/`: the MMAD reasoning-trace corpus (AnomalyThink-MMAD) and the leakage test.
   One thesis-recipe trace per MMAD image (8,293, Gemini 3.6-Flash with the MMAD answers as hints), 1,600 of them used to
   fine-tune Qwen2.5-VL-7B with the thesis 6K recipe, scored on the other 6,693 images of the same products. Best balanced
   run: 79.2 / 67.2 / 61.1 / 54.7 strict BA on held-out DS-MVTec / VisA / GoodsAD / MVTec-LOCO, against 69.7 / 53.8 / 51.0 / 50.5
   for the base model, with a memorisation gap of only 1 to 2 points. Quantifies what "one example per category from MMAD"
   (OmniAD v1) buys. Not a thesis result, no thesis model saw an MMAD image. Dataset on Hugging Face as
-  `aacudad/AnomalyThink-MMAD`. Write-up in [`scripts/06_mmad_leakage/RESULTS.md`](scripts/06_mmad_leakage/RESULTS.md).
+  `aacudad/AnomalyThink-MMAD`. Write-up in [`scripts/06_mmad/RESULTS.md`](scripts/06_mmad/RESULTS.md).
 
 ### 10 Sep 2026
 
@@ -255,7 +255,7 @@ The trained checkpoints and the trace corpus are openly released:
 | Backbone | Artifact | DS-MVTec / VisA | Link |
 |---|---|---:|---|
 | — | **AnomalyThink** dataset (reasoning traces) | — | <https://huggingface.co/datasets/aacudad/AnomalyThink> |
-| — | **AnomalyThink-MMAD** dataset (MMAD leakage side-experiment, not a training set) | — | <https://huggingface.co/datasets/aacudad/AnomalyThink-MMAD> |
+| — | **AnomalyThink-MMAD** dataset (reasoning traces on MMAD, read the card before training on it) | — | <https://huggingface.co/datasets/aacudad/AnomalyThink-MMAD> |
 | Qwen2.5-VL-7B | **KCR SFT**, thesis headline | 82.80 / 72.07 | <https://huggingface.co/aacudad/AnomalyThink-Qwen2.5-VL-7B-KCR> |
 | Qwen2.5-VL-7B | SFT-6K | 80.16 / 64.78 | <https://huggingface.co/aacudad/AnomalyThink-Qwen2.5-VL-7B-SFT> |
 | Qwen2.5-VL-7B | SFT + GRPO | 82.73 / 70.39 | <https://huggingface.co/aacudad/AnomalyThink-Qwen2.5-VL-7B-SFT-GRPO> |
@@ -298,7 +298,7 @@ repository_tu_delft_vlms/
 │   ├── 04_eval/          # Evaluation harness + watchers + summarizers (DS-MVTec / VisA / Real-IAD),
 │   │                     #   incl. the vLLM LLaVA path and the explainability judge
 │   ├── 05_figures/       # Thesis figure + HTML audit generators
-│   └── 06_mmad_leakage/  # Side-experiment: traces on MMAD itself, SFT on 1,600, held-out scoring (not a thesis result)
+│   └── 06_mmad/          # Reasoning traces on MMAD itself (AnomalyThink-MMAD) and the leakage test: SFT on 1,600, held-out scoring
 ├── configs/        # All training configs
 │   ├── sft/              # LlamaFactory SFT YAMLs (one per run, all three backbones)
 │   ├── grpo/             # GRPO config (currently empty placeholder, see 02_grpo/*.sh)
@@ -313,7 +313,7 @@ repository_tu_delft_vlms/
 │   ├── iter2/                # The Qwen KCR corpus. sft_iter2_train.json (6,000) is Arm C,
 │   │                         #   the file behind the 82.80 / 72.07 headline model
 │   ├── variety_star_6k/      # Real-IAD Variety STaR corpus, future work in the thesis (F5), not a thesis result
-│   └── mmad_leakage/         # 8,293 traces on MMAD images + the leakage-experiment splits, paths MMAD/<key>
+│   └── mmad/                 # 8,293 traces on MMAD images (AnomalyThink-MMAD) + the leakage-test splits, paths MMAD/<key>
 ├── results/        # Eval JSONs + trainer_state.json per run, plus the BA tooling
 │   ├── eval_ba_inventory.txt # Every (BA, n, path) we computed, the source of truth
 │   ├── compute_ba.py         # Recompute BA from any eval JSON
@@ -354,7 +354,7 @@ the same `results/<run>/checkpoint-X/eval_<bench>_full_<mode>.json` layout, and 
 | [`results/qwen3vl_8b_baseline_eval/`](results/qwen3vl_8b_baseline_eval/) | Qwen3-VL-8B base row |
 | [`results/sft_qwen3vl_8b_armC/`](results/sft_qwen3vl_8b_armC/) | Qwen3-VL-8B on the Qwen KCR corpus, 4 epochs |
 | [`results/sft_qwen25vl_7b_6k_noreason/`](results/sft_qwen25vl_7b_6k_noreason/) | Labels-only control, 4 epochs |
-| [`results/mmad_leakage/`](results/mmad_leakage/) | MMAD leakage side-experiment: both runs, every epoch, four held-out subsets, train-key (memorisation) evals, the thesis KCR model on the same keys, split files. Layout `eval_<subset>_heldout.json` |
+| [`results/mmad/`](results/mmad/) | MMAD trace corpus, leakage test: both runs, every epoch, four held-out subsets, train-key (memorisation) evals, the thesis KCR model on the same keys, split files. Layout `eval_<subset>_heldout.json` |
 
 ---
 
