@@ -166,5 +166,65 @@
       "user_tag": "user",
       "assistant_tag": "assistant"
     }
+  },
+  "mmad_sft_train1600": {
+    "file_name": "${WORK_DIR}/repository_tu_delft_vlms/traces/mmad_leakage/run1_unbalanced_train_1600.json",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages",
+      "images": "images"
+    },
+    "tags": {
+      "role_tag": "role",
+      "content_tag": "content",
+      "user_tag": "user",
+      "assistant_tag": "assistant"
+    },
+    "note": "image paths are relative MMAD/<key>; prepend your data root (traces/rewrite_image_paths.py)"
+  },
+  "mmad_sft_train1600_bal": {
+    "file_name": "${WORK_DIR}/repository_tu_delft_vlms/traces/mmad_leakage/run2_balanced_train_1600.json",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages",
+      "images": "images"
+    },
+    "tags": {
+      "role_tag": "role",
+      "content_tag": "content",
+      "user_tag": "user",
+      "assistant_tag": "assistant"
+    },
+    "note": "image paths are relative MMAD/<key>; prepend your data root (traces/rewrite_image_paths.py)"
+  },
+  "mmad_sft_train_cat": {
+    "file_name": "${WORK_DIR}/repository_tu_delft_vlms/traces/mmad_leakage/one_per_product_and_defect_144.json",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages",
+      "images": "images"
+    },
+    "tags": {
+      "role_tag": "role",
+      "content_tag": "content",
+      "user_tag": "user",
+      "assistant_tag": "assistant"
+    },
+    "note": "image paths are relative MMAD/<key>; prepend your data root (traces/rewrite_image_paths.py)"
+  },
+  "mmad_sft_train_prod": {
+    "file_name": "${WORK_DIR}/repository_tu_delft_vlms/traces/mmad_leakage/one_per_product_39.json",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages",
+      "images": "images"
+    },
+    "tags": {
+      "role_tag": "role",
+      "content_tag": "content",
+      "user_tag": "user",
+      "assistant_tag": "assistant"
+    },
+    "note": "image paths are relative MMAD/<key>; prepend your data root (traces/rewrite_image_paths.py)"
   }
 }
