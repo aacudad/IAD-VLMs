@@ -102,6 +102,23 @@ after 1,600 benchmark images is one point below the thesis Real-IAD SFT on 6,000
 | GoodsAD | 571 | 57.72 | 56.07 | +1.7 |
 | MVTec-LOCO | 297 | 55.26 | 54.29 | +1.0 |
 
+## The thesis KCR model on the same held-out keys (no MMAD image in its training)
+
+Qwen2.5-VL-7B KCR checkpoint-376 (thesis headline 82.80 / 72.07), scored on the run-2 held-out keys of all four
+subsets with the same harness. GoodsAD and MVTec-LOCO were never evaluated in the thesis.
+
+| Subset | BA | TPR / TNR |
+|---|---|---|
+| DS-MVTec | 82.35 | 80 / 85 |
+| VisA | 73.36 | 60 / 87 |
+| GoodsAD | 58.43 | 43 / 74 |
+| MVTec-LOCO | 50.18 | 27 / 74 |
+
+Pooled over the four subsets (MMAD's Anomaly Discrimination definition, zero-shot): 65.96.
+For comparison, pooled on the same keys: base 56.1, run 2 best epoch 65.4. OmniAD-7B reports 61.4 zero-shot and
+68.8 one-shot on that column. A model that never saw MMAD is ahead of the benchmark-trained runs on DS-MVTec
+and VisA, the two subsets closest to Real-IAD's product families, and behind on GoodsAD, the retail packaging.
+
 ## Both runs on the 6,521 held-out images they share
 
 | Subset | Base | Run 1 ep 2 | ep 3 | ep 4 | Run 2 ep 1 | ep 2 | ep 3 | ep 4 | ep 5 | ep 6 |

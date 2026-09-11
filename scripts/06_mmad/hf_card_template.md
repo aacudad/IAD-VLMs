@@ -100,6 +100,9 @@ Strict balanced accuracy on unseen images of the same products:
 
 Scoring the same checkpoint on its own training images gives only 1 to 2 points more than on the
 held-out images, so the gain is familiarity with the benchmark's products, not memorisation.
+The thesis KCR model, which never saw an MMAD image, scores 82.4 / 73.4 / 58.4 / 50.2 on the same
+held-out keys (DS-MVTec / VisA / GoodsAD / MVTec-LOCO); pooled over the four subsets that is 66.0
+against 65.4 for the best benchmark-trained run and 61.4 zero-shot for OmniAD-7B.
 
 ## Reproduce the traces and the experiment
 Code and the exact prompt are in the GitHub repository, folder `scripts/06_mmad`:
