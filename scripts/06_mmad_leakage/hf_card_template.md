@@ -81,6 +81,7 @@ resolve. This dataset inherits MMAD's non-commercial licence.
 | `splits/one_per_product_39.json` | 39 | one image per product, the other reading |
 | `splits/split_keys.json` | | the key lists of every split |
 | `RESULTS.md` | | the experiment: recipe, epoch tables, sensitivity/specificity, memorisation checks |
+| `system_prompt_inspector_v2.txt` | | the exact system prompt the teacher was given (the user prompt is built in the generator) |
 
 ## Headline of the experiment (strict balanced accuracy on unseen images of the same products)
 | Subset | Qwen2.5-VL-7B base | 1,600 MMAD traces, balanced, best epoch | thesis SFT on 6,000 Real-IAD traces (no MMAD) |
@@ -92,6 +93,22 @@ resolve. This dataset inherits MMAD's non-commercial licence.
 
 Scoring the same checkpoint on its own training images gives only 1 to 2 points more than on the
 held-out images, so the gain is familiarity with the benchmark's products, not memorisation.
+
+## Reproduce the traces and the experiment
+Code and the exact prompt are in the GitHub repository, folder `scripts/06_mmad_leakage`:
+- generator: <https://github.com/aacudad/IAD-VLMs/blob/main/scripts/06_mmad_leakage/generate_mmad_traces_v4.py>
+  (the user prompt, the three-image input and the hint lines are built inside `format_anomaly_prompt`)
+- system prompt, the exact file the run used, also shipped here as `system_prompt_inspector_v2.txt`:
+  <https://github.com/aacudad/IAD-VLMs/blob/main/scripts/06_mmad_leakage/inspector_prompt_test_v2_mmad_run.txt>
+- split, SFT recipe, evaluation and scoring: `compile_split.py`, `compile_split_bal.py`, `sft_mmad_train1600*.yaml`,
+  `eval_heldout_vllm.py`, `score_heldout.py` in the same folder, write-up in `RESULTS.md`
+- per-checkpoint evaluation files: <https://github.com/aacudad/IAD-VLMs/tree/main/results/mmad_leakage>
+
+```
+export WORK_DIR=/path/to/your/clone   # MMAD under $WORK_DIR/reasoning_traces_gen/data/MMAD
+python generate_mmad_traces_v4.py --shard_id 0 --total_shards 8   # one process per shard, Vertex AI credentials in GOOGLE_APPLICATION_CREDENTIALS
+python compile_split.py && python compile_split_bal.py
+```
 
 ## Citation
 Cite the thesis and MMAD. Code: <https://github.com/aacudad/IAD-VLMs> (`scripts/06_mmad_leakage`).

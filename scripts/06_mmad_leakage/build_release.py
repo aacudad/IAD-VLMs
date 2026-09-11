@@ -83,6 +83,7 @@ def main():
                "note": "keys are MMAD image paths relative to the MMAD root (mmad.json keys)"},
               open(HF / "splits" / "split_keys.json", "w"), indent=1)
     shutil.copy(SRC / "RESULTS.md", HF / "RESULTS.md")
+    shutil.copy(SRC / "inspector_prompt_test_v2_mmad_run.txt", HF / "system_prompt_inspector_v2.txt")
     card = open(SRC / "hf_card_template.md").read().replace("{{DATASET_ID}}", DATASET_ID)
     open(HF / "README.md", "w").write(card)
     print("HF staging:", sum(p.stat().st_size for p in HF.rglob("*") if p.is_file()) // 2**20, "MiB")
@@ -96,7 +97,8 @@ def main():
     for name in ["generate_mmad_traces_v4.py", "compile_split.py", "compile_split_bal.py", "eval_heldout_vllm.py",
                  "score_heldout.py", "eval_all_checkpoints.sh", "eval_ckpts_on_gpu.sh", "eval_train_keys.sh",
                  "sft_mmad_train1600.yaml", "sft_mmad_train1600_bal_6ep.yaml", "run_sft_mmad_train1600.sh",
-                 "run_sft_mmad_train1600_bal_6ep.sh", "build_release.py", "hf_card_template.md"]:
+                 "run_sft_mmad_train1600_bal_6ep.sh", "build_release.py", "hf_card_template.md",
+                 "inspector_prompt_test_v2_mmad_run.txt", "repo_readme_snippet.md"]:
         txt = open(SRC / name).read()
         # portabilise: the cluster root becomes an environment variable
         txt = txt.replace(os.environ.get("WORK_DIR", "/bulk/aacudad/reasoning_traces") + "", "${WORK_DIR}") if name.endswith((".sh", ".yaml")) \
@@ -122,7 +124,7 @@ def main():
                     x["absolute_path"] = rel(x["absolute_path"])
                 json.dump(d, open(dst / f.name, "w"))
     kcr = SRC / "evals_thesis_kcr" / "checkpoint-376"
-    if kcr.exists():
+    if kcr.exists() and len(list(kcr.glob("eval_*_heldout.json"))) == 4:
         dst = rdir / "thesis_kcr_no_mmad_in_training" / "checkpoint-376"
         dst.mkdir(parents=True, exist_ok=True)
         for f in kcr.glob("eval_*.json"):

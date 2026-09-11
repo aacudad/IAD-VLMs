@@ -37,7 +37,7 @@ from google.genai.types import Content, Part, GenerateContentConfig, ThinkingCon
 HERE = Path(__file__).parent
 MMAD_ROOT = Path(os.environ.get("WORK_DIR", "/bulk/aacudad/reasoning_traces") + "/reasoning_traces_gen/data/MMAD")
 MMAD_JSON = MMAD_ROOT / "mmad.json"
-PROMPT_FILE = Path(os.environ.get("WORK_DIR", "/bulk/aacudad/reasoning_traces") + "/reasoning_traces_gen_laptop_adnane/prompts/inspector_prompt_test_v2.txt")
+PROMPT_FILE = HERE / "inspector_prompt_test_v2_mmad_run.txt"   # exact copy of the system prompt this run used
 KEY_FILE = Path(os.environ.get("WORK_DIR", "/bulk/aacudad/reasoning_traces") + "/vertexai-amir-key.json")
 OUT_DIR = HERE / "traces"
 LOG_DIR = HERE / "logs"
